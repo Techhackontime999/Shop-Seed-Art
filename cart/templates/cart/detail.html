@@ -1,0 +1,277 @@
+{% extends "shop/base/base.html" %}
+{% load i18n %}
+{% load preference_extras %}
+{% block title %}{% trans 'Your Cart' %} — Shop-Seed{% endblock %}
+
+{% block content %}
+<!-- Cart Hero -->
+<section class="crt-hero">
+  <div class="crt-hero-glow crt-hero-glow-a" aria-hidden="true"></div>
+  <div class="crt-hero-glow crt-hero-glow-b" aria-hidden="true"></div>
+  <div class="crt-hero-dots" aria-hidden="true"></div>
+
+  <div class="container-aq crt-hero-inner">
+    <div class="breadcrumb-aq crt-breadcrumb">
+      <a href="{% url 'shop:home' %}">{% trans 'Home' %}</a>
+      <span class="sep"><i class="fas fa-chevron-right"></i></span>
+      <a href="{% url 'shop:product_list' %}">{% trans 'Shop' %}</a>
+      <span class="sep"><i class="fas fa-chevron-right"></i></span>
+      <span class="current">{% trans 'Cart' %}</span>
+    </div>
+
+    <div class="crt-hero-left fade-up">
+      <span class="hero-aq-badge"><i class="fas fa-bag-shopping"></i> {% trans 'Your Cart' %}</span>
+      <h1 class="crt-hero-title">
+        {% if cart|length %}
+        {% trans 'Everything,' %} <span class="crt-hero-accent">{% trans 'ready to go' %}</span>
+        {% else %}
+        {% trans 'Your cart is' %} <span class="crt-hero-accent">{% trans 'waiting' %}</span>
+        {% endif %}
+      </h1>
+      {% if cart|length %}
+      <p class="crt-hero-sub">
+        {% blocktranslate count counter=cart|length %}You have {{ counter }} item in your cart. Double-check your picks, then head to checkout.{% plural %}You have {{ counter }} items in your cart. Double-check your picks, then head to checkout.{% endblocktranslate %}
+      </p>
+      {% else %}
+      <p class="crt-hero-sub">
+        {% trans 'Nothing in here yet. Browse the shop and add something you love.' %}
+      </p>
+      {% endif %}
+    </div>
+
+    <div class="crt-hero-right fade-up fade-up-delay-1" aria-hidden="true">
+      <div class="crt-hero-count">
+        <span class="crt-hero-count-num mono">{{ cart|length }}</span>
+        <span class="crt-hero-count-label">{% blocktranslate count counter=cart|length %}item{% plural %}items{% endblocktranslate %}</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Cart Body -->
+<section class="crt-body">
+  <div class="container-aq">
+    {% if cart|length %}
+    <div class="crt-grid">
+      <!-- Items -->
+      <div class="crt-main">
+        <div class="crt-list-head fade-up">
+          <h2 class="crt-list-title">{% trans 'Items in your cart' %}</h2>
+          <a class="crt-continue" href="{% url 'shop:product_list' %}">
+            <i class="fas fa-arrow-left"></i> {% trans 'Continue shopping' %}
+          </a>
+        </div>
+
+        <div class="crt-list">
+          {% for item in cart_items %}
+          {% with product=item.product %}
+          <article class="crt-item fade-up" style="transition-delay:{% widthratio forloop.counter0 1 60 %}ms">
+            <a class="crt-thumb" href="{{ product.get_absolute_url }}" aria-label="{{ product.name }}">
+              {% if product.image %}
+              <img src="{{ product.image.url }}" alt="{{ product.name }}">
+              {% else %}
+              <span class="crt-thumb-ph"><i class="fas fa-box-open"></i></span>
+              {% endif %}
+            </a>
+
+            <div class="crt-item-body">
+              <a class="crt-name" href="{{ product.get_absolute_url }}">{{ product.name }}</a>
+              {% if item.variant %}
+              <span class="crt-variant">{{ item.variant.name }}</span>
+              {% endif %}
+              {% if product.brand %}
+              <span class="crt-brand">{{ product.brand }}</span>
+              {% endif %}
+              <div class="crt-price">
+                {% if item.price < product.price %}
+                <span class="crt-deal-tag"><i class="fas fa-bolt"></i> {% trans 'Deal' %}</span>
+                <span class="crt-price-now">{% price item.price %}</span>
+                <del class="crt-price-old">{% price product.price %}</del>
+                {% else %}
+                <span class="crt-price-now">{% price item.price %}</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <form class="crt-qty-form" action="{% url 'cart:cart_add' product.id %}" method="post" data-qty-form>
+              {% csrf_token %}
+              {% if item.variant %}
+              <input type="hidden" name="variant_id" value="{{ item.variant.id }}">
+              {% endif %}
+              {{ item.update_quantity_form.quantity }}
+              {{ item.update_quantity_form.update }}
+              <button type="button" class="crt-step" data-step="-1" aria-label="{% trans 'Decrease quantity' %}">
+                <i class="fas fa-minus"></i>
+              </button>
+              <span class="crt-qty-val" data-qty-val aria-live="polite">{{ item.quantity }}</span>
+              <button type="button" class="crt-step" data-step="1" aria-label="{% trans 'Increase quantity' %}">
+                <i class="fas fa-plus"></i>
+              </button>
+              <input type="submit" value="{% trans 'Update' %}" class="crt-qty-submit" hidden>
+            </form>
+
+            <div class="crt-line-total">
+              <span class="crt-line-label">{% trans 'Line total' %}</span>
+              <strong class="mono">{% price item.total_price %}</strong>
+            </div>
+
+            {% if item.variant %}
+            <form class="crt-remove" method="post" action="{% url 'cart:cart_remove_variant' product.id item.variant.id %}"
+                  title="{% blocktranslate %}Remove {{ product.name }} ({{ item.variant.name }}){% endblocktranslate %}">
+              {% csrf_token %}
+              <button type="submit" class="crt-remove-btn" aria-label="{% blocktranslate %}Remove {{ product.name }} ({{ item.variant.name }}){% endblocktranslate %}">
+                <i class="fas fa-xmark"></i>
+              </button>
+            </form>
+            {% else %}
+            <form class="crt-remove" method="post" action="{% url 'cart:cart_remove' product.id %}"
+                  title="{% blocktranslate %}Remove {{ product.name }}{% endblocktranslate %}">
+              {% csrf_token %}
+              <button type="submit" class="crt-remove-btn" aria-label="{% blocktranslate %}Remove {{ product.name }}{% endblocktranslate %}">
+                <i class="fas fa-xmark"></i>
+              </button>
+            </form>
+            {% endif %}
+          </article>
+          {% endwith %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <aside class="crt-aside">
+        <div class="crt-card fade-up fade-up-delay-1">
+          <h3 class="crt-card-title">{% trans 'Order summary' %}</h3>
+
+          <div class="crt-summary-rows">
+            <div class="crt-summary-row">
+              <span>{% blocktranslate count counter=cart|length %}Item ({{ counter }}){% plural %}Items ({{ counter }}){% endblocktranslate %}</span>
+              <span class="mono">{% price cart.get_total_price %}</span>
+            </div>
+            {% if cart.get_discount %}
+            <div class="crt-summary-row crt-discount">
+              <span><i class="fas fa-tag"></i> {% trans 'Coupon discount' %}</span>
+              <span class="mono">−{% price cart.get_discount %}</span>
+            </div>
+            {% endif %}
+            <div class="crt-summary-row">
+              <span>{% trans 'Shipping' %}</span>
+              <span class="crt-shipping-val">{% trans 'Calculated at checkout' %}</span>
+            </div>
+            <div class="crt-summary-total">
+              <span>{% trans 'Total' %}</span>
+              <strong class="mono">{% price cart.get_total_price_after_discount %}</strong>
+            </div>
+          </div>
+
+          <form class="crt-coupon" action="{% url 'coupons:apply' %}" method="post" data-coupon-form>
+            {% csrf_token %}
+            <label class="crt-field-label" for="id_coupon">{% trans 'Coupon code' %}</label>
+            <div class="crt-coupon-row">
+              <input type="text" name="code" id="id_coupon" class="crt-coupon-input"
+                     placeholder="{% trans 'e.g. WELCOME10' %}" value="{{ coupon.code|default:'' }}"
+                     autocomplete="off" spellcheck="false">
+              <button type="submit" class="crt-btn-ghost">{% trans 'Apply' %}</button>
+            </div>
+            {% if cart.coupon %}
+            <p class="crt-coupon-applied"><i class="fas fa-circle-check"></i> {% blocktranslate with code=coupon.code pct=coupon.discount %}{{ code }} applied — {{ pct }}% off{% endblocktranslate %}</p>
+            {% endif %}
+          </form>
+
+          <form action="{% url 'order:order_create' %}" method="get">
+            <button type="submit" class="crt-btn-primary">
+              <span>{% trans 'Proceed to checkout' %}</span>
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          </form>
+
+          <a class="crt-continue-mobile" href="{% url 'shop:product_list' %}">
+            <i class="fas fa-arrow-left"></i> {% trans 'Continue shopping' %}
+          </a>
+
+          <ul class="crt-trust">
+            <li><i class="fas fa-lock"></i> {% trans 'Secure checkout' %}</li>
+            <li><i class="fas fa-truck-fast"></i> {% trans 'Free shipping over $50' %}</li>
+            <li><i class="fas fa-rotate-left"></i> {% trans 'Easy 30-day returns' %}</li>
+          </ul>
+        </div>
+      </aside>
+
+      <!-- Mobile sticky checkout bar (below 1024px) -->
+      <div class="crt-sticky-checkout">
+        <div class="crt-sticky-total">
+          <span class="crt-line-label">{% trans 'Total' %}</span>
+          <strong class="mono">{% price cart.get_total_price_after_discount %}</strong>
+        </div>
+        <form action="{% url 'order:order_create' %}" method="get">
+          <button type="submit" class="crt-btn-primary">
+            <span>{% trans 'Checkout' %}</span>
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+    {% else %}
+    <!-- Empty state -->
+    <div class="crt-empty">
+      <div class="crt-empty-card fade-up">
+        <div class="crt-empty-icon"><i class="fas fa-bag-shopping"></i></div>
+        <span class="hero-aq-badge">{% trans 'Your Cart' %}</span>
+        <h2 class="crt-empty-title">{% trans 'Your cart is empty' %}</h2>
+        <p class="crt-empty-sub">
+          {% trans "Looks like you haven't added anything yet. Explore the shop and find something that feels right." %}
+        </p>
+        <a href="{% url 'shop:product_list' %}" class="crt-btn-primary">
+          <span>{% trans 'Browse products' %}</span>
+          <i class="fas fa-arrow-right"></i>
+        </a>
+        <div class="crt-empty-perks">
+          <span><i class="fas fa-truck-fast"></i> {% trans 'Free shipping over $50' %}</span>
+          <span><i class="fas fa-rotate-left"></i> {% trans 'Easy returns' %}</span>
+          <span><i class="fas fa-lock"></i> {% trans 'Secure checkout' %}</span>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    var forms = document.querySelectorAll('[data-qty-form]');
+    forms.forEach(function (form) {
+      var select = form.querySelector('select');
+      var val = form.querySelector('[data-qty-val]');
+      var submit = form.querySelector('input[type="submit"]');
+      if (!select || !val || !submit) return;
+
+      var max = 1;
+      for (var i = 0; i < select.options.length; i++) {
+        var opt = parseInt(select.options[i].value, 10);
+        if (!isNaN(opt) && opt > max) max = opt;
+      }
+      var current = parseInt(select.value, 10);
+      if (isNaN(current)) current = 1;
+      val.textContent = current;
+
+      function set(n) {
+        n = Math.max(1, Math.min(max, n));
+        select.value = n;
+        val.textContent = n;
+        submit.click();
+      }
+
+      var dec = form.querySelector('[data-step="-1"]');
+      var inc = form.querySelector('[data-step="1"]');
+      if (dec) dec.addEventListener('click', function () {
+        set((parseInt(select.value, 10) || 1) - 1);
+      });
+      if (inc) inc.addEventListener('click', function () {
+        set((parseInt(select.value, 10) || 1) + 1);
+      });
+    });
+  })();
+</script>
+{% endblock %}

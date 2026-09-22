@@ -1,0 +1,146 @@
+{% extends "shop/base/base.html" %}
+{% load i18n %}
+{% load preference_extras %}
+
+{% block title %}{% trans 'Search Results' %}{% endblock %}
+
+{% block content %}
+<section class="section-aq" style="padding-top:6rem;">
+  <div class="container-aq">
+    <h2 style="font-size:1.5rem;font-weight:600;margin-bottom:1.5rem;">
+      {% blocktranslate %}Search Results for "{{ query }}"{% endblocktranslate %}
+    </h2>
+
+    {% if results %}
+    <form class="mb-4" action="{% url 'shop:product_search' %}" method="get" style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
+      <div style="display:flex;gap:0.5rem;align-items:center;">
+        <input type="hidden" name="q" value="{{ query }}">
+        <select name="category" style="padding:0.5rem 1rem;border-radius:var(--aq-radius-xl);border:1px solid var(--aq-border);background:var(--aq-surface);font-family:var(--aq-font);font-size:0.875rem;color:var(--aq-body);outline:none;">
+          <option value="">{% trans 'All Categories' %}</option>
+          {% for cat in product_categories %}
+          <option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>
+            {{ cat.name }}
+          </option>
+          {% endfor %}
+        </select>
+        <select name="sort" style="padding:0.5rem 1rem;border-radius:var(--aq-radius-xl);border:1px solid var(--aq-border);background:var(--aq-surface);font-family:var(--aq-font);font-size:0.875rem;color:var(--aq-body);outline:none;">
+          <option value="relevance" {% if sort == 'relevance' %}selected{% endif %}>{% trans 'Sort: Relevance' %}</option>
+          <option value="newest" {% if sort == 'newest' %}selected{% endif %}>{% trans 'Sort: Newest' %}</option>
+          <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>{% trans 'Price: Low to High' %}</option>
+          <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>{% trans 'Price: High to Low' %}</option>
+          <option value="rating" {% if sort == 'rating' %}selected{% endif %}>{% trans 'Sort: Top Rated' %}</option>
+          <option value="name" {% if sort == 'name' %}selected{% endif %}>{% trans 'Sort: Name' %}</option>
+        </select>
+        <button type="submit" class="btn-aq btn-aq-primary" style="padding:0.5rem 1.25rem;">
+          <i class="fas fa-search"></i>
+          {% trans 'Search' %}
+        </button>
+      </div>
+    </form>
+
+    <div class="products-aq-toggle-wrap products-aq-toggle-wrap-right">
+      {% include 'shop/product/layout_toggle.html' with target='#search-grid' %}
+    </div>
+
+    <div class="products-aq-grid" id="search-grid" data-layout="4col">
+      {% for product in results %}
+      <div class="product-aq-card fade-up" style="transition-delay:{% widthratio forloop.counter0 1 80 %}ms">
+        <a href="{{ product.get_absolute_url }}" style="text-decoration:none;color:inherit;">
+          <div class="product-aq-image">
+            {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            {% else %}
+            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--aq-accent);font-size:2.5rem;">
+              <i class="fas fa-box-open"></i>
+            </div>
+            {% endif %}
+            {% if product.current_price and product.current_price < product.price %}
+            <span class="product-aq-tag sale">{% trans 'Sale' %}</span>
+            {% endif %}
+          </div>
+          <div class="product-aq-body">
+            <h3>{{ product.name }}</h3>
+            <p class="desc">{{ product.description|truncatewords:12|richtext }}</p>
+            {% with total=product.average_rating %}
+            <div class="product-aq-rating">
+              <span class="stars">
+                {% if total %}
+                {% for i in "12345"|make_list %}
+                  {% if forloop.counter <= total|floatformat:"0"|add:"0" %}
+                  <i class="fas fa-star"></i>
+                  {% elif forloop.counter == total|add:"0.5"|floatformat:"0"|add:"0" %}
+                  <i class="fas fa-star-half-alt"></i>
+                  {% else %}
+                  <i class="far fa-star"></i>
+                  {% endif %}
+                {% endfor %}
+                {% else %}
+                <i class="far fa-star"></i>
+                <i class="far fa-star"></i>
+                <i class="far fa-star"></i>
+                <i class="far fa-star"></i>
+                <i class="far fa-star"></i>
+                {% endif %}
+              </span>
+              {% if product.rating_count %}
+              <span class="count">({{ product.rating_count }})</span>
+              {% endif %}
+            </div>
+            {% endwith %}
+            <div class="product-aq-price">
+              {% if product.current_price and product.current_price != product.price %}
+              <span>{% price product.current_price %}</span>
+              <span class="original">{% price product.price %}</span>
+              {% else %}
+              <span>{% price product.price %}</span>
+              {% endif %}
+            </div>
+            <div class="product-aq-actions">
+              <a href="{{ product.get_absolute_url }}" class="btn-aq btn-aq-primary" style="padding:0.5rem 1.25rem;font-size:0.8125rem;width:100%;justify-content:center;">
+                {% trans 'View Details' %}
+              </a>
+            </div>
+          </div>
+        </a>
+      </div>
+      {% empty %}
+      <div class="empty-aq" style="grid-column:1/-1">
+        <div class="empty-aq-icon"><i class="fas fa-search"></i></div>
+        <h3>{% trans 'No products found' %}</h3>
+        <p>{% trans 'Try adjusting your search or filter criteria.' %}</p>
+        <a href="{% url 'shop:product_list' %}" class="btn-aq btn-aq-primary">{% trans 'Browse All' %}</a>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <div class="pagination-aq fade-up" style="margin-top:2.5rem;">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}&q={{ query|urlencode }}&category={{ selected_category }}&sort={{ sort }}"><i class="fas fa-chevron-left"></i></a>
+      {% endif %}
+      {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <span class="current">{{ num }}</span>
+        {% else %}
+        <a href="?page={{ num }}&q={{ query|urlencode }}&category={{ selected_category }}&sort={{ sort }}">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}&q={{ query|urlencode }}&category={{ selected_category }}&sort={{ sort }}"><i class="fas fa-chevron-right"></i></a>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="empty-aq" style="padding:4rem 0;">
+      <div class="empty-aq-icon"><i class="fas fa-search"></i></div>
+      <h3>{% blocktranslate %}No results for "{{ query }}"{% endblocktranslate %}</h3>
+      <p>{% trans 'Try different keywords or browse our collections.' %}</p>
+      <a href="{% url 'shop:product_list' %}" class="btn-aq btn-aq-primary">
+        <i class="fas fa-arrow-left"></i>
+        {% trans 'Browse All Products' %}
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

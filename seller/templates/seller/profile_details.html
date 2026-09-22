@@ -1,0 +1,97 @@
+{% extends 'shop/base/base.html' %}
+{% load static %}
+{% load preference_extras %}
+
+{% block title %}{{ profile.shop_name }} — Shop-Seed{% endblock %}
+
+{% block content %}
+<div class="pd-page">
+  <div class="pd-page-inner">
+
+    <a href="{% url 'seller:best_sellers' %}" class="pd-back">
+      <i class="fas fa-arrow-left"></i> Back to Best Sellers
+    </a>
+
+    <div class="pd-card pd-card-profile">
+      <div class="pd-profile-top">
+        <div class="pd-avatar-wrap">
+          {% if profile.profile_picture %}
+          <img src="{{ profile.profile_picture.url }}" alt="{{ profile.shop_name }}" class="pd-avatar">
+          {% else %}
+          <div class="pd-avatar pd-avatar-placeholder">
+            <i class="fas fa-store"></i>
+          </div>
+          {% endif %}
+        </div>
+        <div class="pd-profile-info">
+          <h1 class="pd-shop-name">{{ profile.shop_name }}</h1>
+          <div class="pd-rating">
+            {% if profile.rating %}
+              {% with irating=profile.rating|floatformat:"0"|add:"0" %}
+              {% for i in "12345" %}
+                {% if forloop.counter <= irating %}
+                <i class="fas fa-star"></i>
+                {% else %}
+                <i class="far fa-star"></i>
+                {% endif %}
+              {% endfor %}
+              {% endwith %}
+              <span class="pd-rating-value">{{ profile.rating|floatformat:1 }}/5</span>
+            {% else %}
+              <span class="pd-no-rating">No ratings yet</span>
+            {% endif %}
+          </div>
+          <div class="pd-meta">
+            <span><i class="fas fa-map-marker-alt"></i> {{ profile.address }}</span>
+            {% if profile.phone %}
+            <span><i class="fas fa-phone"></i> {{ profile.phone }}</span>
+            {% endif %}
+          </div>
+          {% if profile.description %}
+          <p class="pd-desc">{{ profile.description }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="pd-products">
+      <div class="pd-products-header">
+        <h2 class="pd-products-title"><i class="fas fa-cube"></i> Products by {{ profile.shop_name }}</h2>
+        <span class="pd-products-count">{{ profile.products.all|length }} item{{ profile.products.all|length|pluralize }}</span>
+      </div>
+
+      <div class="pd-products-grid">
+        {% for product in profile.products.all %}
+        <div class="pd-product-card">
+          <div class="pd-product-image-wrap">
+            {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="pd-product-image">
+            {% else %}
+            <div class="pd-product-image pd-product-image-placeholder">
+              <i class="fas fa-box-open"></i>
+            </div>
+            {% endif %}
+          </div>
+          <div class="pd-product-body">
+            <h3 class="pd-product-name">{{ product.name }}</h3>
+            {% if product.brand %}
+            <span class="pd-product-brand">{{ product.brand }}</span>
+            {% endif %}
+            <span class="pd-product-price">{% price product.price %}</span>
+            <a href="{% url 'shop:product_detail' product.id product.slug %}" class="pd-product-btn">
+              View Product <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+        {% empty %}
+        <div class="pd-empty">
+          <i class="fas fa-box-open"></i>
+          <p>No products listed yet.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

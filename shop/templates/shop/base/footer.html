@@ -1,0 +1,139 @@
+{% load static %}
+{% load i18n %}
+
+<footer class="footer-aq">
+  <svg class="footer-aq-wave" viewBox="0 0 1440 60" preserveAspectRatio="none">
+    <path d="M0,30 C360,60 720,0 1440,30 L1440,0 L0,0 Z" fill="#0F172A"/>
+  </svg>
+
+  <div class="container-aq">
+    <div class="footer-aq-grid">
+      <div class="footer-aq-brand">
+        <a href="{% url 'shop:home' %}" class="nav-aq-logo">
+          <span class="logo-mark">{{ platform_settings.logo_mark|default:'S' }}</span>
+          {{ platform_settings.site_name|default:'Shop-Seed' }}
+        </a>
+        <p>{{ platform_settings.brand_description|default:"India's most trusted e-commerce platform. Discover premium products at unbeatable prices with fast delivery." }}</p>
+        <form class="newsletter-aq" id="newsletter-form" action="{% url 'newsletter:subscribe' %}" method="post" novalidate>
+          {% csrf_token %}
+          <input type="email" name="email" placeholder="{% trans 'Enter your email' %}" aria-label="Email address" required>
+          <button type="submit">{% trans "Subscribe" %}</button>
+        </form>
+        <p class="newsletter-aq-msg" id="newsletter-msg" role="status" aria-live="polite"></p>
+        {% if platform_settings.show_footer_social != '0' %}
+        <div class="footer-aq-social">
+          {% if platform_settings.social_twitter and platform_settings.social_twitter != '#' %}<a href="{{ platform_settings.social_twitter }}" aria-label="Twitter"><i class="fab fa-x-twitter"></i></a>{% endif %}
+          {% if platform_settings.social_instagram and platform_settings.social_instagram != '#' %}<a href="{{ platform_settings.social_instagram }}" aria-label="Instagram"><i class="fab fa-instagram"></i></a>{% endif %}
+          {% if platform_settings.social_facebook and platform_settings.social_facebook != '#' %}<a href="{{ platform_settings.social_facebook }}" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>{% endif %}
+          {% if platform_settings.social_linkedin and platform_settings.social_linkedin != '#' %}<a href="{{ platform_settings.social_linkedin }}" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>{% endif %}
+          {% if platform_settings.social_youtube and platform_settings.social_youtube != '#' %}<a href="{{ platform_settings.social_youtube }}" aria-label="YouTube"><i class="fab fa-youtube"></i></a>{% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      {% if platform_settings.show_footer_shop != '0' %}
+      <div class="footer-aq-col" data-acc-col>
+        <button type="button" class="ds-facc" data-acc-toggle aria-expanded="false" aria-controls="footer-col-shop">
+          {% trans "Shop" %}
+          <i class="fas fa-chevron-down" aria-hidden="true"></i>
+        </button>
+        <ul id="footer-col-shop">
+          <li><a href="{% url 'shop:product_list' %}">{% trans "All Products" %}</a></li>
+          <li><a href="{% url 'deals:todays_deals' %}">{% trans "Today's Deals" %}</a></li>
+          <li><a href="{% url 'seller:best_sellers' %}">{% trans "Best Sellers" %}</a></li>
+          <li><a href="{% url 'shop:product_list' %}">{% trans "New Arrivals" %}</a></li>
+          <li><a href="{% url 'shop:product_list' %}">{% trans "Categories" %}</a></li>
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if platform_settings.show_footer_support != '0' %}
+      <div class="footer-aq-col" data-acc-col>
+        <button type="button" class="ds-facc" data-acc-toggle aria-expanded="false" aria-controls="footer-col-support">
+          {% trans "Support" %}
+          <i class="fas fa-chevron-down" aria-hidden="true"></i>
+        </button>
+        <ul id="footer-col-support">
+          <li><a href="{% url 'contact:contact' %}">{% trans "Contact Us" %}</a></li>
+          <li><a href="{% url 'faq:faq' %}">{% trans "FAQ" %}</a></li>
+          <li><a href="{% url 'services:services_list' %}">{% trans "Services" %}</a></li>
+          <li><a href="#">{% trans "Shipping Info" %}</a></li>
+          <li><a href="#">{% trans "Returns" %}</a></li>
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if platform_settings.show_footer_company != '0' %}
+      <div class="footer-aq-col" data-acc-col>
+        <button type="button" class="ds-facc" data-acc-toggle aria-expanded="false" aria-controls="footer-col-company">
+          {% trans "Company" %}
+          <i class="fas fa-chevron-down" aria-hidden="true"></i>
+        </button>
+        <ul id="footer-col-company">
+          <li><a href="{% url 'about:about' %}">{% trans "About Us" %}</a></li>
+          <li><a href="{% url 'accounts:seller_register' %}">{% trans "Sell With Us" %}</a></li>
+          <li><a href="{% url 'accounts:signup' %}">{% trans "Join Shop-Seed" %}</a></li>
+          <li><a href="{% url 'doc:documentation' %}">{% trans "Documentation" %}</a></li>
+          <li><a href="{% url 'legal:privacy' %}">{% trans "Privacy Policy" %}</a></li>
+          <li><a href="{% url 'legal:terms' %}">{% trans "Terms of Service" %}</a></li>
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="footer-aq-bottom">
+      <p>{{ platform_settings.footer_copyright|default:'&copy; 2026 Shop-Seed. All rights reserved.' }}</p>
+      <div class="payment-icons">
+        <i class="fab fa-cc-visa"></i>
+        <i class="fab fa-cc-mastercard"></i>
+        <i class="fab fa-cc-amex"></i>
+        <i class="fab fa-cc-paypal"></i>
+        <i class="fab fa-cc-stripe"></i>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var form = document.getElementById('newsletter-form');
+    var msg = document.getElementById('newsletter-msg');
+    if (!form || !msg) return;
+
+    function show(text, ok) {
+      msg.textContent = text;
+      msg.classList.remove('newsletter-aq-msg-ok', 'newsletter-aq-msg-err');
+      msg.classList.add(ok ? 'newsletter-aq-msg-ok' : 'newsletter-aq-msg-err');
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var input = form.querySelector('input[name="email"]');
+      var email = (input.value || '').trim();
+      if (!email || email.indexOf('@') === -1) {
+        show('Please enter a valid email address.', false);
+        return;
+      }
+      var data = new FormData(form);
+      msg.textContent = '';
+      fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': data.get('csrfmiddlewaretoken')
+        },
+        body: data
+      })
+        .then(function (res) {
+          return res.json().then(function (d) { return { ok: res.ok, d: d }; });
+        })
+        .then(function (r) {
+          show(r.d.message || (r.ok ? 'Subscribed!' : 'Something went wrong. Please try again.'), r.ok);
+          if (r.ok) form.reset();
+        })
+        .catch(function () {
+          show('Something went wrong. Please try again.', false);
+        });
+    });
+  })();
+</script>

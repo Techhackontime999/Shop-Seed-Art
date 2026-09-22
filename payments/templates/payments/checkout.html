@@ -1,0 +1,339 @@
+{% extends "shop/base/base.html" %}
+{% load static %}
+{% load i18n %}
+{% load preference_extras %}
+{% block title %}{% trans 'Payment' %} — Shop-Seed{% endblock %}
+
+{% block content %}
+<!-- Payment Hero -->
+<section class="pay-hero">
+  <div class="pay-hero-glow pay-hero-glow-a" aria-hidden="true"></div>
+  <div class="pay-hero-glow pay-hero-glow-b" aria-hidden="true"></div>
+  <div class="pay-hero-dots" aria-hidden="true"></div>
+
+  <div class="container-aq pay-hero-inner">
+    <div class="breadcrumb-aq pay-breadcrumb">
+      <a href="{% url 'shop:home' %}">{% trans 'Home' %}</a>
+      <span class="sep"><i class="fas fa-chevron-right"></i></span>
+      <a href="{% url 'shop:product_list' %}">{% trans 'Shop' %}</a>
+      <span class="sep"><i class="fas fa-chevron-right"></i></span>
+      <a href="{% url 'cart:cart_detail' %}">{% trans 'Cart' %}</a>
+      <span class="sep"><i class="fas fa-chevron-right"></i></span>
+      <span class="current">{% trans 'Payment' %}</span>
+    </div>
+
+    <div class="pay-hero-copy fade-up">
+      <span class="hero-aq-badge"><i class="fas fa-shield-halved"></i> {% trans 'Secure payment' %}</span>
+      <h1 class="pay-hero-title">{% trans 'Finish your' %} <span class="pay-hero-accent">{% trans 'payment' %}</span></h1>
+      <p class="pay-hero-sub">
+        {% trans 'Your order is ready. Review the details below, then complete the transaction on our encrypted payment gateway.' %}
+      </p>
+    </div>
+
+    <ol class="ord-steps fade-up fade-up-delay-1">
+      <li class="ord-step is-done">
+        <span class="ord-step-dot"><i class="fas fa-check"></i></span>
+        <span class="ord-step-label">{% trans 'Cart' %}</span>
+      </li>
+      <li class="ord-step is-done">
+        <span class="ord-step-dot"><i class="fas fa-check"></i></span>
+        <span class="ord-step-label">{% trans 'Details' %}</span>
+      </li>
+      <li class="ord-step is-done">
+        <span class="ord-step-dot"><i class="fas fa-check"></i></span>
+        <span class="ord-step-label">{% trans 'Shipping' %}</span>
+      </li>
+      <li class="ord-step is-active">
+        <span class="ord-step-dot">4</span>
+        <span class="ord-step-label">{% trans 'Payment' %}</span>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- Payment Body -->
+<section class="pay-body">
+  <div class="container-aq">
+    <div class="pay-grid">
+      <!-- Order review -->
+      <div class="pay-main">
+        <section class="pay-card fade-up">
+          <header class="pay-card-head">
+            <span class="pay-card-icon"><i class="fas fa-receipt"></i></span>
+            <div>
+              <h2 class="pay-card-title">{% trans 'Review your order' %}</h2>
+              <span class="pay-card-sub">{% blocktranslate count counter=order.items.count %}{{ counter }} item · ready for checkout{% plural %}{{ counter }} items · ready for checkout{% endblocktranslate %}</span>
+            </div>
+          </header>
+
+          <div class="pay-items">
+            {% for item in order.items.all %}
+            {% with product=item.product %}
+            <article class="pay-item">
+              <a class="pay-thumb" href="{{ product.get_absolute_url }}" aria-label="{{ product.name }}">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                {% else %}
+                <i class="fas fa-box-open"></i>
+                {% endif %}
+              </a>
+              <div class="pay-item-body">
+                <a class="pay-item-name" href="{{ product.get_absolute_url }}">{{ product.name }}</a>
+                <div class="pay-item-meta">
+                  <span class="pay-qty mono">{{ item.quantity }}×</span>
+                  {% if item.variant_name %}<span class="pay-item-variant">{{ item.variant_name }}</span>{% endif %}
+                  {% if product.brand %}<span class="pay-item-brand">{{ product.brand }}</span>{% endif %}
+                </div>
+              </div>
+              <div class="pay-item-price">
+                {% if item.price < product.price %}<del>{% price product.price %}</del>{% endif %}
+                {% price item.get_cost %}
+              </div>
+            </article>
+            {% endwith %}
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="pay-card fade-up fade-up-delay-1">
+          <header class="pay-card-head">
+            <span class="pay-card-icon"><i class="fas fa-location-dot"></i></span>
+            <div>
+              <h2 class="pay-card-title">{% trans 'Deliver to' %}</h2>
+              <span class="pay-card-sub">{% trans 'Items will ship to this address' %}</span>
+            </div>
+          </header>
+
+          <div class="pay-ship">
+            <div class="pay-ship-row">
+              <i class="fas fa-user" aria-hidden="true"></i>
+              <div>
+                <span class="pay-ship-label">{% trans 'Recipient' %}</span>
+                <span class="pay-ship-val">{{ order.first_name }} {{ order.last_name }} · {{ order.email }}</span>
+              </div>
+            </div>
+            <div class="pay-ship-row">
+              <i class="fas fa-house" aria-hidden="true"></i>
+              <div>
+                <span class="pay-ship-label">{% trans 'Shipping address' %}</span>
+                <span class="pay-ship-val">{{ order.address }}, {{ order.city }} {{ order.postal_code }}</span>
+              </div>
+            </div>
+            <div class="pay-ship-row">
+              <i class="fas fa-truck-fast" aria-hidden="true"></i>
+              <div>
+                <span class="pay-ship-label">{% trans 'Shipping method' %}</span>
+                <span class="pay-ship-val">{% if order.shipping_method_name %}{{ order.shipping_method_name }}{% else %}{% trans 'Standard delivery' %}{% endif %}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="pay-card fade-up fade-up-delay-2">
+          <header class="pay-card-head">
+            <span class="pay-card-icon"><i class="fas fa-calculator"></i></span>
+            <div>
+              <h2 class="pay-card-title">{% trans 'Payment summary' %}</h2>
+              <span class="pay-card-sub">{% trans 'One final look before you pay' %}</span>
+            </div>
+          </header>
+
+          <div class="pay-totals">
+            <div class="pay-row">
+              <span>{% blocktranslate count counter=order.items.count %}Subtotal ({{ counter }} item){% plural %}Subtotal ({{ counter }} items){% endblocktranslate %}</span>
+              <span class="mono">{% price subtotal %}</span>
+            </div>
+            <div class="pay-row">
+              <span>{% trans 'Shipping' %}</span>
+              <span class="mono">{% if order.shipping_cost %}{% price order.shipping_cost %}{% else %}{% trans 'Free' %}{% endif %}</span>
+            </div>
+            <div class="pay-row pay-row-total">
+              <span>{% trans 'Total due' %}</span>
+              <strong class="mono">{% price order.get_total_cost %}</strong>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Payment panel -->
+      <aside class="pay-aside">
+        <div class="pay-panel fade-up fade-up-delay-2">
+          <span class="pay-due-label">{% if cod_mode %}{% trans 'Amount on delivery' %}{% else %}{% trans 'Amount due' %}{% endif %}</span>
+          <strong class="pay-due">{% price order.get_total_cost %}</strong>
+          <span class="pay-ref"><i class="fas fa-hashtag"></i> {% blocktranslate %}Order {{ order.order_number }}{% endblocktranslate %}</span>
+
+          <div class="pay-secure">
+            <span class="pay-secure-line"></span>
+            <span class="pay-shield"><i class="fas fa-shield-halved"></i></span>
+            <span class="pay-secure-text">{% trans 'Encrypted & secure' %}</span>
+            <span class="pay-secure-line"></span>
+          </div>
+
+          {% if cod_mode %}
+          <form method="post" action="{% url 'payments:checkout' order.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="payment_method" value="cod">
+            <input type="hidden" name="confirm" value="1">
+            <button class="pay-btn" type="submit">
+              <i class="fas fa-money-bill-wave pay-btn-lock" aria-hidden="true"></i>
+              <span data-pay-label>{% trans 'Confirm Cash on Delivery order' %}</span>
+              <span class="pay-btn-amount">{% price order.get_total_cost %}</span>
+            </button>
+          </form>
+
+          <form method="post" action="{% url 'payments:checkout' order.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="payment_method" value="online">
+            <button class="pay-btn pay-btn-ghost" type="submit">
+              <i class="fas fa-credit-card" aria-hidden="true"></i>
+              <span>{% trans 'Pay online instead' %}</span>
+            </button>
+          </form>
+
+          <p class="pay-note">
+            <i class="fas fa-circle-info" aria-hidden="true"></i>
+            <span>{% trans "Pay nothing now — the courier will collect the amount in cash when your order is delivered." %}</span>
+          </p>
+
+          <ul class="pay-trust">
+            <li><i class="fas fa-money-bill-wave"></i> {% trans 'Pay the courier on delivery' %}</li>
+            <li><i class="fas fa-truck-fast"></i> {% trans 'Order ships after confirmation' %}</li>
+            <li><i class="fas fa-headset"></i> {% trans 'Support available 7 days a week' %}</li>
+          </ul>
+          {% else %}
+          {% if razorpay_order_id %}
+          <button id="rzp-button" class="pay-btn" type="button">
+            <i class="fas fa-lock pay-btn-lock" aria-hidden="true"></i>
+            <i class="fas fa-spinner fa-spin pay-btn-spin" aria-hidden="true"></i>
+            <span data-pay-label>{% trans 'Pay securely' %}</span>
+            <span class="pay-btn-amount">{% price order.get_total_cost %}</span>
+          </button>
+          {% elif payment_link_url %}
+          <a class="pay-btn" href="{{ payment_link_url }}" rel="noopener">
+            <i class="fas fa-lock pay-btn-lock" aria-hidden="true"></i>
+            <span data-pay-label>{% trans 'Proceed to secure payment' %}</span>
+          </a>
+          {% else %}
+          <button id="rzp-button" class="pay-btn" type="button" disabled>
+            <i class="fas fa-lock pay-btn-lock" aria-hidden="true"></i>
+            <span data-pay-label>{% trans 'Payment unavailable' %}</span>
+          </button>
+          {% endif %}
+
+          {% if payment_link_url %}
+          <a class="pay-fallback" href="{{ payment_link_url }}" rel="noopener">
+            <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
+            <span>{% trans "Checkout not opening? Use the hosted payment page instead" %}</span>
+          </a>
+          {% endif %}
+
+          {% if show_verify %}
+          <form class="pay-verify" method="post" action="{% url 'payments:verify' order.id %}">
+            {% csrf_token %}
+            <button type="submit" class="pay-btn pay-btn-ghost">
+              <i class="fas fa-rotate-right"></i>
+              <span>{% trans "I've already paid — verify my payment" %}</span>
+            </button>
+            <p class="pay-note">
+              <i class="fas fa-circle-info" aria-hidden="true"></i>
+              <span>{% trans "If you were charged but didn't reach the confirmation page, click here before paying again." %}</span>
+            </p>
+          </form>
+          {% endif %}
+
+          <p class="pay-note">
+            <i class="fas fa-circle-info" aria-hidden="true"></i>
+            <span>{% trans "A secure Razorpay window will open to complete your payment, then you'll be brought back here." %}</span>
+          </p>
+
+          <ul class="pay-trust">
+            <li><i class="fas fa-credit-card"></i> {% trans 'UPI, cards, net-banking & wallets' %}</li>
+            <li><i class="fas fa-shield-halved"></i> {% trans 'PCI-DSS compliant gateway' %}</li>
+            <li><i class="fas fa-headset"></i> {% trans 'Support available 7 days a week' %}</li>
+          </ul>
+
+          <form method="post" action="{% url 'payments:checkout' order.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="payment_method" value="cod">
+            <button class="pay-back" type="submit" style="background:none;border:none;cursor:pointer;">
+              <i class="fas fa-money-bill-wave"></i> {% trans 'Prefer Cash on Delivery instead?' %}
+            </button>
+          </form>
+          {% endif %}
+
+          {% if user.is_authenticated %}
+          <a class="pay-back" href="{% url 'order:my_orders' %}">
+            <i class="fas fa-arrow-left"></i> {% trans 'Back to my orders' %}
+          </a>
+          {% else %}
+          <a class="pay-back" href="{% url 'shipping:order_tracking' order.id %}">
+            <i class="fas fa-arrow-left"></i> {% trans 'Back to order' %}
+          </a>
+          {% endif %}
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% if razorpay_order_id %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+var options = {
+    "key": "{{ razorpay_key_id }}",
+    "amount": "{{ amount }}",
+    "currency": "{{ currency }}",
+    "name": "An Ecommerce Site",
+    "description": "Order {{ order.order_number }}",
+    "order_id": "{{ razorpay_order_id }}",
+    "callback_url": "{{ callback_url }}",
+    "prefill": {
+        "name": "{{ order.first_name }} {{ order.last_name }}",
+        "email": "{{ order.email }}",
+        "contact": ""
+    },
+    "theme": {
+        "color": "#EA580C"
+    }
+};
+var rzp = new Razorpay(options);
+</script>
+{% endif %}
+<script>
+(function () {
+    var btn = document.getElementById('rzp-button');
+    if (!btn || typeof rzp === 'undefined') return;
+
+    var label = btn.querySelector('[data-pay-label]');
+    var original = label ? label.textContent : '';
+
+    function setLoading(on) {
+        btn.disabled = on;
+        btn.classList.toggle('is-loading', on);
+        btn.setAttribute('aria-busy', on ? 'true' : 'false');
+        if (label) label.textContent = on ? 'Opening secure payment' : original;
+    }
+
+    btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            rzp.open();
+        } catch (err) {
+            setLoading(false);
+        }
+    });
+
+    if (typeof rzp.on === 'function') {
+        rzp.on('payment.failed', function () {
+            setLoading(false);
+        });
+        rzp.on('modal.closed', function () {
+            setLoading(false);
+        });
+    }
+})();
+</script>
+{% endblock %}

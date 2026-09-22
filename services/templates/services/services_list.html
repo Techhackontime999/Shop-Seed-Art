@@ -1,0 +1,57 @@
+{% extends 'shop/base/base.html' %}
+{% load static %}
+
+{% block title %}Our Services — Shop-Seed{% endblock %}
+
+{% block content %}
+<div class="svc-page">
+  <div class="svc-inner">
+
+    <div class="svc-hero">
+      <div class="svc-hero-glow"></div>
+      <div class="svc-hero-inner">
+        <span class="svc-hero-badge"><i class="fas fa-cogs"></i> Our Services</span>
+        <h1 class="svc-hero-title">Everything your business needs</h1>
+        <p class="svc-hero-sub">Explore the services we provide to keep your shopping experience seamless and enjoyable.</p>
+      </div>
+    </div>
+
+    {% if services %}
+    <div class="svc-grid">
+      {% for service in services %}
+      <div class="svc-card">
+        <div class="svc-card-icon">
+          {% if forloop.counter|divisibleby:"3" %}
+          <i class="fas fa-box-open"></i>
+          {% elif forloop.counter|divisibleby:"2" %}
+          <i class="fas fa-rocket"></i>
+          {% else %}
+          <i class="fas fa-shield-alt"></i>
+          {% endif %}
+        </div>
+        {% if service.image %}
+        <div class="svc-card-media">
+          <img src="{{ service.image.url }}" alt="{{ service.title }}" class="svc-card-img">
+        </div>
+        {% endif %}
+        <div class="svc-card-body">
+          <h3 class="svc-card-title">{{ service.title }}</h3>
+          <p class="svc-card-text">{{ service.description|truncatewords:18 }}</p>
+          <a href="{% url 'services:service_detail' service.pk %}" class="svc-card-btn">
+            Learn More <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="svc-empty">
+      <i class="fas fa-concierge-bell"></i>
+      <h3>No services yet</h3>
+      <p>Our services are coming soon. Check back shortly.</p>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,211 @@
+# =============================================================================
+# Render Blueprint — One-click deploy configuration
+# =============================================================================
+# 1. Push this repo to GitHub
+# 2. Go to https://dashboard.render.com/blueprints
+# 3. Connect your repo — Render auto-detects this file
+# 4. Set the missing SECRET_KEY, FIELD_ENCRYPTION_KEY, RAZORPAY_*, and
+#    SUPERUSER vars manually (marked `sync: false`)
+#
+# Python version is pinned in runtime.txt (python-3.13.3).
+#
+# Plan note: the free tier only includes ONE web service + ONE PostgreSQL
+# database. The background worker and the cron services below require a paid
+# plan (Starter or above). On a purely free deployment, delete the `worker`
+# and `cron` blocks: the site will still run, but background jobs (emails,
+# fulfilment, refund retries) will not drain until a worker process exists.
+# =============================================================================
+databases:
+  - name: ecommerce-db
+    plan: free
+    region: singapore
+    databaseName: ecommerce
+    user: ecommerce_user
+
+# Optional: add a managed Redis to avoid the DatabaseCache backend entirely.
+# Uncomment this block (and the REDIS_URL envVar below) for better performance.
+# Redis is also required for the tracking-sync / exchange-rate cron jobs to
+# share cache state efficiently.
+# redis:
+#   - name: ecommerce-redis
+#     plan: free
+#     region: singapore
+#     maxmemoryPolicy: noeviction
+
+services:
+  - type: web
+    name: ecommerce-site
+    plan: free
+    region: singapore
+    runtime: python
+    buildCommand: bash build.sh
+    # Migrations + cache table + collectstatic run ONCE in preDeployCommand;
+    # the start command must stay a pure gunicorn so they never run twice.
+    startCommand: gunicorn config.wsgi --bind 0.0.0.0:$PORT --workers=2 --access-logfile=-
+    preDeployCommand: bash setup.sh
+    healthCheckPath: /healthz
+    envVars:
+      - key: DJANGO_ENV
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: "true"
+      - key: SECRET_KEY
+        sync: false
+      - key: FIELD_ENCRYPTION_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ecommerce-db
+          property: connectionString
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      # - key: REDIS_URL
+      #   fromService:
+      #     name: ecommerce-redis
+      #     type: redis
+      #     property: connectionString
+      - key: DJANGO_SUPERUSER_USERNAME
+        sync: false
+      - key: DJANGO_SUPERUSER_EMAIL
+        sync: false
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false
+
+  # Async worker — drains the DB-backed job queue: transactional emails,
+  # fulfilment runs and gateway refund retries (see the jobs app). Moves slow
+  # SMTP/courier/gateway work off the checkout & payment-webhook request path.
+  - type: worker
+    name: async-worker
+    plan: free
+    region: singapore
+    runtime: python
+    buildCommand: bash build.sh
+    startCommand: python manage.py run_worker --poll 5 --limit 25
+    envVars:
+      - key: DJANGO_ENV
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: "true"
+      - key: SECRET_KEY
+        sync: false
+      - key: FIELD_ENCRYPTION_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ecommerce-db
+          property: connectionString
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+
+# Scheduled jobs — keep tracking timelines and live FX rates fresh, and keep
+# the free web service warm: `job-reconcile` (every 5 min < the 15-min free
+# spin-down window) also pings KEEPALIVE_URL via `manage.py keepalive`.
+# Free-plan cron services spin up on schedule; upgrade to a worker + Celery
+# beat (with Redis) if the store grows.
+#
+# Note: Render cron jobs today carry a $1/month minimum each, so the keep-alive
+# intentionally rides the existing job-reconcile cron instead of adding a new
+# one. The 750 free instance-hours/month per workspace (~one always-on service)
+# mean the always-on async-worker plus an always-awake web will exceed the cap
+# and trigger suspension; the guaranteed no-spin-down option is a Starter web.
+cron:
+  - type: cron
+    name: refund-reconcile
+    schedule: "*/10 * * * *"
+    runtime: python
+    buildCommand: bash build.sh
+    startCommand: python manage.py reconcile_refunds
+    envVars:
+      - key: DJANGO_ENV
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: "true"
+      - key: SECRET_KEY
+        sync: false
+      - key: FIELD_ENCRYPTION_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ecommerce-db
+          property: connectionString
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+
+  - type: cron
+    name: job-reconcile
+    schedule: "*/5 * * * *"
+    runtime: python
+    buildCommand: bash build.sh
+    # Reconcile the queue, then (re)warm the free web service. `;` keeps the
+    # keep-alive running even if reconciliation errors; keepalive exits
+    # non-zero on a failed ping so the run shows red in the Render dashboard.
+    startCommand: python manage.py reconcile_jobs; python manage.py keepalive
+    envVars:
+      - key: DJANGO_ENV
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: "true"
+      - key: SECRET_KEY
+        sync: false
+      - key: FIELD_ENCRYPTION_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ecommerce-db
+          property: connectionString
+      # The web service's public URL with the /healthz probe, e.g.
+      #   https://<your-app>.onrender.com/healthz
+      - key: KEEPALIVE_URL
+        sync: false
+
+  - type: cron
+    name: tracking-sync
+    schedule: "*/30 * * * *"
+    runtime: python
+    buildCommand: bash build.sh
+    startCommand: python manage.py sync_tracking_status --limit 100 --min-age-hours 1
+    envVars:
+      - key: DJANGO_ENV
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: "true"
+      - key: SECRET_KEY
+        sync: false
+      - key: FIELD_ENCRYPTION_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ecommerce-db
+          property: connectionString
+
+  - type: cron
+    name: exchange-rate-refresh
+    schedule: "0 */12 * * *"
+    runtime: python
+    buildCommand: bash build.sh
+    startCommand: python manage.py update_currency_rates
+    envVars:
+      - key: DJANGO_ENV
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: "true"
+      - key: SECRET_KEY
+        sync: false
+      - key: FIELD_ENCRYPTION_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ecommerce-db
+          property: connectionString

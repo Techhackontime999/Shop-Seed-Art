@@ -1,0 +1,159 @@
+{% extends 'shop/base/base.html' %}
+{% load static %}
+{% load preference_extras %}
+
+{% block title %}Your Orders — Shop-Seed{% endblock %}
+
+{% block content %}
+<div class="seller-dash">
+  <div class="seller-dash-inner">
+
+    <div class="seller-dash-header">
+      <h1 class="seller-dash-title"><i class="fas fa-clipboard-list" style="color: var(--aq-accent);"></i> Your Orders</h1>
+      <form method="get" class="list-search" role="search">
+        <i class="fas fa-search"></i>
+        <input type="search" name="q" value="{{ query }}" placeholder="Search orders…" aria-label="Search orders">
+        {% if query %}
+          <a href="{% url 'seller:orders' %}" class="list-search-clear" title="Clear search" aria-label="Clear search"><i class="fas fa-times"></i></a>
+        {% endif %}
+      </form>
+    </div>
+
+    <div class="seller-dash-stats">
+      <div class="seller-dash-stat-card">
+        <div class="seller-dash-stat-icon" style="background: var(--aq-blue-glow); color: var(--aq-blue);">
+          <i class="fas fa-shopping-cart"></i>
+        </div>
+        <div class="seller-dash-stat-body">
+          <span class="seller-dash-stat-value">{{ total_orders }}</span>
+          <span class="seller-dash-stat-label">Total Orders</span>
+        </div>
+      </div>
+      <div class="seller-dash-stat-card">
+        <div class="seller-dash-stat-icon" style="background: rgba(234, 179, 8, 0.12); color: #CA8A04;">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="seller-dash-stat-body">
+          <span class="seller-dash-stat-value">{{ pending_orders }}</span>
+          <span class="seller-dash-stat-label">Pending</span>
+        </div>
+      </div>
+      <div class="seller-dash-stat-card">
+        <div class="seller-dash-stat-icon" style="background: rgba(34, 197, 94, 0.12); color: #16A34A;">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="seller-dash-stat-body">
+          <span class="seller-dash-stat-value">{{ completed_orders }}</span>
+          <span class="seller-dash-stat-label">Completed</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="seller-dash-table-section">
+      <div class="seller-dash-table-header">
+        <h2><i class="fas fa-receipt"></i> Order Items</h2>
+        {% if order_items %}
+          <span class="seller-dash-count-badge">{{ order_items|length }} total</span>
+        {% endif %}
+      </div>
+
+      {% if order_items %}
+      <div class="seller-dash-table-wrap">
+        <table class="seller-dash-table">
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Customer</th>
+              <th>Product</th>
+              <th>Qty</th>
+              <th>Total</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Fulfilment</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order_items %}
+            <tr>
+              <td>
+                <div class="seller-dash-product-name">{{ item.order.order_number }}</div>
+                <div class="seller-dash-product-sku"><i class="fas fa-user"></i> {{ item.order.first_name }} {{ item.order.last_name }}</div>
+              </td>
+              <td class="seller-dash-date">{{ item.order.address|truncatechars:32 }}</td>
+              <td>
+                <div class="seller-dash-product-cell">
+                  {% if item.product.image %}
+                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="seller-dash-product-thumb">
+                  {% else %}
+                    <div class="seller-dash-product-thumb seller-dash-product-thumb-placeholder">
+                      <i class="fas fa-box"></i>
+                    </div>
+                  {% endif %}
+                  <div>
+                    <div class="seller-dash-product-name">{{ item.product.name }}</div>
+                    <div class="seller-dash-product-sku">{% if item.variant_name %}{{ item.variant_name }} · {% endif %}{{ item.product.brand|default:"No brand" }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ item.quantity }}</td>
+              <td class="seller-dash-price">{% price item.get_cost %}</td>
+              <td class="seller-dash-date">{{ item.order.created|date:"M d, Y" }}</td>
+              <td>
+                {% if item.order.paid %}
+                  <span class="seller-dash-badge seller-dash-badge-active"><i class="fas fa-check-circle"></i> Paid</span>
+                {% else %}
+                  <span class="seller-dash-badge seller-dash-badge-inactive"><i class="fas fa-clock"></i> Pending</span>
+                {% endif %}
+              </td>
+              <td>
+                {% with shipments=item.order.logistics_shipments.all %}
+                  {% if shipments %}
+                    {% for shipment in shipments %}
+                      <div class="seller-dash-product-name">
+                        {{ shipment.courier.name|default:"—" }}
+                        {% if shipment.tracking_number %}
+                          · <a href="{% url 'logistics:tracking_detail' shipment.tracking_number %}" style="color: var(--aq-accent);">{{ shipment.tracking_number }}</a>
+                        {% endif %}
+                      </div>
+                      <span class="seller-dash-badge" style="background: rgba(16, 185, 129, 0.12); color: #10B981;">{{ shipment.get_status_display }}</span>
+                    {% endfor %}
+                  {% else %}
+                    <span class="seller-dash-product-sku">Not yet fulfilled</span>
+                  {% endif %}
+                {% endwith %}
+              </td>
+              <td>
+                {% if not item.order.paid %}
+                  <form method="post" action="{% url 'seller:update_order_status' item.order.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="seller-dash-btn-primary seller-dash-btn-sm">
+                      <i class="fas fa-box"></i> Confirm Order
+                    </button>
+                  </form>
+                {% else %}
+                  <span class="seller-dash-product-sku"><i class="fas fa-check-circle" style="color: #16A34A;"></i> Completed</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="seller-dash-empty">
+        <i class="fas fa-clipboard-list"></i>
+        {% if query %}
+          <p>No orders match “{{ query }}”</p>
+          <a href="{% url 'seller:orders' %}" class="seller-dash-btn-primary"><i class="fas fa-times"></i> Clear search</a>
+        {% else %}
+          <p>No orders yet</p>
+          <a href="{% url 'seller:seller_dashboard' %}" class="seller-dash-btn-primary"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

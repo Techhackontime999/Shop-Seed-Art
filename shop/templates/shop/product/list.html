@@ -1,0 +1,281 @@
+{% extends "shop/base/base.html" %}
+{% load static %}
+{% load i18n %}
+{% load preference_extras %}
+
+{% block title %}
+{% if category %}{{ category.name }}{% else %}Shop — Shop-Seed{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="{% if category %}Browse {{ category.name }} products at Shop-Seed.{% else %}Shop a wide range of products at Shop-Seed.{% endif %}">
+{% endblock %}
+
+{% block extra_head %}
+{% if category %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ category.get_absolute_url }}">{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="container-aq" style="padding-top:6rem;">
+  <div class="breadcrumb-aq">
+    <a href="{% url 'shop:home' %}">Home</a>
+    <span class="sep"><i class="fas fa-chevron-right"></i></span>
+    {% if category %}
+    <a href="{% url 'shop:product_list' %}">Shop</a>
+    <span class="sep"><i class="fas fa-chevron-right"></i></span>
+    <span class="current">{{ category.name }}</span>
+    {% else %}
+    <span class="current">Shop</span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Products Section -->
+<section class="section-aq" style="padding-top:1rem;">
+  <div class="container-aq">
+    <div class="row">
+      <!-- Sidebar -->
+      <div class="col-md-3 order-1 order-md-1 mb-4 mb-md-0">
+        <div class="fade-up">
+          <aside class="glass-card" style="padding:1.5rem;border-radius:var(--aq-radius-md);">
+            <h3 style="font-size:0.8125rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--aq-tertiary);margin-bottom:1.25rem;font-weight:600;">
+              <i class="fas fa-filter" style="margin-right:0.5rem;color:var(--aq-accent);"></i>
+              {% trans 'Categories' %}
+            </h3>            <ul style="list-style:none;padding:0;margin:0;">
+              <li style="margin-bottom:0.375rem;">
+                <a href="{% url 'shop:product_list' %}"
+                   style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border-radius:var(--aq-radius-sm);text-decoration:none;font-size:0.8125rem;font-weight:500;transition:var(--aq-transition);{% if not category %}background:var(--aq-accent-subtle);color:var(--aq-accent-dark);{% else %}color:var(--aq-body);{% endif %}"
+                   onmouseover="this.style.background='var(--aq-accent-subtle)';this.style.color='var(--aq-accent-dark)'"
+                   onmouseout="this.style.background='{% if not category %}var(--aq-accent-subtle){% else %}transparent{% endif %}';this.style.color='{% if not category %}var(--aq-accent-dark){% else %}var(--aq-body){% endif %}'">
+                  <i class="fas fa-th-large" style="font-size:0.6875rem;"></i>
+                  {% trans 'All Products' %}
+                </a>
+              </li>
+              {% for c in categories %}
+              <li style="margin-bottom:0.375rem;">
+                <a href="{{ c.get_absolute_url }}"
+                   style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border-radius:var(--aq-radius-sm);text-decoration:none;font-size:0.8125rem;font-weight:500;transition:var(--aq-transition);{% if category and category.slug == c.slug %}background:var(--aq-accent-subtle);color:var(--aq-accent-dark);{% else %}color:var(--aq-body);{% endif %}"
+                   onmouseover="this.style.background='var(--aq-accent-subtle)';this.style.color='var(--aq-accent-dark)'"
+                   onmouseout="this.style.background='{% if category and category.slug == c.slug %}var(--aq-accent-subtle){% else %}transparent{% endif %}';this.style.color='{% if category and category.slug == c.slug %}var(--aq-accent-dark){% else %}var(--aq-body){% endif %}'">
+                  <i class="fas fa-tag" style="font-size:0.6875rem;"></i>
+                  {{ c.name }}
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+          </aside>
+        </div>
+      </div>
+
+      <!-- Product Grid -->
+      <div class="col-md-9 order-2 order-md-2">
+        <div class="d-flex align-items-center justify-content-between mb-4 fade-up">
+          <div>
+            <h2 style="font-size:1.375rem;font-weight:600;margin:0;">
+              {% if category %}{{ category.name }}{% else %}{% trans 'All Products' %}{% endif %}
+            </h2>
+            <p style="font-size:0.75rem;color:var(--aq-tertiary);margin:0.25rem 0 0;">
+              {{ products.paginator.count }} product{{ products.paginator.count|pluralize }}
+            </p>
+          </div>
+        </div>
+
+        <div class="products-aq-rows">
+          {% for row in product_rows %}
+          <div class="products-aq-row-wrap">
+            <button type="button" class="products-aq-arrow products-aq-arrow-prev" data-row-scroll="prev" aria-label="{% trans 'Scroll left' %}"><i class="fas fa-chevron-left"></i></button>
+            <div class="products-aq-row" data-row>
+            {% for product in row %}
+            <div class="product-aq-card fade-up" style="transition-delay:{% widthratio forloop.counter0 1 60 %}ms">
+              <a href="{{ product.get_absolute_url }}" style="text-decoration:none;color:inherit;">
+                <div class="product-aq-image">
+                  {% if product.image %}
+                  <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                  {% else %}
+                  <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--aq-accent);font-size:2.5rem;">
+                    <i class="fas fa-box-open"></i>
+                  </div>
+                  {% endif %}
+                  {% if product.current_price and product.current_price < product.price %}
+                  <span class="product-aq-tag sale">{% trans 'Sale' %}</span>
+                  {% else %}
+                  <span class="product-aq-tag new">{% trans 'New' %}</span>
+                  {% endif %}
+                </div>
+                <div class="product-aq-body">
+                  <h3>{{ product.name }}</h3>
+                  <p class="desc">{{ product.description|truncatewords:10|richtext }}</p>
+                  {% with total=product.average_rating %}
+                  <div class="product-aq-rating">
+                    <span class="stars">
+                      {% if total %}
+                      {% for i in "12345"|make_list %}
+                        {% if forloop.counter <= total|floatformat:"0"|add:"0" %}
+                        <i class="fas fa-star"></i>
+                        {% elif forloop.counter == total|add:"0.5"|floatformat:"0"|add:"0" %}
+                        <i class="fas fa-star-half-alt"></i>
+                        {% else %}
+                        <i class="far fa-star"></i>
+                        {% endif %}
+                      {% endfor %}
+                      {% else %}
+                      <i class="far fa-star"></i>
+                      <i class="far fa-star"></i>
+                      <i class="far fa-star"></i>
+                      <i class="far fa-star"></i>
+                      <i class="far fa-star"></i>
+                      {% endif %}
+                    </span>
+                    {% if product.rating_count %}
+                    <span class="count">({{ product.rating_count }})</span>
+                    {% endif %}
+                  </div>
+                  {% endwith %}
+                  <div class="product-aq-price">
+                    {% if product.current_price and product.current_price != product.price %}
+                    <span>{% price product.current_price %}</span>
+                    <span class="original">{% price product.price %}</span>
+                    {% else %}
+                    <span>{% price product.price %}</span>
+                    {% endif %}
+                  </div>
+                  <div class="product-aq-actions">
+                    <a href="{{ product.get_absolute_url }}" class="btn-aq btn-aq-primary" style="padding:0.5rem 1.125rem;font-size:0.75rem;width:100%;justify-content:center;">
+                      {% trans 'View Details' %}
+                    </a>
+                  </div>
+                </div>
+              </a>
+            </div>
+            {% endfor %}
+            </div>
+            <button type="button" class="products-aq-arrow products-aq-arrow-next" data-row-scroll="next" aria-label="{% trans 'Scroll right' %}"><i class="fas fa-chevron-right"></i></button>
+          </div>
+          {% empty %}
+          <div class="empty-aq">
+            <div class="empty-aq-icon"><i class="fas fa-box-open"></i></div>
+            <h3>{% trans 'No products found' %}</h3>
+            <p>{% trans 'This category is being restocked. Check back soon for new arrivals.' %}</p>
+            <a href="{% url 'shop:product_list' %}" class="btn-aq btn-aq-primary">{% trans 'Browse All' %}</a>
+          </div>
+          {% endfor %}
+        </div>
+
+        {% if products.has_other_pages %}
+        <div class="pagination-aq fade-up">
+          {% if products.has_previous %}
+          <a href="?page={{ products.previous_page_number }}"><i class="fas fa-chevron-left"></i></a>
+          {% endif %}
+          {% for num in products.paginator.page_range %}
+            {% if products.number == num %}
+            <span class="current">{{ num }}</span>
+            {% else %}
+            <a href="?page={{ num }}">{{ num }}</a>
+            {% endif %}
+          {% endfor %}
+          {% if products.has_next %}
+          <a href="?page={{ products.next_page_number }}"><i class="fas fa-chevron-right"></i></a>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Suggested products slider -->
+        {% if suggested_products %}
+        <section class="td-slider-section" style="margin-top:2.5rem;">
+          <div class="td-slider-header">
+            <div class="td-slider-heading">
+              <h2 class="td-slider-title"><i class="fas fa-fire"></i> {% trans 'You Might Also Like' %}</h2>
+              <p class="td-slider-sub">
+                {% if category %}{% blocktranslate %}More from {{ category.name }}{% endblocktranslate %}{% else %}{% trans 'Popular picks from our shop' %}{% endif %}
+              </p>
+            </div>
+            <div class="td-slider-nav">
+              <button type="button" class="td-slider-btn" data-slider="prev" aria-label="{% trans 'Scroll left' %}"><i class="fas fa-chevron-left"></i></button>
+              <button type="button" class="td-slider-btn" data-slider="next" aria-label="{% trans 'Scroll right' %}"><i class="fas fa-chevron-right"></i></button>
+            </div>
+          </div>
+          <div class="td-slider-track" data-slider-track>
+            {% for product in suggested_products %}
+            <div class="td-slide">
+              <a href="{{ product.get_absolute_url }}" class="td-slide-link">
+                <div class="td-slide-media">
+                  {% if product.image %}
+                  <img src="{{ product.image.url }}" alt="{{ product.name }}" class="td-slide-img">
+                  {% else %}
+                  <div class="td-slide-img td-slide-img-placeholder"><i class="fas fa-box-open"></i></div>
+                  {% endif %}
+                </div>
+                <div class="td-slide-body">
+                  <h3 class="td-slide-title">{{ product.name }}</h3>
+                  <div class="td-slide-prices">
+                    {% if product.current_price != product.price %}
+                    <span class="td-slide-price">{% price product.current_price %}</span>
+                    <del class="td-slide-old-price">{% price product.price %}</del>
+                    {% else %}
+                    <span class="td-slide-price">{% price product.price %}</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('.products-aq-row-wrap').forEach(function (wrap) {
+    var row = wrap.querySelector('[data-row]');
+    var prev = wrap.querySelector('[data-row-scroll="prev"]');
+    var next = wrap.querySelector('[data-row-scroll="next"]');
+    var firstCard = row.querySelector('.product-aq-card');
+    var step = firstCard ? firstCard.offsetWidth + 20 : 280;
+
+    function updateArrows() {
+      var atStart = row.scrollLeft <= 0;
+      var atEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 1;
+      prev.classList.toggle('is-disabled', atStart);
+      next.classList.toggle('is-disabled', atEnd);
+    }
+
+    prev.addEventListener('click', function () {
+      row.scrollBy({ left: -step, behavior: 'smooth' });
+    });
+    next.addEventListener('click', function () {
+      row.scrollBy({ left: step, behavior: 'smooth' });
+    });
+    row.addEventListener('scroll', updateArrows);
+    window.addEventListener('resize', updateArrows);
+    updateArrows();
+
+    row.addEventListener('wheel', function (e) {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        e.preventDefault();
+        row.scrollLeft += e.deltaX;
+      }
+    }, { passive: false });
+  });
+
+  document.querySelectorAll('[data-slider-track]').forEach(function (track) {
+    var section = track.closest('.td-slider-section');
+    var prev = section.querySelector('[data-slider="prev"]');
+    var next = section.querySelector('[data-slider="next"]');
+    var firstCard = track.querySelector('.td-slide');
+    var step = firstCard ? firstCard.offsetWidth + 16 : 280;
+
+    prev.addEventListener('click', function () {
+      track.scrollBy({ left: -step, behavior: 'smooth' });
+    });
+    next.addEventListener('click', function () {
+      track.scrollBy({ left: step, behavior: 'smooth' });
+    });
+  });
+</script>
+{% endblock %}
