@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Shop-Seed Loader Experience System — Engine (Phase 1)
+   Shop-Seed Art Loader Experience System — Engine (Phase 1)
 
    - Initial loader: rendered by the server (instant paint), decided + animated
      here, finished as soon as the page is ready (with a minimum display time).
@@ -75,7 +75,7 @@
       mark = el('span', 'ss-brand__mark' + (pulse ? ' is-pulse' : ''));
       mark.textContent = cfg.logoMark || 'S';
     }
-    var name = el('span', 'ss-brand__name', cfg.logo_text || cfg.siteName || 'Shop-Seed');
+    var name = el('span', 'ss-brand__name', cfg.logo_text || cfg.siteName || 'Shop-Seed Art');
     return { mark: mark, name: name };
   }
 
@@ -388,7 +388,7 @@
     var overlay = document.getElementById('ss-loader');
     if (overlay) {
       cfg.logoMark = overlay.getAttribute('data-mark') || 'S';
-      cfg.siteName = overlay.getAttribute('data-site-name') || cfg.logo_text || 'Shop-Seed';
+      cfg.siteName = overlay.getAttribute('data-site-name') || cfg.logo_text || 'Shop-Seed Art';
     }
     currentConfig = cfg;
     cacheConfig(cfg);

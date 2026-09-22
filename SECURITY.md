@@ -1,6 +1,6 @@
 # Security Policy
 
-Shop-Seed handles payments, personal data, and courier credentials. We take
+Shop-Seed Art handles payments, personal data, and courier credentials. We take
 security seriously and ask that you report vulnerabilities responsibly.
 
 ## Supported Versions

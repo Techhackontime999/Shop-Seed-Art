@@ -67,7 +67,7 @@ def send_email_verification(request, user):
     link = request.build_absolute_uri(reverse('accounts:verify_email', args=[uid, token]))
     try:
         send_mail(
-            subject='Verify your email — Shop-Seed',
+            subject='Verify your email — Shop-Seed Art',
             message='',
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
@@ -92,7 +92,7 @@ def send_phone_otp(request, user):
     request.session.modified = True
     try:
         send_mail(
-            subject='Your phone verification code — Shop-Seed',
+            subject='Your phone verification code — Shop-Seed Art',
             message='',
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
@@ -125,7 +125,7 @@ def signup(request):
             notify(
                 user,
                 Notification.Category.ACCOUNT,
-                'Welcome to Shop-Seed!',
+                'Welcome to Shop-Seed Art!',
                 'Your customer account was created. Complete email and phone verification to unlock everything.',
                 link=reverse('accounts:verify'),
                 icon='user-plus',
@@ -226,8 +226,8 @@ def seller_register(request):
             notify(
                 user,
                 Notification.Category.ACCOUNT,
-                'Welcome to Shop-Seed sellers!',
-                'Your seller account was created. Complete verification to start selling on Shop-Seed.',
+                'Welcome to Shop-Seed Art sellers!',
+                'Your seller account was created. Complete verification to start selling on Shop-Seed Art.',
                 link=reverse('accounts:verify'),
                 icon='store',
             )
@@ -277,7 +277,7 @@ def become_seller(request):
                 request.user,
                 Notification.Category.ACCOUNT,
                 'Welcome to the seller family!',
-                'Your shop is live. Complete verification and start selling on Shop-Seed.',
+                'Your shop is live. Complete verification and start selling on Shop-Seed Art.',
                 link=reverse('seller:seller_dashboard'),
                 icon='store',
             )

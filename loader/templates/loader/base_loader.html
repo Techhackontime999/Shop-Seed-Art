@@ -6,9 +6,9 @@
      class="ss-loader ss-loader--{{ loader_config.initial_type }}"
      data-type="{{ loader_config.initial_type }}"
      data-mark="{{ platform_settings.logo_mark|default:'S' }}"
-     data-site-name="{{ platform_settings.site_name|default:'Shop-Seed' }}"
+     data-site-name="{{ platform_settings.site_name|default:'Shop-Seed Art' }}"
      style="--ss-bg: {{ loader_config.background_color }}; --ss-accent: {{ loader_config.accent_color }};"
-     role="status" aria-live="polite" aria-label="{% trans 'Loading Shop-Seed' %}">
+     role="status" aria-live="polite" aria-label="{% trans 'Loading Shop-Seed Art' %}">
   <div class="ss-loader__scene">
     {% if loader_config.initial_type == 'seed' %}
     <div class="ss-seed">
@@ -25,7 +25,7 @@
       {% else %}
       <span class="ss-brand__mark is-pulse">{{ platform_settings.logo_mark|default:'S' }}</span>
       {% endif %}
-      <span class="ss-brand__name">{{ loader_config.logo_text|default:platform_settings.site_name|default:'Shop-Seed' }}</span>
+      <span class="ss-brand__name">{{ loader_config.logo_text|default:platform_settings.site_name|default:'Shop-Seed Art' }}</span>
     </span>
     {% elif loader_config.initial_type == 'logo' %}
     <span class="ss-brand">
@@ -37,7 +37,7 @@
         {{ platform_settings.logo_mark|default:'S' }}
         {% endif %}
       </span>
-      <span class="ss-brand__name">{{ loader_config.logo_text|default:platform_settings.site_name|default:'Shop-Seed' }}</span>
+      <span class="ss-brand__name">{{ loader_config.logo_text|default:platform_settings.site_name|default:'Shop-Seed Art' }}</span>
     </span>
     {% elif loader_config.initial_type == 'spinner' %}
     <span class="ss-spinner"></span>

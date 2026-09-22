@@ -1,6 +1,6 @@
 # Contributors
 
-Shop-Seed is developed and maintained by its owner and the open-source
+Shop-Seed Art is developed and maintained by its owner and the open-source
 contributors listed below. Thank you to everyone who has helped improve the
 platform — bug reports, fixes, features, tests, and documentation all count.
 

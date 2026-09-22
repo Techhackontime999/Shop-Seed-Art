@@ -67,10 +67,10 @@ def loader_studio_view(request):
     try:
         from platform_studio.utils import get_site_settings
         site_settings = get_site_settings()
-        studio_config['site_name'] = site_settings.get('site_name', 'Shop-Seed')
+        studio_config['site_name'] = site_settings.get('site_name', 'Shop-Seed Art')
         studio_config['logo_mark'] = site_settings.get('logo_mark', 'S')
     except Exception:
-        studio_config['site_name'] = 'Shop-Seed'
+        studio_config['site_name'] = 'Shop-Seed Art'
         studio_config['logo_mark'] = 'S'
     pages = config.skeleton_pages or {}
     skeleton_page_checks = [(key, label, pages.get(key, True)) for key, label in SKELETON_PAGE_TYPES]

@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report a problem with Shop-Seed
+about: Report a problem with Shop-Seed Art
 title: "[Bug] "
 labels: bug
 assignees: ''

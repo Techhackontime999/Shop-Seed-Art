@@ -16,25 +16,25 @@
 # fulfilment, refund retries) will not drain until a worker process exists.
 # =============================================================================
 databases:
-  - name: ecommerce-db
+  - name: shop-seed-art-db
     plan: free
     region: singapore
-    databaseName: ecommerce
-    user: ecommerce_user
+    databaseName: shop_seed_art
+    user: shop_seed_art_user
 
 # Optional: add a managed Redis to avoid the DatabaseCache backend entirely.
 # Uncomment this block (and the REDIS_URL envVar below) for better performance.
 # Redis is also required for the tracking-sync / exchange-rate cron jobs to
 # share cache state efficiently.
 # redis:
-#   - name: ecommerce-redis
+#   - name: shop-seed-art-redis
 #     plan: free
 #     region: singapore
 #     maxmemoryPolicy: noeviction
 
 services:
   - type: web
-    name: ecommerce-site
+    name: shop-seed-art
     plan: free
     region: singapore
     runtime: python
@@ -55,7 +55,7 @@ services:
         sync: false
       - key: DATABASE_URL
         fromDatabase:
-          name: ecommerce-db
+          name: shop-seed-art-db
           property: connectionString
       - key: RAZORPAY_KEY_ID
         sync: false
@@ -65,7 +65,7 @@ services:
         sync: false
       # - key: REDIS_URL
       #   fromService:
-      #     name: ecommerce-redis
+      #     name: shop-seed-art-redis
       #     type: redis
       #     property: connectionString
       - key: DJANGO_SUPERUSER_USERNAME
@@ -96,7 +96,7 @@ services:
         sync: false
       - key: DATABASE_URL
         fromDatabase:
-          name: ecommerce-db
+          name: shop-seed-art-db
           property: connectionString
       - key: RAZORPAY_KEY_ID
         sync: false
@@ -134,7 +134,7 @@ cron:
         sync: false
       - key: DATABASE_URL
         fromDatabase:
-          name: ecommerce-db
+          name: shop-seed-art-db
           property: connectionString
       - key: RAZORPAY_KEY_ID
         sync: false
@@ -163,10 +163,10 @@ cron:
         sync: false
       - key: DATABASE_URL
         fromDatabase:
-          name: ecommerce-db
+          name: shop-seed-art-db
           property: connectionString
       # The web service's public URL with the /healthz probe, e.g.
-      #   https://<your-app>.onrender.com/healthz
+      #   https://shop-seed-art.onrender.com/healthz
       - key: KEEPALIVE_URL
         sync: false
 
@@ -187,7 +187,7 @@ cron:
         sync: false
       - key: DATABASE_URL
         fromDatabase:
-          name: ecommerce-db
+          name: shop-seed-art-db
           property: connectionString
 
   - type: cron
@@ -207,5 +207,5 @@ cron:
         sync: false
       - key: DATABASE_URL
         fromDatabase:
-          name: ecommerce-db
+          name: shop-seed-art-db
           property: connectionString

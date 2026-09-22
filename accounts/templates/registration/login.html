@@ -2,7 +2,7 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}{% trans 'Login' %} — Shop-Seed{% endblock %}
+{% block title %}{% trans 'Login' %} — Shop-Seed Art{% endblock %}
 
 {% block news_ticker %}{% endblock %}
 
@@ -17,7 +17,7 @@
   <div class="auth-card">
     <div class="auth-brand">
       <span class="auth-logo"><i class="fas fa-store"></i></span>
-      <span class="auth-brand-name">Shop-Seed</span>
+      <span class="auth-brand-name">Shop-Seed Art</span>
     </div>
 
     <h1 class="auth-title">{% trans 'Welcome back' %}</h1>
@@ -70,14 +70,14 @@
       </button>
     </form>
 
-    <div class="auth-divider"><span>{% trans 'New to Shop-Seed?' %}</span></div>
+    <div class="auth-divider"><span>{% trans 'New to Shop-Seed Art?' %}</span></div>
 
     <a href="{% url 'accounts:signup' %}" class="auth-btn-ghost">
       <i class="fas fa-user-plus"></i> {% trans 'Create an account' %}
     </a>
 
     <div class="auth-extra">
-      <a href="{% url 'accounts:seller_register' %}" class="auth-link"><i class="fas fa-store-alt"></i> {% trans 'Want to sell on Shop-Seed?' %}</a>
+      <a href="{% url 'accounts:seller_register' %}" class="auth-link"><i class="fas fa-store-alt"></i> {% trans 'Want to sell on Shop-Seed Art?' %}</a>
     </div>
 
     <p class="auth-footer">

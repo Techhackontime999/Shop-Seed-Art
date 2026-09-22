@@ -9,7 +9,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-08-01 01:27+0000\n"
 "PO-Revision-Date: 2026-08-01 01:27+0000\n"
-"Last-Translator: Shop-Seed Team <translations@shop-seed.local>\n"
+"Last-Translator: Shop-Seed Art Team <translations@shop-seed.local>\n"
 "Language-Team: French <LL@li.org>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
@@ -51,8 +51,8 @@ msgid "Site Settings"
 msgstr "Paramètres du site"
 
 #: preferences/templates/preferences/settings.html:21
-msgid "Set how Shop-Seed looks and feels for you — theme, language, currency, font and accent color."
-msgstr "Choisissez l'apparence de Shop-Seed — thème, langue, devise, police et couleur d'accent."
+msgid "Set how Shop-Seed Art looks and feels for you — theme, language, currency, font and accent color."
+msgstr "Choisissez l'apparence de Shop-Seed Art — thème, langue, devise, police et couleur d'accent."
 
 #: preferences/templates/preferences/settings.html:30
 msgid "Saved!"
@@ -226,8 +226,8 @@ msgstr "Vendez avec nous"
 
 #: shop/templates/shop/base/footer.html:57
 #: shop/templates/shop/base/navbar.html:92
-msgid "Join Shop-Seed"
-msgstr "Rejoindre Shop-Seed"
+msgid "Join Shop-Seed Art"
+msgstr "Rejoindre Shop-Seed Art"
 
 #: shop/templates/shop/base/footer.html:58
 msgid "Documentation"
@@ -242,8 +242,8 @@ msgid "Terms of Service"
 msgstr "Conditions d'utilisation"
 
 #: shop/templates/shop/base/footer.html:66
-msgid "&copy; 2026 Shop-Seed. All rights reserved."
-msgstr "© 2026 Shop-Seed. Tous droits réservés."
+msgid "&copy; 2026 Shop-Seed Art. All rights reserved."
+msgstr "© 2026 Shop-Seed Art. Tous droits réservés."
 
 #: shop/templates/shop/base/navbar.html:12
 #: shop/templates/shop/base/navbar.html:82

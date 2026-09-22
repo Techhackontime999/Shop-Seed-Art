@@ -1,7 +1,7 @@
 {% extends 'shop/base/base.html' %}
 {% load static %}
 
-{% block title %}Best Sellers — Shop-Seed{% endblock %}
+{% block title %}Best Sellers — Shop-Seed Art{% endblock %}
 
 {% block content %}
 <div class="bs-page">
@@ -10,7 +10,7 @@
     <div class="bs-header">
       <div class="bs-header-text">
         <h1 class="bs-title"><i class="fas fa-trophy"></i> Best Sellers</h1>
-        <p class="bs-subtitle">Top-rated sellers on Shop-Seed</p>
+        <p class="bs-subtitle">Top-rated sellers on Shop-Seed Art</p>
       </div>
       <div class="bs-header-end">
         <form class="bs-search" method="GET" action="{% url 'seller:best_sellers' %}">
@@ -92,7 +92,7 @@
     <div class="bs-empty">
       <i class="fas fa-store-slash"></i>
       <h3>No sellers found</h3>
-      <p>Check back later for new sellers joining Shop-Seed.</p>
+      <p>Check back later for new sellers joining Shop-Seed Art.</p>
     </div>
     {% endif %}
 

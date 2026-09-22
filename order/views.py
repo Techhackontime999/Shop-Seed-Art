@@ -238,7 +238,7 @@ def my_orders(request):
 
 
 NOMINATIM_URL = 'https://nominatim.openstreetmap.org/reverse'
-NOMINATIM_HEADERS = {'User-Agent': 'Shop-Seed checkout autofill (contact@shopseed.com)'}
+NOMINATIM_HEADERS = {'User-Agent': 'Shop-Seed Art checkout autofill (contact@shopseed.com)'}
 
 
 def _join_parts(parts):

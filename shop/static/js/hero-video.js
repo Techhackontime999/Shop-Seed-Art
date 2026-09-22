@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   Shop-Seed — Theme-Aware Video Hero
+   Shop-Seed Art — Theme-Aware Video Hero
    -----------------------------------------------------------------------
    Autoplays the light/dark theme-matched hero video (muted, looping),
    swaps the video the moment the visitor toggles the theme, fades the

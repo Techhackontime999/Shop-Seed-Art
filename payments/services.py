@@ -213,7 +213,7 @@ def _post_capture_side_effects(order, payment):
         order.user,
         Notification.Category.PAYMENT,
         f'Payment received for order {order.order_number}',
-        f'Your payment of {payment.amount} {payment.currency} was successful. Thank you for shopping with Shop-Seed!',
+        f'Your payment of {payment.amount} {payment.currency} was successful. Thank you for shopping with Shop-Seed Art!',
         link=reverse('order:my_orders'),
         icon='credit-card',
     )
@@ -435,7 +435,7 @@ def collect_cod_cash(shipment, *, source='system', actor=None):
                 order.user,
                 Notification.Category.PAYMENT,
                 f'Payment collected for order {order.order_number}',
-                f'Cash of {payment.amount} {payment.currency} was collected on delivery. Thank you for shopping with Shop-Seed!',
+                f'Cash of {payment.amount} {payment.currency} was collected on delivery. Thank you for shopping with Shop-Seed Art!',
                 link=reverse('order:my_orders'),
                 icon='hand-coin',
             )
@@ -522,7 +522,7 @@ def mark_payment_failed(payment, message='', source='gateway', actor=None):
     )
 
 
-def refund_payment(payment, amount=None, note='Refund requested via Shop-Seed admin', actor=None, source='admin'):
+def refund_payment(payment, amount=None, note='Refund requested via Shop-Seed Art admin', actor=None, source='admin'):
     """Issue a gateway refund for a captured payment.
 
     Falls back to marking the payment refunded locally when the gateway is not

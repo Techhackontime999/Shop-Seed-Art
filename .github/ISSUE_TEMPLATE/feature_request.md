@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea for Shop-Seed
+about: Suggest an idea for Shop-Seed Art
 title: "[Feature] "
 labels: enhancement
 assignees: ''

@@ -54,7 +54,7 @@ def notify_owner(contact):
         send_mail(
             subject,
             body,
-            getattr(settings, 'DEFAULT_FROM_EMAIL', 'Shop-Seed <no-reply@shop-seed.com>'),
+            getattr(settings, 'DEFAULT_FROM_EMAIL', 'Shop-Seed Art <no-reply@shop-seed.com>'),
             [recipient],
             reply_to=[contact.email],
             fail_silently=True,

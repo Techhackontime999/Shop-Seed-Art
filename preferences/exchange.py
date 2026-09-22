@@ -57,7 +57,7 @@ def _fetch_live():
 
     request = urllib.request.Request(
         url,
-        headers={'User-Agent': 'Shop-Seed/1.0 (e-commerce)'},
+        headers={'User-Agent': 'Shop-Seed Art/1.0 (e-commerce)'},
     )
     with urllib.request.urlopen(request, timeout=12) as resp:
         data = json.loads(resp.read().decode('utf-8'))

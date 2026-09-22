@@ -148,7 +148,7 @@ class DelhiveryAdapter(BaseCourierAdapter):
                     'products': line_items or [{'name': shipment.shipment_number, 'units': 1, 'amount': float(shipment.declared_value or 1)}],
                 }],
                 'pickup_location': {
-                    'name': shipment.warehouse.name if shipment.warehouse else 'Shop-Seed',
+                    'name': shipment.warehouse.name if shipment.warehouse else 'Shop-Seed Art',
                     'address': shipment.warehouse.address_line1 if shipment.warehouse else '',
                     'city': shipment.warehouse.city if shipment.warehouse else '',
                     'pin': shipment.warehouse.pincode if shipment.warehouse else '',

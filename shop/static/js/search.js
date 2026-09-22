@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   Shop-Seed — Advanced Search Autocomplete
+   Shop-Seed Art — Advanced Search Autocomplete
    -----------------------------------------------------------------------
    Powers the navbar search boxes (desktop + mobile). Fetches the
    /api/search/suggest/ JSON endpoint as the user types, then renders an

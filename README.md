@@ -1,11 +1,13 @@
-# Shop-Seed — Django E-Commerce Platform
+# Shop-Seed Art — Django E-Commerce Platform
 
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![Django 5.2](https://img.shields.io/badge/Django-5.2-green.svg)](https://www.djangoproject.com/)
-[![Build](https://github.com/Techhackontime999/An-Ecommerce-Site/actions/workflows/django.yml/badge.svg)](https://github.com/Techhackontime999/An-Ecommerce-Site/actions/workflows/django.yml)
+[![Build](https://github.com/Techhackontime999/Shop-Seed-Art/actions/workflows/django.yml/badge.svg)](https://github.com/Techhackontime999/Shop-Seed-Art/actions/workflows/django.yml)
+
+**Production:** https://shop-seed-art.onrender.com
 
 A full-featured, production-ready e-commerce platform built on **Django 5.2**.
-Shop-Seed is a complete marketplace: a multi-currency, multi-language storefront
+Shop-Seed Art is a complete marketplace: a multi-currency, multi-language storefront
 with a seller marketplace, Razorpay payments (cards / UPI / netbanking) plus
 cash-on-delivery, logistics with shipment tracking, coupons and deals, a blog,
 moderated reviews, newsletter double opt-in, and a durable background job queue
@@ -125,7 +127,7 @@ Python 3.12 and 3.13.
 ## Project Structure
 
 ```
-An-Ecommerce-Site/
+Shop-Seed-Art/
 ├── config/                  # Project settings & URL routing
 │   └── settings/
 │       ├── __init__.py      # Picks local/production from DJANGO_ENV
@@ -174,8 +176,8 @@ An-Ecommerce-Site/
 ### Linux / macOS
 
 ```sh
-git clone https://github.com/Techhackontime999/An-Ecommerce-Site.git
-cd An-Ecommerce-Site
+git clone https://github.com/Techhackontime999/Shop-Seed-Art.git
+cd Shop-Seed-Art
 
 python3 -m venv env
 source env/bin/activate
@@ -194,8 +196,8 @@ Open http://localhost:8000 — the admin is at http://localhost:8000/admin/.
 ### Windows
 
 ```bat
-git clone https://github.com/Techhackontime999/An-Ecommerce-Site.git
-cd An-Ecommerce-Site
+git clone https://github.com/Techhackontime999/Shop-Seed-Art.git
+cd Shop-Seed-Art
 
 python -m venv siteenv
 siteenv\Scripts\activate
@@ -320,7 +322,7 @@ and add the cron commands via your platform's scheduler.
 | `SECRET_KEY` | ✅ | unique per deployment |
 | `FIELD_ENCRYPTION_KEY` | ✅ | `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` |
 | `DATABASE_URL` | ✅ | e.g. Render/Supabase PostgreSQL |
-| `SITE_URL` | ✅ | your canonical domain, e.g. `https://www.yourstore.com` — used in emails, invoices, payment links, tracking, SEO previews |
+| `SITE_URL` | ✅ | your canonical domain, e.g. `https://shop-seed-art.onrender.com` — used in emails, invoices, payment links, tracking, SEO previews |
 | `ALLOWED_HOSTS` | recommended | comma-separated hosts; defaults to `RENDER_EXTERNAL_URL` |
 | `CSRF_TRUSTED_ORIGINS` | recommended | comma-separated origins; same as hosts for HTTPS |
 | `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | ✅ | Razorpay live keys |
@@ -334,8 +336,8 @@ and add the cron commands via your platform's scheduler.
 **Branding.** Your store name, tagline, logo letter, support email, copyright
 holder and contact email are all editable at runtime — no code changes needed —
 under **Platform Studio → Brand & Identity** in the admin. `DEFAULT_FROM_EMAIL`
-(preset `Shop-Seed <no-reply@shop-seed.com>`) is overridable via env for a
-custom sender. Every Shop-Seed default (name, logo, emails, demo data) can be
+(preset `Shop-Seed Art <no-reply@shop-seed.com>`) is overridable via env for a
+custom sender. Every Shop-Seed Art default (name, logo, emails, demo data) can be
 replaced to present the platform as your own storefront.
 
 ---
@@ -420,7 +422,7 @@ Contributions are welcome — bug fixes, features and documentation. Please read
 how to run the checks and open a pull request) and follow our
 [Code of Conduct](./CODE_OF_CONDUCT.md).
 
-Because Shop-Seed is a **commercial product**, contributors must agree to the
+Because Shop-Seed Art is a **commercial product**, contributors must agree to the
 [Contributor License Agreement](./CLA.md) (the PR template includes the
 acknowledgement checkbox). Contributors are credited in
 [CONTRIBUTORS.md](./CONTRIBUTORS.md) and may list their work on this project on
@@ -430,7 +432,7 @@ their own portfolios — but must not claim ownership of the project.
 
 ## License
 
-Shop-Seed is released under the **Shop-Seed Commercial License** — see the
+Shop-Seed Art is released under the **Shop-Seed Art Commercial License** — see the
 [LICENSE](./LICENSE) file for the full terms.
 
 In short: a licensed copy may be used, modified, and deployed to operate your

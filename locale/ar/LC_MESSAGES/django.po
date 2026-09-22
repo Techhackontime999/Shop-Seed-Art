@@ -1,14 +1,14 @@
-# Shop-Seed Arabic translation.
-# Copyright (C) 2026 Shop-Seed
-# This file is distributed under the same license as the Shop-Seed package.
+# Shop-Seed Art Arabic translation.
+# Copyright (C) 2026 Shop-Seed Art
+# This file is distributed under the same license as the Shop-Seed Art package.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Shop-Seed 1.0\n"
+"Project-Id-Version: Shop-Seed Art 1.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-08-07 01:54+0000\n"
 "PO-Revision-Date: 2026-08-07 02:10+0000\n"
-"Last-Translator: Shop-Seed <no-reply@shop-seed.com>\n"
+"Last-Translator: Shop-Seed Art <no-reply@shop-seed.com>\n"
 "Language-Team: Arabic <LL@li.org>\n"
 "Language: ar\n"
 "MIME-Version: 1.0\n"
@@ -315,7 +315,7 @@ msgid ""
 "Stay up to date with the latest updates, events, and announcements from Shop-"
 "Seed."
 msgstr ""
-"ابقَ على اطلاع بأحدث التحديثات والفعاليات والإعلانات من Shop-Seed."
+"ابقَ على اطلاع بأحدث التحديثات والفعاليات والإعلانات من Shop-Seed Art."
 
 #: news/templates/news/list.html:31
 msgid "Read more"
@@ -466,10 +466,10 @@ msgstr "إعدادات الموقع"
 
 #: preferences/templates/preferences/settings.html:22
 msgid ""
-"Set how Shop-Seed looks and feels for you — theme, language, currency, font, "
+"Set how Shop-Seed Art looks and feels for you — theme, language, currency, font, "
 "text size and accent color."
 msgstr ""
-"حدّد مظهر Shop-Seed وشعوره — السمة واللغة والعملة والخط وحجم النص ولون "
+"حدّد مظهر Shop-Seed Art وشعوره — السمة واللغة والعملة والخط وحجم النص ولون "
 "التمييز."
 
 #: preferences/templates/preferences/settings.html:40
@@ -703,8 +703,8 @@ msgid "Sell With Us"
 msgstr "بيع معنا"
 
 #: shop/templates/shop/base/footer.html:75
-msgid "Join Shop-Seed"
-msgstr "انضم إلى Shop-Seed"
+msgid "Join Shop-Seed Art"
+msgstr "انضم إلى Shop-Seed Art"
 
 #: shop/templates/shop/base/footer.html:76
 msgid "Documentation"
@@ -724,8 +724,8 @@ msgstr "التنقل الرئيسي"
 
 #: shop/templates/shop/base/navbar.html:9
 #: shop/templates/shop/base/navbar.html:154
-msgid "Shop-Seed home"
-msgstr "الرئيسية Shop-Seed"
+msgid "Shop-Seed Art home"
+msgstr "الرئيسية Shop-Seed Art"
 
 #: shop/templates/shop/base/navbar.html:21
 #: shop/templates/shop/base/navbar.html:248

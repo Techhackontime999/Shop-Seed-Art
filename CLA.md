@@ -1,11 +1,11 @@
-# Shop-Seed Contributor License Agreement (CLA)
+# Shop-Seed Art Contributor License Agreement (CLA)
 
-Thank you for contributing to Shop-Seed. Shop-Seed is a **commercial product**:
-it is sold to paying customers under the Shop-Seed Commercial License. So that
+Thank you for contributing to Shop-Seed Art. Shop-Seed Art is a **commercial product**:
+it is sold to paying customers under the Shop-Seed Art Commercial License. So that
 we (the project owner) can legally include your contributions in what we sell,
 every contribution must be covered by this agreement.
 
-By submitting a pull request to the Shop-Seed repository (or otherwise
+By submitting a pull request to the Shop-Seed Art repository (or otherwise
 submitting code, tests, documentation, assets, or other content to the
 project), you agree to the terms below.
 
@@ -18,13 +18,13 @@ project), you agree to the terms below.
   the Contribution.
 - **"Contribution"** — any original work of authorship, including any
   modifications or additions to an existing work, that you intentionally
-  submit for inclusion in Shop-Seed.
+  submit for inclusion in Shop-Seed Art.
 - **"Submit"** — any form of communication to the project, including but not
   limited to communication on electronic mailing lists, source-code control
   systems, and issue/PR tracking systems, that is for the purpose of
   discussing and improving the project. This does not include communication
   that is conspicuously marked as "not a contribution".
-- **"Licensor"** — Techhackontime999 (AMIT KUMAR), owner of the Shop-Seed
+- **"Licensor"** — Techhackontime999 (AMIT KUMAR), owner of the Shop-Seed Art
   project.
 
 ## 2. Copyright license
@@ -39,7 +39,7 @@ royalty-free, fully sublicensable** right and license to:
   derivative works of it, in any form and through any medium, now known or
   hereafter developed;
 - **relicense the Contribution under any terms whatsoever**, including the
-  Shop-Seed Commercial License, proprietary licenses, or any other license, and
+  Shop-Seed Art Commercial License, proprietary licenses, or any other license, and
   to incorporate the Contribution into proprietary products sold to customers.
 
 ## 3. Patent license

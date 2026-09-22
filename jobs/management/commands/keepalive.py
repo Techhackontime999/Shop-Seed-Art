@@ -8,7 +8,7 @@ the service's health URL on a cadence shorter than the spin-down window.
 It deliberately lives in the existing ``jobs`` cron architecture instead of
 introducing a new dependency, and never runs inside the web request path::
 
-    python manage.py keepalive --url https://your-app.onrender.com/healthz
+    python manage.py keepalive --url https://shop-seed-art.onrender.com/healthz
     python manage.py keepalive                          # uses $KEEPALIVE_URL
 
 Exits 0 only when the target answered HTTP 200. Timeouts, network errors

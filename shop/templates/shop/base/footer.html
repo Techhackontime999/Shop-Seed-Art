@@ -11,7 +11,7 @@
       <div class="footer-aq-brand">
         <a href="{% url 'shop:home' %}" class="nav-aq-logo">
           <span class="logo-mark">{{ platform_settings.logo_mark|default:'S' }}</span>
-          {{ platform_settings.site_name|default:'Shop-Seed' }}
+          {{ platform_settings.site_name|default:'Shop-Seed Art' }}
         </a>
         <p>{{ platform_settings.brand_description|default:"India's most trusted e-commerce platform. Discover premium products at unbeatable prices with fast delivery." }}</p>
         <form class="newsletter-aq" id="newsletter-form" action="{% url 'newsletter:subscribe' %}" method="post" novalidate>
@@ -72,7 +72,7 @@
         <ul id="footer-col-company">
           <li><a href="{% url 'about:about' %}">{% trans "About Us" %}</a></li>
           <li><a href="{% url 'accounts:seller_register' %}">{% trans "Sell With Us" %}</a></li>
-          <li><a href="{% url 'accounts:signup' %}">{% trans "Join Shop-Seed" %}</a></li>
+          <li><a href="{% url 'accounts:signup' %}">{% trans "Join Shop-Seed Art" %}</a></li>
           <li><a href="{% url 'doc:documentation' %}">{% trans "Documentation" %}</a></li>
           <li><a href="{% url 'legal:privacy' %}">{% trans "Privacy Policy" %}</a></li>
           <li><a href="{% url 'legal:terms' %}">{% trans "Terms of Service" %}</a></li>
@@ -82,7 +82,7 @@
     </div>
 
     <div class="footer-aq-bottom">
-      <p>{{ platform_settings.footer_copyright|default:'&copy; 2026 Shop-Seed. All rights reserved.' }}</p>
+      <p>{{ platform_settings.footer_copyright|default:'&copy; 2026 Shop-Seed Art. All rights reserved.' }}</p>
       <div class="payment-icons">
         <i class="fab fa-cc-visa"></i>
         <i class="fab fa-cc-mastercard"></i>

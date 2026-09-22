@@ -52,7 +52,7 @@ def confirm_link(email):
 
 
 def _welcome_email(email):
-    subject = 'Welcome to Shop-Seed — you are subscribed!'
+    subject = 'Welcome to Shop-Seed Art — you are subscribed!'
     html = render_to_string('newsletter/welcome_email.html', {
         'email': email,
         'unsubscribe_url': unsubscribe_link(email),
@@ -72,7 +72,7 @@ def _welcome_email(email):
 
 def _confirmation_email(email):
     """Double opt-in email: the subscriber must click to confirm consent."""
-    subject = 'Please confirm your Shop-Seed subscription'
+    subject = 'Please confirm your Shop-Seed Art subscription'
     html = render_to_string('newsletter/confirm_email.html', {
         'email': email,
         'confirm_url': confirm_link(email),
@@ -114,7 +114,7 @@ def subscribe(request):
     if not created and subscriber.is_confirmed:
         subscriber.is_active = True
         subscriber.save(update_fields=['is_active'])
-        message = 'You are already subscribed to the Shop-Seed newsletter.'
+        message = 'You are already subscribed to the Shop-Seed Art newsletter.'
     else:
         subscriber.is_active = False
         subscriber.is_confirmed = False
@@ -127,7 +127,7 @@ def subscribe(request):
         notify(
             user,
             Notification.Category.PROMO,
-            'Confirm your Shop-Seed subscription',
+            'Confirm your Shop-Seed Art subscription',
             'We sent you a confirmation link — click it to start receiving exclusive deals.',
             link=confirm_link(email) if not (subscriber.is_confirmed and subscriber.is_active) else '/',
             icon='bell',
@@ -163,14 +163,14 @@ def confirm(request, token):
         return render(request, 'newsletter/confirmed.html', {
             'email': email,
             'title': 'You are subscribed!',
-            'message': f'{email} is now subscribed to the Shop-Seed newsletter. '
+            'message': f'{email} is now subscribed to the Shop-Seed Art newsletter. '
                        'Check your inbox for a welcome email.',
         })
 
     return render(request, 'newsletter/confirmed.html', {
         'email': email,
         'title': 'Already subscribed',
-        'message': f'{email} is already confirmed on the Shop-Seed newsletter.',
+        'message': f'{email} is already confirmed on the Shop-Seed Art newsletter.',
     })
 
 
@@ -194,8 +194,8 @@ def unsubscribe(request, token):
         'title': 'You are unsubscribed',
         'message': (
             f'{email} has been removed from our newsletter list. '
-            'You will no longer receive marketing emails from Shop-Seed.'
+            'You will no longer receive marketing emails from Shop-Seed Art.'
             if updated else
-            f'{email} is not currently subscribed to the Shop-Seed newsletter.'
+            f'{email} is not currently subscribed to the Shop-Seed Art newsletter.'
         ),
     })

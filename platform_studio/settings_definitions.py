@@ -99,7 +99,7 @@ _S = setting
 
 ALL_SETTINGS = [
     # ---- Brand & Identity ----
-    _S('site_name', 'Site name', 'brand', 'text', 'Shop-Seed',
+    _S('site_name', 'Site name', 'brand', 'text', 'Shop-Seed Art',
        'Shown in the logo, page titles and metadata.'),
     _S('site_tagline', 'Tagline', 'brand', 'text', 'Premium E-Commerce',
        'Short tagline appended to page titles.'),
@@ -110,7 +110,7 @@ ALL_SETTINGS = [
        'Used in the footer and the about section.'),
     _S('support_email', 'Support email', 'brand', 'text', 'support@shop-seed.com',
        'Public support address.'),
-    _S('copyright_holder', 'Copyright holder', 'brand', 'text', 'Shop-Seed',
+    _S('copyright_holder', 'Copyright holder', 'brand', 'text', 'Shop-Seed Art',
        'Name used in the footer copyright line.'),
 
     # ---- Appearance ----
@@ -152,7 +152,7 @@ ALL_SETTINGS = [
        'One Smarter Store.',
        'Second line of the big hero headline.'),
     _S('hero_tagline', 'Hero tagline', 'homepage', 'textarea',
-       'Discover products, compare options, and shop smarter with Shop-Seed.',
+       'Discover products, compare options, and shop smarter with Shop-Seed Art.',
        'Supporting message under the hero headline.'),
     _S('hero_cta_text', 'Hero primary button', 'homepage', 'text', 'Shop Now'),
     _S('hero_cta_url', 'Hero primary button link', 'homepage', 'text', '/shop/',
@@ -173,7 +173,7 @@ ALL_SETTINGS = [
     _S('hero_scroll_hint', 'Hero scroll hint', 'homepage', 'text', 'Scroll to explore',
        'Text under the hero actions that prompts scrolling.'),
 
-    _S('features_badge', 'Features badge', 'homepage', 'text', 'Why Shop-Seed'),
+    _S('features_badge', 'Features badge', 'homepage', 'text', 'Why Shop-Seed Art'),
     _S('features_heading', 'Features heading', 'homepage', 'text', 'Why Millions Trust Us'),
 
     _S('feature_1_icon', 'Feature 1 icon', 'homepage', 'text', 'fa-truck',
@@ -217,13 +217,13 @@ ALL_SETTINGS = [
     _S('deals_link_text', 'Deals "view all" text', 'homepage', 'text', 'View All Deals'),
 
     _S('testimonial_quote', 'Testimonial quote', 'homepage', 'textarea',
-       "Shop-Seed transformed the way I shop online. The quality is unmatched, delivery is lightning-fast, and their support team genuinely cares. I haven't had a single disappointment in over a year of shopping here."),
+       "Shop-Seed Art transformed the way I shop online. The quality is unmatched, delivery is lightning-fast, and their support team genuinely cares. I haven't had a single disappointment in over a year of shopping here."),
     _S('testimonial_name', 'Testimonial name', 'homepage', 'text', 'Priya Sharma'),
     _S('testimonial_role', 'Testimonial role', 'homepage', 'text', 'Verified Buyer, 24 orders'),
 
     _S('cta_heading', 'Call-to-action heading', 'homepage', 'text', 'Start Shopping Today'),
     _S('cta_text', 'Call-to-action text', 'homepage', 'textarea',
-       'Join millions of satisfied customers who trust Shop-Seed for premium products at the best prices with fast delivery.'),
+       'Join millions of satisfied customers who trust Shop-Seed Art for premium products at the best prices with fast delivery.'),
     _S('cta_button_text', 'Call-to-action button', 'homepage', 'text', 'Get Started Free'),
     _S('cta_button_url', 'Call-to-action button link', 'homepage', 'text', '/accounts/signup/',
        'Relative or absolute URL.'),
@@ -241,7 +241,7 @@ ALL_SETTINGS = [
     _S('show_footer_support', 'Show "Support" column', 'footer', 'boolean', '1'),
     _S('show_footer_company', 'Show "Company" column', 'footer', 'boolean', '1'),
     _S('show_footer_social', 'Show social icons', 'footer', 'boolean', '1'),
-    _S('footer_copyright', 'Copyright line', 'footer', 'text', '© 2026 Shop-Seed. All rights reserved.'),
+    _S('footer_copyright', 'Copyright line', 'footer', 'text', '© 2026 Shop-Seed Art. All rights reserved.'),
     _S('social_twitter', 'Twitter / X URL', 'footer', 'text', '#'),
     _S('social_instagram', 'Instagram URL', 'footer', 'text', '#'),
     _S('social_facebook', 'Facebook URL', 'footer', 'text', '#'),
@@ -250,7 +250,7 @@ ALL_SETTINGS = [
 
     # ---- SEO & Analytics ----
     _S('meta_description', 'Meta description', 'seo', 'textarea',
-       'Shop-Seed — Premium e-commerce platform',
+       'Shop-Seed Art — Premium e-commerce platform',
        'Shown under the page title in search results.'),
     _S('meta_keywords', 'Meta keywords', 'seo', 'text',
        'shop, ecommerce, online shopping, deals, products'),
@@ -268,7 +268,7 @@ ALL_SETTINGS = [
     _S('contact_email', 'Contact email', 'contact', 'text', 'support@shop-seed.com'),
     _S('contact_phone', 'Contact phone', 'contact', 'text', '+1 (800) 123-4567'),
     _S('contact_address', 'Contact address', 'contact', 'textarea',
-       'Shop-Seed HQ, 100 Market Street, New York, NY'),
+       'Shop-Seed Art HQ, 100 Market Street, New York, NY'),
     _S('support_hours', 'Support hours', 'contact', 'text', '24/7'),
 
     # ---- Store Settings ----

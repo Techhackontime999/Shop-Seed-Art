@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   Shop-Seed — Per-Product Loading Skeleton
+   Shop-Seed Art — Per-Product Loading Skeleton
    -----------------------------------------------------------------------
    Shows a shimmering skeleton inside each product image area while that
    product's image is loading, then fades the real image in. Applies to

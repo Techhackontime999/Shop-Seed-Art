@@ -1,6 +1,6 @@
-# Contributing to Shop-Seed
+# Contributing to Shop-Seed Art
 
-Thank you for wanting to contribute to Shop-Seed! This document explains how the
+Thank you for wanting to contribute to Shop-Seed Art! This document explains how the
 repository is organised, the workflow we use, and how to get a change reviewed
 and merged.
 
@@ -48,8 +48,8 @@ Follow the [Local Development](./README.md#local-development) section of the
 README. The short version:
 
 ```sh
-git clone https://github.com/Techhackontime999/An-Ecommerce-Site.git
-cd An-Ecommerce-Site
+git clone https://github.com/Techhackontime999/Shop-Seed-Art.git
+cd Shop-Seed-Art
 
 python3 -m venv env
 source env/bin/activate          # Windows: env\Scripts\activate
@@ -197,7 +197,7 @@ public issue for a live security bug.
 
 ## License and contributions
 
-Shop-Seed is a **commercial product** (see [LICENSE](./LICENSE)). To keep the
+Shop-Seed Art is a **commercial product** (see [LICENSE](./LICENSE)). To keep the
 project saleable while accepting community help, every contribution must be
 covered by the [Contributor License Agreement](./CLA.md):
 
@@ -206,7 +206,7 @@ covered by the [Contributor License Agreement](./CLA.md):
 - By opening a pull request (or checking the CLA box in the PR template), you
   agree to the [CLA](./CLA.md). It grants the project owner a perpetual,
   irrevocable, sublicensable license to use, modify, and **relicense** your
-  contribution as part of the commercial Shop-Seed product.
+  contribution as part of the commercial Shop-Seed Art product.
 - Read the full terms in [CLA.md](./CLA.md) before contributing.
 
 ## Contributor recognition

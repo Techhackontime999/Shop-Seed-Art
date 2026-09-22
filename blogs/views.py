@@ -505,7 +505,7 @@ def product_lookup(request):
     if product is None:
         return JsonResponse({
             'found': False,
-            'error': 'That is not a valid Shop-Seed product link (or the product is unavailable).',
+            'error': 'That is not a valid Shop-Seed Art product link (or the product is unavailable).',
         })
     return JsonResponse({
         'found': True,

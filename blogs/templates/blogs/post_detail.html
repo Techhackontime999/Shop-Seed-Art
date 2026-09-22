@@ -1,7 +1,7 @@
 {% extends "shop/base/base.html" %}
 {% load static %}
 
-{% block title %}{{ post.meta_title|default:post.title }} — Shop-Seed Blog{% endblock %}
+{% block title %}{{ post.meta_title|default:post.title }} — Shop-Seed Art Blog{% endblock %}
 
 {% block extra_css %}
 <meta name="description" content="{{ post.meta_description|default:post.excerpt }}">
@@ -11,7 +11,7 @@
 <meta property="og:type" content="article">
 <meta property="og:url" content="{{ canonical_url }}">
 <meta property="og:description" content="{{ post.meta_description|default:post.excerpt }}">
-<meta property="og:site_name" content="Shop-Seed Blog">
+<meta property="og:site_name" content="Shop-Seed Art Blog">
 <meta property="article:published_time" content="{{ post.publish_at|date:'c' }}">
 <meta property="article:modified_time" content="{{ post.updated|date:'c' }}">
 {% if og_image %}<meta property="og:image" content="{{ og_image }}">{% endif %}
@@ -156,7 +156,7 @@
             </a>
             <div>
               <h4>Written by {{ post.author.username }}</h4>
-              <p>{% if post.author.first_name or post.author.last_name %}{{ post.author.first_name }} {{ post.author.last_name }} · {% endif %}Member of the Shop-Seed community.</p>
+              <p>{% if post.author.first_name or post.author.last_name %}{{ post.author.first_name }} {{ post.author.last_name }} · {% endif %}Member of the Shop-Seed Art community.</p>
               {% if user.is_authenticated and user != post.author %}
               <form method="post" action="{% url 'blogs:toggle_follow' post.author.username %}" style="margin:0.5rem 0 0;">
                 {% csrf_token %}

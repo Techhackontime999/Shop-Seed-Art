@@ -37,7 +37,7 @@ def send_html_email(subject, template_name, context, to_emails, from_email=None)
         return False
     if isinstance(to_emails, str):
         to_emails = [to_emails]
-    context.setdefault('site_name', 'Shop-Seed')
+    context.setdefault('site_name', 'Shop-Seed Art')
     context.setdefault('site_url', getattr(settings, 'SITE_URL', ''))
     try:
         html = render_to_string(template_name, context)
@@ -105,7 +105,7 @@ def send_notification_digest(user, notifications):
     if not user.email:
         return False
     return send_html_email(
-        subject=f'{len(notifications)} new update{"" if len(notifications) == 1 else "s"} from Shop-Seed',
+        subject=f'{len(notifications)} new update{"" if len(notifications) == 1 else "s"} from Shop-Seed Art',
         template_name='emails/notification_digest.html',
         context={'notifications': notifications},
         to_emails=user.email,

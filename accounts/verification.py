@@ -93,7 +93,7 @@ def approve_verification(seller, *, reviewer=None, note=''):
         seller.user,
         'account',
         'You are approved to sell!',
-        f'Your seller verification was approved. You can now add products and start selling on Shop-Seed.'
+        f'Your seller verification was approved. You can now add products and start selling on Shop-Seed Art.'
         + (f' {note}' if note else ''),
         link=reverse('seller:seller_dashboard'),
     )

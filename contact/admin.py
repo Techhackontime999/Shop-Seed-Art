@@ -79,8 +79,8 @@ class ContactMessageAdmin(admin.ModelAdmin):
             try:
                 send_mail(
                     f'Re: {msg.subject}',
-                    f'Dear {msg.name},\n\n{msg.reply}\n\n— Shop-Seed Support',
-                    getattr(settings, 'DEFAULT_FROM_EMAIL', 'Shop-Seed <no-reply@shop-seed.com>'),
+                    f'Dear {msg.name},\n\n{msg.reply}\n\n— Shop-Seed Art Support',
+                    getattr(settings, 'DEFAULT_FROM_EMAIL', 'Shop-Seed Art <no-reply@shop-seed.com>'),
                     [msg.email],
                     fail_silently=False,
                 )

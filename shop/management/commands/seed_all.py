@@ -440,7 +440,7 @@ QUICK_PRESETS = {
 
 
 class Command(BaseCommand):
-    help = 'Seed demo data for every feature of Shop-Seed, with category-matched images.'
+    help = 'Seed demo data for every feature of Shop-Seed Art, with category-matched images.'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -486,7 +486,7 @@ class Command(BaseCommand):
                 self.cfg[key] = max(1, options[key])
 
         self.stdout.write(
-            f'Seeding Shop-Seed database [{options["preset"]} preset]...'
+            f'Seeding Shop-Seed Art database [{options["preset"]} preset]...'
         )
 
         self._create_groups()
@@ -573,8 +573,8 @@ class Command(BaseCommand):
         seller, _ = SellerProfile.objects.get_or_create(
             user=admin,
             defaults={
-                'shop_name': 'Shop-Seed Official', 'phone': '+91-9876543210',
-                'address': 'Mumbai, India', 'description': 'Official store of Shop-Seed.',
+                'shop_name': 'Shop-Seed Art Official', 'phone': '+91-9876543210',
+                'address': 'Mumbai, India', 'description': 'Official store of Shop-Seed Art.',
                 'bank_account': '0000000000000000', 'account_holder_name': 'Admin User',
                 'ifsc_code': 'HDFC0000000', 'bank_name': 'HDFC Bank',
                 'is_verified': True,
@@ -636,7 +636,7 @@ class Command(BaseCommand):
                 user=u,
                 defaults={
                     'shop_name': shop, 'phone': f'+91-{random.randint(7000000000, 9999999999)}',
-                    'address': addr, 'description': f'{shop} sells quality products on Shop-Seed.',
+                    'address': addr, 'description': f'{shop} sells quality products on Shop-Seed Art.',
                     'bank_account': '0000000000000000', 'account_holder_name': shop,
                     'ifsc_code': 'HDFC0000000', 'bank_name': 'HDFC Bank',
                     'is_verified': True,
@@ -1224,7 +1224,7 @@ class Command(BaseCommand):
 
     def _create_stories(self):
         stories = [
-            ('Our Journey', '<p>Shop-Seed started with a vision to make quality products '
+            ('Our Journey', '<p>Shop-Seed Art started with a vision to make quality products '
                             'accessible to everyone.</p>'),
             ('Sustainability Pledge', '<p>We are committed to sustainable packaging and '
                                       'eco-friendly practices.</p>'),
@@ -1241,8 +1241,8 @@ class Command(BaseCommand):
 
     def _create_about(self):
         section, was_created = AboutSection.objects.get_or_create(
-            title='About Shop-Seed',
-            defaults={'content': 'Shop-Seed is India\'s fastest growing e-commerce platform. '
+            title='About Shop-Seed Art',
+            defaults={'content': 'Shop-Seed Art is India\'s fastest growing e-commerce platform. '
                                  'We connect millions of buyers with thousands of sellers across '
                                  'the country, offering everything from electronics to fashion.'},
         )
@@ -1252,10 +1252,10 @@ class Command(BaseCommand):
 
     def _create_team(self):
         members = [
-            ('Rajesh Kumar', 'CEO & Founder', 'Built Shop-Seed from a garage startup into a national marketplace.'),
+            ('Rajesh Kumar', 'CEO & Founder', 'Built Shop-Seed Art from a garage startup into a national marketplace.'),
             ('Sneha Patel', 'CTO', 'Leads engineering and drives our technology roadmap.'),
             ('Amit Singh', 'Head of Operations', 'Keeps 750+ cities humming with reliable deliveries.'),
-            ('Priya Mehta', 'Marketing Director', 'Tells the Shop-Seed story to millions of shoppers.'),
+            ('Priya Mehta', 'Marketing Director', 'Tells the Shop-Seed Art story to millions of shoppers.'),
         ]
         for name, role, bio in members:
             member, was_created = TeamMember.objects.get_or_create(
@@ -1277,7 +1277,7 @@ class Command(BaseCommand):
 
     def _create_documentation(self):
         docs = [
-            ('Getting Started', 'getting-started', '📘', 'Learn how to navigate Shop-Seed and place your first order.'),
+            ('Getting Started', 'getting-started', '📘', 'Learn how to navigate Shop-Seed Art and place your first order.'),
             ('Seller Guide', 'seller-guide', '🛠️', 'Complete guide for sellers to list and manage products.'),
             ('Payment Methods', 'payment-methods', '💳', 'Information about accepted payment methods and security.'),
             ('Shipping & Returns', 'shipping-and-returns', '🚚', 'Everything you need to know about delivery and returns.'),

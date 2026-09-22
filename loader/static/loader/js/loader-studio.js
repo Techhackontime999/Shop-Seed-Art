@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Shop-Seed Loader Studio — live preview for Loader Studio
+   Shop-Seed Art Loader Studio — live preview for Loader Studio
    Reads the saved config (json_script), binds form controls, and drives the
    engine's preview API. Requires loader-engine.js to be loaded first.
    ========================================================================== */
@@ -45,7 +45,7 @@
       accent_color: accent ? accent.value : (base.accent_color || '#ff7a2f'),
       duration_ms: parseInt(duration && duration.value, 10) || 1600,
       logo_text: logoText ? logoText.value : (base.logo_text || ''),
-      siteName: base.site_name || 'Shop-Seed',
+      siteName: base.site_name || 'Shop-Seed Art',
       logoMark: base.logo_mark || 'S',
       logo_image: fileUrl || base.logo_image || '',
       skeleton_pages: {}

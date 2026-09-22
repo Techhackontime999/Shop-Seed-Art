@@ -127,7 +127,7 @@ def _origin_block(shipment):
         ]))
     if shipment.seller:
         return shipment.seller.address
-    return 'Shop-Seed Fulfilment'
+    return 'Shop-Seed Art Fulfilment'
 
 
 def _barcode_drawing(value, width=120 * mm, height=30 * mm):
@@ -173,7 +173,7 @@ def generate_label_pdf(shipment):
 
     # Header
     header = Table(
-        [[Paragraph('SHOP-SEED', st['title']), Paragraph('Shipping Label', st['h2'])]],
+        [[Paragraph('SHOP-SEED ART', st['title']), Paragraph('Shipping Label', st['h2'])]],
         colWidths=[90 * mm, 96 * mm],
     )
     header.setStyle(TableStyle([
@@ -292,7 +292,7 @@ def generate_invoice_pdf(shipment):
 
     order = shipment.order
     header = Table(
-        [[Paragraph('SHOP-SEED', st['title']), Paragraph('Tax Invoice', st['h2'])]],
+        [[Paragraph('SHOP-SEED ART', st['title']), Paragraph('Tax Invoice', st['h2'])]],
         colWidths=[95 * mm, 90 * mm],
     )
     header.setStyle(TableStyle([
@@ -431,7 +431,7 @@ def _shipments_list_pdf(shipments, title):
     )
     st = _styles()
     story = []
-    story.append(Paragraph(f'SHOP-SEED — {title}', st['title']))
+    story.append(Paragraph(f'SHOP-SEED ART — {title}', st['title']))
     story.append(Spacer(1, 3 * mm))
     story.append(Paragraph(
         f'Generated {timezone.localtime():%d %b %Y %H:%M} • {len(shipments)} shipment(s)',

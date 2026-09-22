@@ -30,7 +30,7 @@ prompt_load_test_data() {
     esac
 }
 echo ""
-echo -e "${BLUE}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Welcome To Shop-Seed >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${NC}"
+echo -e "${BLUE}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Welcome To Shop-Seed Art >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${NC}"
 echo ""
 
 # Update the package list and upgrade all packages
@@ -99,7 +99,7 @@ echo -e "${GREEN}Now you are in siteenv.${NC}"
 echo "********************************************************************************************************************"
 
 # Go to project folder
-cd "An-Ecommerce-Site"
+cd "Shop-Seed-Art"
 
 # Install project dependencies
 echo "********************************************************************************************************************"

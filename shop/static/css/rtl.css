@@ -1,4 +1,4 @@
-/* Shop-Seed RTL mirror layer — loaded after design-system.css.
+/* Shop-Seed Art RTL mirror layer — loaded after design-system.css.
    Only active when the active language is right-to-left (html[dir="rtl"]).
    Browsers shape Arabic script natively in HTML; this sheet mirrors the
    physical-property layout of the shared shell and key storefront pages. */

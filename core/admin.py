@@ -171,6 +171,6 @@ def patched_index(request, extra_context=None):
 
 admin.site.index = patched_index
 admin.site.index_template = "admin/dashboard_index.html"
-admin.site.site_header = "Shop-Seed Administration Panel"
-admin.site.site_title = "Shop-Seed Dashboard"
-admin.site.index_title = "Welcome to Shop-Seed Admin Panel"
+admin.site.site_header = "Shop-Seed Art Administration Panel"
+admin.site.site_title = "Shop-Seed Art Dashboard"
+admin.site.index_title = "Welcome to Shop-Seed Art Admin Panel"

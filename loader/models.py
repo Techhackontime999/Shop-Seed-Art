@@ -1,4 +1,4 @@
-"""Singleton configuration model for the Shop-Seed Loader Experience System.
+"""Singleton configuration model for the Shop-Seed Art Loader Experience System.
 
 Phase 1 keeps a single row (pk=1) with everything the Loader Engine needs to
 know: whether loaders are enabled, which animation plays on first load and on

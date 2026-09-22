@@ -6,9 +6,9 @@ from .models import Post
 
 
 class LatestPostsFeed(Feed):
-    title = 'Shop-Seed Market Blog'
+    title = 'Shop-Seed Art Market Blog'
     link = '/blog/'
-    description = 'Guides, product reviews, and buying tips from the Shop-Seed Market Blog.'
+    description = 'Guides, product reviews, and buying tips from the Shop-Seed Art Market Blog.'
 
     def items(self):
         return Post.objects.filter(

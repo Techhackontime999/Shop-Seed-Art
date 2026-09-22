@@ -17,5 +17,5 @@ class LoaderConfigForm(forms.ModelForm):
             'background_color': forms.TextInput(attrs={'type': 'color', 'class': 'ls-color'}),
             'accent_color': forms.TextInput(attrs={'type': 'color', 'class': 'ls-color'}),
             'duration_ms': forms.NumberInput(attrs={'min': 400, 'max': 6000, 'step': 100}),
-            'logo_text': forms.TextInput(attrs={'placeholder': 'Shop-Seed'}),
+            'logo_text': forms.TextInput(attrs={'placeholder': 'Shop-Seed Art'}),
         }

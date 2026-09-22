@@ -2,7 +2,7 @@
 {% load static %}
 {% load i18n %}
 {% load preference_extras %}
-{% block title %}{% trans 'Payment' %} — Shop-Seed{% endblock %}
+{% block title %}{% trans 'Payment' %} — Shop-Seed Art{% endblock %}
 
 {% block content %}
 <!-- Payment Hero -->
@@ -285,7 +285,7 @@ var options = {
     "key": "{{ razorpay_key_id }}",
     "amount": "{{ amount }}",
     "currency": "{{ currency }}",
-    "name": "An Ecommerce Site",
+    "name": "Shop-Seed Art",
     "description": "Order {{ order.order_number }}",
     "order_id": "{{ razorpay_order_id }}",
     "callback_url": "{{ callback_url }}",

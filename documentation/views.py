@@ -323,8 +323,8 @@ def _build_docx(sections):
     doc = Document()
 
     cp = doc.core_properties
-    cp.title = 'Shop-Seed Documentation'
-    cp.author = 'Shop-Seed'
+    cp.title = 'Shop-Seed Art Documentation'
+    cp.author = 'Shop-Seed Art'
     cp.subject = 'Platform guide for buyers and sellers'
 
     # Base styles
@@ -361,7 +361,7 @@ def _build_docx(sections):
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.paragraph_format.space_after = Pt(2)
-    run = p.add_run('SHOP-SEED')
+    run = p.add_run('SHOP-SEED ART')
     _set_run(run, size=18, color=INK, bold=True, spacing=80)
 
     p = doc.add_paragraph()
@@ -383,7 +383,7 @@ def _build_docx(sections):
     p.paragraph_format.right_indent = Cm(2.5)
     run = p.add_run(
         'Step-by-step guides for buyers and sellers — from placing your '
-        'first order to growing a full store on Shop-Seed.'
+        'first order to growing a full store on Shop-Seed Art.'
     )
     _set_run(run, size=11, color=MUTED)
 
@@ -415,7 +415,7 @@ def _build_docx(sections):
     footer = content.footer
     fp = footer.paragraphs[0]
     fp.paragraph_format.tab_stops.add_tab_stop(Cm(16.8), WD_TAB_ALIGNMENT.RIGHT)
-    r = fp.add_run('Shop-Seed  ·  shopseed.com')
+    r = fp.add_run('Shop-Seed Art  ·  shop-seed-art.onrender.com')
     _set_run(r, size=8, color=MUTED)
     fp.add_run('\t')
     r = fp.add_run('Page ')
@@ -473,7 +473,7 @@ def _build_docx(sections):
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.paragraph_format.space_before = Pt(28)
-        run = p.add_run('Thank you for choosing Shop-Seed')
+        run = p.add_run('Thank you for choosing Shop-Seed Art')
         _set_run(run, size=14, color=INK, bold=True)
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -481,7 +481,7 @@ def _build_docx(sections):
         _set_run(run, size=10, color=BODY)
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run('support@shopseed.com    ·    +91 98765 43210    ·    shopseed.com')
+        run = p.add_run('support@shopseed.com    ·    +91 98765 43210    ·    shop-seed-art.onrender.com')
         _set_run(run, size=9.5, color=MUTED)
 
     return doc

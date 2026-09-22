@@ -192,9 +192,9 @@ def generate_invoice_pdf(order):
 
     totals = invoice_totals(order)
     story = [
-        Paragraph('SHOP-SEED', title),
+        Paragraph('SHOP-SEED ART', title),
         Paragraph('Tax Invoice', h2),
-        Paragraph('support@shop-seed.com · {0}'.format(getattr(settings, 'SITE_URL', 'shop-seed.com')), small),
+        Paragraph('support@shop-seed.com · {0}'.format(getattr(settings, 'SITE_URL', 'shop-seed-art.onrender.com')), small),
         Spacer(1, 6 * mm),
     ]
 
@@ -263,7 +263,7 @@ def generate_invoice_pdf(order):
     story.append(totals_table)
     story.append(Spacer(1, 8 * mm))
     story.append(Paragraph(
-        'Thank you for shopping with Shop-Seed! This is a computer-generated invoice and does not '
+        'Thank you for shopping with Shop-Seed Art! This is a computer-generated invoice and does not '
         'require a signature. For returns or questions, visit your order page.', small))
 
     doc.build(story)

@@ -1,4 +1,4 @@
-# Shop-Seed Invoice Template
+# Shop-Seed Art Invoice Template
 
 For the simple model: **one-time payment → source code delivered.** Fill in the
 placeholders and send as PDF. Number invoices sequentially (`SS-0001`, ...).
@@ -26,7 +26,7 @@ amitkumarkh01012006@gmail.com
 
 | # | Description | Qty | Unit Price | Amount |
 |---|---|---|---|---|
-| 1 | Shop-Seed source code license — one-time, for own business use (modify/rebrand allowed; resale not allowed) | 1 | [ e.g. USD 199 ] | [ USD 199 ] |
+| 1 | Shop-Seed Art source code license — one-time, for own business use (modify/rebrand allowed; resale not allowed) | 1 | [ e.g. USD 199 ] | [ USD 199 ] |
 | 2 | Optional: installation/setup assistance | 1 | [ e.g. USD 30 ] | [ USD 30 ] |
 | | **Subtotal** | | | **[ total ]** |
 | | Tax (GST/VAT) @ [ 18 ]% | | | **[ tax ]** |

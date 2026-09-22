@@ -1,4 +1,4 @@
-# Shop-Seed Source Code License — One-Page Template
+# Shop-Seed Art Source Code License — One-Page Template
 
 A simple, no-fuss agreement for the model: **one-time payment → customer
 receives the full source code → they modify/rebrand it and run their own
@@ -10,7 +10,7 @@ want it enforceable.
 
 ---
 
-**SHOP-SEED SOURCE CODE LICENSE**
+**SHOP-SEED ART SOURCE CODE LICENSE**
 
 Agreement date: **[ date ]**
 
@@ -18,7 +18,7 @@ Agreement date: **[ date ]**
 
 **Licensee:** **[ customer name / company ]** — **[ email ]**
 
-**The Software:** the Shop-Seed e-commerce platform source code and assets
+**The Software:** the Shop-Seed Art e-commerce platform source code and assets
 delivered to the Licensee upon payment ("the Software").
 
 ## 1. What you may do
