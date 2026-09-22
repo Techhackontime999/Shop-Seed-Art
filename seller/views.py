@@ -1,6 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 from shop.models import Product, ProductImage, ProductVariant, VariantImage
 from order.models import OrderItem, Order
 from accounts.models import SellerProfile
@@ -18,6 +21,8 @@ from django.core.files import File
 from .services import available_balance, create_payout, payout_min_amount, total_earned
 import os
 import math
+import json
+import requests
 
 @login_required
 def seller_dashboard(request):
@@ -126,6 +131,58 @@ def _ensure_default_variant(product):
     )
 
 
+# AI API Configuration
+AI_CATALOG_URL = getattr(settings, 'AI_API', {}).get('CATALOG_URL', 'http://localhost:8001/api/ai/v1/catalog')
+AI_IMAGE_URL = getattr(settings, 'AI_API', {}).get('IMAGE_URL', 'http://localhost:8001/api/ai/v1/image')
+AI_PRICING_URL = getattr(settings, 'AI_API', {}).get('PRICING_URL', 'http://localhost:8001/api/ai/v1/pricing')
+AI_TIMEOUT = getattr(settings, 'AI_API', {}).get('TIMEOUT', 15)
+AI_SUPPORTED_LANGUAGES = getattr(settings, 'AI_SUPPORTED_LANGUAGES', [
+    ('hi-IN', 'हिंदी'), ('en-IN', 'English'), ('ta-IN', 'தமிழ்'),
+    ('te-IN', 'తెలుగు'), ('bn-IN', 'বাংলা'), ('mr-IN', 'मराठी'),
+    ('gu-IN', 'ગુજરાતી'), ('kn-IN', 'ಕನ್ನಡ'), ('ml-IN', 'മലയാളം'),
+    ('pa-IN', 'ਪੰਜਾਬੀ'),
+])
+
+
+def call_ai_api(url, data=None, files=None, timeout=None):
+    """Simple wrapper for mock AI API calls"""
+    try:
+        resp = requests.post(url, data=data, files=files, timeout=timeout or AI_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as e:
+        return {'error': str(e)}
+
+
+def generate_blog_drafts(session_data):
+    """Generate blog drafts from AI outputs"""
+    attrs = session_data.get('attributes', {})
+    desc = session_data.get('descriptions', {})
+    images = session_data.get('enhanced_images', [])
+    
+    drafts = [
+        {
+            'title': f"The Story Behind {attrs.get('color', '').title()} {attrs.get('subcategory', 'Product').title()}",
+            'type': 'story',
+            'body': f"<p>{attrs.get('origin_story', 'Handcrafted with care by our artisans.')}</p>",
+            'featured_image': images[0] if images else None
+        },
+        {
+            'title': f"How It's Made: {attrs.get('technique', 'Handcrafted').title()} {attrs.get('material', 'Product').title()}",
+            'type': 'how_to',
+            'body': f"<p>Our {attrs.get('subcategory', 'products')} are made using traditional {attrs.get('technique', 'techniques')}...</p>",
+            'featured_image': images[1] if len(images) > 1 else None
+        },
+        {
+            'title': f"Care Guide for Your {attrs.get('material', '').title()} {attrs.get('subcategory', 'Product').title()}",
+            'type': 'care',
+            'body': f"<p>{attrs.get('care', 'Handle with care. Dry clean recommended.')}</p>",
+            'featured_image': None
+        }
+    ]
+    return drafts
+
+
 @login_required
 def add_product(request):
     try:
@@ -136,6 +193,46 @@ def add_product(request):
     if not profile.is_verified:
         return render(request, 'seller/not_verified.html')
 
+    # Handle AI-assisted actions (AJAX)
+    if request.method == 'POST' and request.headers.get('X-AI-Action'):
+        action = request.headers.get('X-AI-Action')
+        
+        if action == 'catalog_text':
+            text = request.POST.get('text', '')
+            language = request.POST.get('language', 'en-IN')
+            result = call_ai_api(f"{AI_CATALOG_URL}/text", data={'text': text, 'language': language})
+            return JsonResponse(result)
+        
+        elif action == 'catalog_voice':
+            audio = request.FILES.get('audio')
+            language = request.POST.get('language', 'hi-IN')
+            files = {'audio': (audio.name, audio.read(), audio.content_type)} if audio else None
+            result = call_ai_api(f"{AI_CATALOG_URL}/voice", data={'language': language}, files=files)
+            return JsonResponse(result)
+        
+        elif action == 'enhance_image':
+            image = request.FILES.get('image')
+            preset = request.POST.get('preset', 'auto')
+            files = {'image': (image.name, image.read(), image.content_type)} if image else None
+            result = call_ai_api(f"{AI_IMAGE_URL}/enhance", data={'preset': preset}, files=files)
+            return JsonResponse(result)
+        
+        elif action == 'suggest_price':
+            product_data = {
+                'images': request.POST.getlist('enhanced_images[]'),
+                'description': request.POST.get('description', ''),
+                'category': request.POST.get('category', ''),
+                'attributes': json.loads(request.POST.get('attributes', '{}'))
+            }
+            result = call_ai_api(f"{AI_PRICING_URL}/analyze", data={'product': product_data})
+            return JsonResponse(result)
+        
+        elif action == 'generate_blogs':
+            session_data = json.loads(request.POST.get('session_data', '{}'))
+            blogs = generate_blog_drafts(session_data)
+            return JsonResponse({'blogs': blogs})
+
+    # Standard form submission
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES)
         variant_formset = VariantsFormSet(request.POST, request.FILES)
@@ -155,7 +252,17 @@ def add_product(request):
         form = ProductForm()
         variant_formset = VariantsFormSet(initial=[{'name': 'Default'}])
 
-    return render(request, 'seller/add_product.html', {'form': form, 'variant_formset': variant_formset})
+    context = {
+        'form': form,
+        'variant_formset': variant_formset,
+        'ai_config': {
+            'catalog_url': AI_CATALOG_URL,
+            'image_url': AI_IMAGE_URL,
+            'pricing_url': AI_PRICING_URL,
+            'languages': AI_SUPPORTED_LANGUAGES,
+        }
+    }
+    return render(request, 'seller/add_product.html', context)
 
 @login_required
 def edit_product(request, pk):

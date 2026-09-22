@@ -62,7 +62,7 @@ INSTALLED_APPS = [
     'contact',
     'services',
     'deals',
-    'documentation',
+    # 'documentation',
     'faq',
     'seller',
     'reviews',
@@ -304,3 +304,26 @@ SECURITY_PERMISSIONS_POLICY = 'camera=(), microphone=(), geolocation=(), battery
 # Upload safety: reject oversized POST bodies early (before they hit memory).
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+
+# ---------------------------------------------------------------------------
+# AI API Configuration (Mock for MVP)
+# ---------------------------------------------------------------------------
+AI_API = {
+    'CATALOG_URL': os.getenv('AI_CATALOG_URL', 'http://localhost:8001/api/ai/v1/catalog'),
+    'IMAGE_URL': os.getenv('AI_IMAGE_URL', 'http://localhost:8001/api/ai/v1/image'),
+    'PRICING_URL': os.getenv('AI_PRICING_URL', 'http://localhost:8001/api/ai/v1/pricing'),
+    'TIMEOUT': int(os.getenv('AI_API_TIMEOUT', '15')),
+}
+
+AI_SUPPORTED_LANGUAGES = [
+    ('hi-IN', 'हिंदी'),
+    ('en-IN', 'English'),
+    ('ta-IN', 'தமிழ்'),
+    ('te-IN', 'తెలుగు'),
+    ('bn-IN', 'বাংলা'),
+    ('mr-IN', 'मराठी'),
+    ('gu-IN', 'ગુજરાતી'),
+    ('kn-IN', 'ಕನ್ನಡ'),
+    ('ml-IN', 'മലയാളം'),
+    ('pa-IN', 'ਪੰਜਾਬੀ'),
+]
