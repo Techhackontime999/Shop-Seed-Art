@@ -62,7 +62,7 @@ INSTALLED_APPS = [
     'contact',
     'services',
     'deals',
-    # 'documentation',
+    'documentation',
     'faq',
     'seller',
     'reviews',
