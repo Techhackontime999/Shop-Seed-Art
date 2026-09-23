@@ -38,6 +38,10 @@ class SellerAI {
       p.hidden = p.dataset.panel !== mode;
     });
 
+    if (mode === 'ai-assist') {
+      document.getElementById('sl-chat-text')?.focus();
+      this.scrollChat();
+    }
     if (mode === 'form' && Object.keys(this.sessionData).length) {
       this.populateForm(this.sessionData);
     }
@@ -508,7 +512,8 @@ class SellerAI {
       this.speechRecognition.onresult = (e) => {
         const transcript = Array.from(e.results).map(r => r[0].transcript).join(' ');
         this.setChatListening(false);
-        document.getElementById('sl-chat-input').classList.remove('is-listening');
+        const chatInput = document.getElementById('sl-chat-input');
+        if (chatInput) chatInput.classList.remove('is-listening');
         if (transcript) {
           const input = document.getElementById('sl-chat-text');
           input.value = transcript;
