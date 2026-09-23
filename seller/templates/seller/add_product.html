@@ -21,12 +21,27 @@
     <!-- AI Config for JavaScript -->
     <script id="ai-config" type="application/json">
     {
+        "ai_url": "{% url 'seller:add_product' %}",
         "catalog_url": "{{ ai_config.catalog_url }}",
         "image_url": "{{ ai_config.image_url }}",
         "pricing_url": "{{ ai_config.pricing_url }}",
-        "languages": {{ ai_config.languages|json_script:"ai-languages" }}
+        "default_voice_text": "लाल हैंडलूम कॉटन साड़ी, 5.5 मीटर, जरी बॉर्डर, ऑफिस वियर के लिए उत्तम",
+        "languages": {{ langs_json|safe }}
     }
     </script>
+
+    <!-- AI Hero Banner -->
+    <section class="sl-ai-hero">
+      <span class="sl-ai-hero-badge"><i class="fas fa-wand-magic-sparkles"></i> AI-Powered Seller Studio</span>
+      <h2>Create a marketplace-ready listing in minutes</h2>
+      <p>Speak or type in any Indian language — our AI extracts product details, auto-generates descriptions, suggests smart pricing and launches marketing blogs for you.</p>
+      <div class="sl-ai-hero-stats">
+        <div class="sl-ai-hero-stat"><b>10</b><span>Indian languages</span></div>
+        <div class="sl-ai-hero-stat"><b>3-step</b><span>Smart pricing</span></div>
+        <div class="sl-ai-hero-stat"><b>SEO</b><span>Auto-written content</span></div>
+        <div class="sl-ai-hero-stat"><b>Live</b><span>OpenRouter AI engine</span></div>
+      </div>
+    </section>
 
     <!-- AI Input Mode Tabs -->
     <div class="sl-ai-tabs" id="sl-ai-tabs" role="tablist" aria-label="Product creation input modes">
@@ -39,8 +54,8 @@
       <button class="sl-ai-tab" data-mode="voice" role="tab" aria-selected="false" title="Speak in your language">
         <i class="fas fa-microphone"></i> Voice
       </button>
-      <button class="sl-ai-tab" data-mode="ai-assist" role="tab" aria-selected="false" title="AI fills everything">
-        <i class="fas fa-magic"></i> AI Assist
+      <button class="sl-ai-tab" data-mode="ai-assist" role="tab" aria-selected="false" title="Chat or talk with the AI assistant side panel">
+        <i class="fas fa-robot"></i> Chat
       </button>
     </div>
 
@@ -48,101 +63,112 @@
     <div class="sl-ai-panels">
       <!-- Form Mode (Default - existing form) -->
       <div class="sl-ai-panel active" data-panel="form" role="tabpanel">
-        {{ form.media }}
-        {% csrf_token %}
+        <div class="sl-grid">
+          <form id="sl-form" method="post" enctype="multipart/form-data" class="sl-form-card">
+            {{ form.media }}
+            {% csrf_token %}
 
         <!-- 1 · Identity -->
         <div class="sl-section">
-          <div class="sl-section-head">
-            <span class="sl-step">1</span>
-            <div>
-              <h2 class="sl-section-title">Product identity</h2>
-              <p class="sl-section-desc">How buyers find and recognize your product.</p>
-            </div>
-          </div>
-          <div class="sl-grid-fields">
-            <div class="sl-col-12 sp-field">
-              <label class="sp-label" for="{{ form.name.id_for_label }}">Title *</label>
-              {{ form.name }}
-              <span class="sl-counter"><span class="sl-counter-bar"><i></i></span><span id="sl-name-count">0 / 120</span></span>
-              <p class="sp-help">Clear titles sell. Include what it is plus the details buyers search for — color, size or material.</p>
-              {% for error in form.name.errors %}<p class="sp-error">{{ error }}</p>{% endfor %}
-            </div>
-            <div class="sl-col-8 sp-field">
-              <label class="sp-label" for="{{ form.slug.id_for_label }}">URL slug</label>
-              {{ form.slug }}
-              <p class="sp-help">Auto-suggested from your title — edit it if you like.</p>
-              {% for error in form.slug.errors %}<p class="sp-error">{{ error }}</p>{% endfor %}
-            </div>
-            <div class="sl-col-4 sp-field">
-              <label class="sp-label" for="{{ form.category.id_for_label }}">Category *</label>
-              {{ form.category }}
-              <p class="sp-help">Helps buyers find you in the right aisle.</p>
-              {% for error in form.category.errors %}<p class="sp-error">{{ error }}</p>{% endfor %}
-            </div>
-          </div>
+        <div class="sl-section-head">
+        <span class="sl-step">1</span>
+        <div>
+        <h2 class="sl-section-title">Product identity</h2>
+        <p class="sl-section-desc">How buyers find and recognize your product.</p>
         </div>
+        </div>
+        <div class="sl-grid-fields">
+        <div class="sl-col-12 sp-field">
+        <label class="sp-label" for="{{ form.name.id_for_label }}">Title *</label>
+        <div class="sl-field-row">
+        {{ form.name }}
+        <button type="button" class="sl-translate-btn" data-translate="id_name" data-target="hi-IN" title="Translate to Hindi">
+        <i class="fas fa-language"></i> हिंदी</button>
+        </div>
+        <span class="sl-counter"><span class="sl-counter-bar"><i></i></span><span id="sl-name-count">0 / 120</span></span>
+        <p class="sp-help">Clear titles sell. Include what it is plus the details buyers search for — color, size or material.</p>
+        {% for error in form.name.errors %}<p class="sp-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="sl-col-8 sp-field">
+        <label class="sp-label" for="{{ form.slug.id_for_label }}">URL slug</label>
+        {{ form.slug }}
+        <p class="sp-help">Auto-suggested from your title — edit it if you like.</p>
+        {% for error in form.slug.errors %}<p class="sp-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="sl-col-4 sp-field">
+        <label class="sp-label" for="{{ form.category.id_for_label }}">Category *</label>
+        {{ form.category }}
+        <p class="sp-help">Helps buyers find you in the right aisle.</p>
+        {% for error in form.category.errors %}<p class="sp-error">{{ error }}</p>{% endfor %}
+        </div>
+        </div>
+        </div>
+        
 
         <!-- 2 · Pricing & brand -->
         <div class="sl-section">
-          <div class="sl-section-head">
-            <span class="sl-step">2</span>
-            <div>
-              <h2 class="sl-section-title">Pricing &amp; brand</h2>
-              <p class="sl-section-desc">What buyers pay, and who made it.</p>
-            </div>
-          </div>
-          <div class="sl-grid-fields">
-            <div class="sl-col-4 sp-field">
-              <label class="sp-label" for="{{ form.price.id_for_label }}">Price *</label>
-              {{ form.price }}
-              <p class="sp-help">The amount buyers pay for this item.</p>
-              {% for error in form.price.errors %}<p class="sp-error">{{ error }}</p>{% endfor %}
-            </div>
-            <div class="sl-col-4 sp-field">
-              <label class="sp-label" for="{{ form.stock.id_for_label }}">Stock</label>
-              {{ form.stock }}
-              <p class="sp-help">Units available for products sold without variants.</p>
-              {% for error in form.stock.errors %}<p class="sp-error">{{ error }}</p>{% endfor %}
-            </div>
-            <div class="sl-col-8 sp-field">
-              <label class="sp-label" for="{{ form.brand.id_for_label }}">Brand</label>
-              {{ form.brand }}
-              <p class="sp-help">Optional — the manufacturer or your store name.</p>
-              {% for error in form.brand.errors %}<p class="sp-error">{{ error }}</p>{% endfor %}
-            </div>
-          </div>
-<div class="sl-tip"><i class="fas fa-lightbulb"></i><span><b>Pricing tip:</b> keep your price and stock honest. A fair price builds trust and repeat purchases, while real stock counts keep buyers from ordering what you can't ship.</span></div>
+        <div class="sl-section-head">
+        <span class="sl-step">2</span>
+        <div>
+        <h2 class="sl-section-title">Pricing &amp; brand</h2>
+        <p class="sl-section-desc">What buyers pay, and who made it.</p>
         </div>
+        </div>
+        <div class="sl-grid-fields">
+        <div class="sl-col-4 sp-field">
+        <label class="sp-label" for="{{ form.price.id_for_label }}">Price *</label>
+        {{ form.price }}
+        <p class="sp-help">The amount buyers pay for this item.</p>
+        {% for error in form.price.errors %}<p class="sp-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="sl-col-4 sp-field">
+        <label class="sp-label" for="{{ form.stock.id_for_label }}">Stock</label>
+        {{ form.stock }}
+        <p class="sp-help">Units available for products sold without variants.</p>
+        {% for error in form.stock.errors %}<p class="sp-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="sl-col-8 sp-field">
+        <label class="sp-label" for="{{ form.brand.id_for_label }}">Brand</label>
+        {{ form.brand }}
+        <p class="sp-help">Optional — the manufacturer or your store name.</p>
+        {% for error in form.brand.errors %}<p class="sp-error">{{ error }}</p>{% endfor %}
+        </div>
+        </div>
+        <div class="sl-tip"><i class="fas fa-lightbulb"></i><span><b>Pricing tip:</b> keep your price and stock honest. A fair price builds trust and repeat purchases, while real stock counts keep buyers from ordering what you can't ship.</span></div>
+        </div>
+        
 
         <!-- 3 · Description -->
         <div class="sl-section">
-          <div class="sl-section-head">
-            <span class="sl-step">3</span>
-            <div>
-              <h2 class="sl-section-title">Description</h2>
-              <p class="sl-section-desc">Tell buyers exactly what they're getting.</p>
-            </div>
-          </div>
-          <div class="sp-field">
-            <label class="sp-label" for="{{ form.description.id_for_label }}">Product description</label>
-            {{ form.description }}
-            <p class="sp-help">Describe materials, what's included, and how it's used. Rich descriptions answer questions before buyers ask.</p>
-            {% for error in form.description.errors %}<p class="sp-error">{{ error }}</p>{% endfor %}
-          </div>
+        <div class="sl-section-head">
+        <span class="sl-step">3</span>
+        <div>
+        <h2 class="sl-section-title">Description</h2>
+        <p class="sl-section-desc">Tell buyers exactly what they're getting.</p>
         </div>
+        </div>
+        <div class="sp-field">
+        <label class="sp-label" for="{{ form.description.id_for_label }}">Product description</label>
+        <div class="sl-field-row sl-field-row-top">
+        {{ form.description }}
+        <button type="button" class="sl-translate-btn" data-translate="id_description" data-target="hi-IN" title="Translate to Hindi">
+        <i class="fas fa-language"></i> हिंदी</button>
+        </div>
+        <p class="sp-help">Describe materials, what's included, and how it's used. Rich descriptions answer questions before buyers ask.</p>
+        {% for error in form.description.errors %}<p class="sp-error">{{ error }}</p>{% endfor %}
+        </div>
+        </div>
+        
 
-<!-- 4 · Variants -->
+        <!-- 4 · Variants -->
         <div class="sl-section">
-          <div class="sl-section-head">
-            <span class="sl-step">4</span>
-            <div>
-              <h2 class="sl-section-title">Options & stock</h2>
-              <p class="sl-section-desc">Sizes, colors or packs — each with its own price, stock, photo and description.</p>
-            </div>
-          </div>
-          </div>
-
+        <div class="sl-section-head">
+        <span class="sl-step">4</span>
+        <div>
+        <h2 class="sl-section-title">Options & stock</h2>
+        <p class="sl-section-desc">Sizes, colors or packs — each with its own price, stock, photo and description.</p>
+        </div>
+        </div>
           {{ variant_formset.management_form }}
           <div class="sl-variant-list" data-variant-list>
             {% for vf in variant_formset %}
@@ -283,244 +309,288 @@
           {% endif %}
         </div>
 
-      </div>
-    </div>
-    <!-- End Form Mode Panel -->
-
-    <!-- Text Mode Panel -->
-    <div class="sl-ai-panel" data-panel="text" role="tabpanel" hidden>
-      <div class="sl-section">
+        <!-- Smart Pricing Section -->
+        <div class="sl-section sl-section-ai" data-ai-section="pricing">
         <div class="sl-section-head">
-          <h2 class="sl-section-title">Describe your product naturally</h2>
-          <p class="sl-section-desc">Write in any language - AI extracts details and fills the form.</p>
-        </div>
-        <div class="sp-field">
-          <label class="sp-label">Language</label>
-          <select id="sl-text-language" class="sp-input">
-            {% for code, name in ai_config.languages %}
-              <option value="{{ code }}">{{ name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="sp-field">
-          <textarea id="sl-text-input" class="sp-input" rows="5" placeholder="e.g. लाल हैंडलूम कॉटन साड़ी, 5.5 मीटर, जरी बॉर्डर, ऑफिस वियर के लिए..."></textarea>
-          <p class="sp-help">Include: material, size, color, technique, occasion, special features</p>
-        </div>
-        <button type="button" class="sp-btn sp-btn-primary" id="sl-text-submit">
-          <i class="fas fa-magic"></i> Generate Listing
-        </button>
-        <div id="sl-text-loading" class="sl-loading" hidden><i class="fas fa-spinner fa-spin"></i> AI is analyzing...</div>
-      </div>
-    </div>
-
-    <!-- Voice Mode Panel -->
-    <div class="sl-ai-panel" data-panel="voice" role="tabpanel" hidden>
-      <div class="sl-section">
-        <div class="sl-section-head">
-          <h2 class="sl-section-title">Record your product description</h2>
-          <p class="sl-section-desc">Speak naturally in your language - AI transcribes and creates the listing.</p>
-        </div>
-        <div class="sp-field">
-          <label class="sp-label">Language</label>
-          <select id="sl-voice-language" class="sp-input">
-            {% for code, name in ai_config.languages %}
-              <option value="{{ code }}">{{ name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="sl-voice-recorder">
-          <button type="button" class="sl-voice-btn" id="sl-voice-btn" aria-label="Start recording">
-            <i class="fas fa-microphone"></i>
-            <span>Tap to Record</span>
-          </button>
-          <div class="sl-voice-wave" id="sl-voice-wave" hidden>
-            <span class="sl-wave-bar"></span><span class="sl-wave-bar"></span><span class="sl-wave-bar"></span>
-            <span class="sl-wave-bar"></span><span class="sl-wave-bar"></span>
-          </div>
-          <p class="sl-voice-timer" id="sl-voice-timer" hidden>00:00</p>
-          <p class="sl-voice-transcript" id="sl-voice-transcript" hidden></p>
-        </div>
-        <div class="sl-voice-actions">
-          <button type="button" class="sp-btn sp-btn-secondary" id="sl-voice-retry" hidden><i class="fas fa-redo"></i> Re-record</button>
-          <button type="button" class="sp-btn sp-btn-primary" id="sl-voice-submit" hidden><i class="fas fa-magic"></i> Generate Listing</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- AI Assist Mode Panel -->
-    <div class="sl-ai-panel" data-panel="ai-assist" role="tabpanel" hidden>
-      <div class="sl-section">
-        <div class="sl-section-head">
-          <h2 class="sl-section-title">AI Assist - Complete Product Creation</h2>
-          <p class="sl-section-desc">Use any input method, AI fills everything including photos, price, and blogs.</p>
-        </div>
-        <div class="sl-ai-progress">
-          <div class="sl-ai-step" data-step="input">1. Input (Voice/Text/Form)</div>
-          <div class="sl-ai-step" data-step="photos">2. Enhance Photos</div>
-          <div class="sl-ai-step" data-step="details">3. Details & Description</div>
-          <div class="sl-ai-step" data-step="price">4. Smart Pricing</div>
-          <div class="sl-ai-step" data-step="blogs">5. Generate Blogs</div>
-          <div class="sl-ai-step" data-step="publish">6. Publish</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Smart Pricing Section -->
-    <div class="sl-section sl-section-ai" data-ai-section="pricing">
-      <div class="sl-section-head">
         <span class="sl-step">★</span>
         <div>
-          <h2 class="sl-section-title">Smart Pricing <span class="sl-badge-ai">AI Powered</span></h2>
-          <p class="sl-section-desc">Get competitive price suggestions based on market trends and your costs.</p>
+        <h2 class="sl-section-title">Smart Pricing <span class="sl-badge-ai">AI Powered</span></h2>
+        <p class="sl-section-desc">Get competitive price suggestions based on market trends and your costs.</p>
         </div>
-      </div>
-      <div class="sl-pricing-ai" id="sl-pricing-ai">
+        </div>
+        <div class="sl-pricing-ai" id="sl-pricing-ai">
         <button type="button" class="sp-btn sp-btn-primary" id="sl-get-price">
-          <i class="fas fa-calculator"></i> Get AI Price Suggestion
+        <i class="fas fa-calculator"></i> Get AI Price Suggestion
         </button>
         <div class="sl-loading" id="sl-price-loading" hidden><i class="fas fa-spinner fa-spin"></i> Analyzing market...</div>
         <div class="sl-price-result" id="sl-price-result" hidden>
-          <div class="sl-price-cards">
-            <div class="sl-price-card floor">
-              <span class="sl-price-label">Floor (Min)</span>
-              <span class="sl-price-value" id="sl-floor-price">₹0</span>
-              <span class="sl-price-note">Below this = loss</span>
-            </div>
-            <div class="sl-price-card recommended highlight">
-              <span class="sl-price-label">Recommended</span>
-              <span class="sl-price-value" id="sl-rec-price">₹0</span>
-              <span class="sl-price-confidence" id="sl-price-confidence">0% confident</span>
-            </div>
-            <div class="sl-price-card premium">
-              <span class="sl-price-label">Premium</span>
-              <span class="sl-price-value" id="sl-premium-price">₹0</span>
-              <span class="sl-price-note">For premium positioning</span>
-            </div>
-          </div>
-          <div class="sl-price-reasoning" id="sl-price-reasoning"></div>
-          <div class="sl-price-actions">
-            <button type="button" class="sp-btn sp-btn-secondary" id="sl-price-reject">Adjust Manually</button>
-            <button type="button" class="sp-btn sp-btn-primary" id="sl-price-accept">Use Recommended Price</button>
-          </div>
+        <div class="sl-price-cards">
+        <div class="sl-price-card floor">
+        <span class="sl-price-label">Floor (Min)</span>
+        <span class="sl-price-value" id="sl-floor-price">₹0</span>
+        <span class="sl-price-note">Below this = loss</span>
         </div>
-      </div>
-    </div>
+        <div class="sl-price-card recommended highlight">
+        <span class="sl-price-label">Recommended</span>
+        <span class="sl-price-value" id="sl-rec-price">₹0</span>
+        <span class="sl-price-confidence" id="sl-price-confidence">0% confident</span>
+        </div>
+        <div class="sl-price-card premium">
+        <span class="sl-price-label">Premium</span>
+        <span class="sl-price-value" id="sl-premium-price">₹0</span>
+        <span class="sl-price-note">For premium positioning</span>
+        </div>
+        </div>
+        <div class="sl-price-reasoning" id="sl-price-reasoning"></div>
+        <div class="sl-price-actions">
+        <button type="button" class="sp-btn sp-btn-secondary" id="sl-price-reject">Adjust Manually</button>
+        <button type="button" class="sp-btn sp-btn-primary" id="sl-price-accept">Use Recommended Price</button>
+        </div>
+        </div>
+        </div>
+        </div>
+        
 
-    <!-- AI Blog Generation Section -->
-    <div class="sl-section sl-section-ai" data-ai-section="blogs">
-      <div class="sl-section-head">
+        <!-- AI Blog Generation Section -->
+        <div class="sl-section sl-section-ai" data-ai-section="blogs">
+        <div class="sl-section-head">
         <span class="sl-step">★</span>
         <div>
-          <h2 class="sl-section-title">Launch Blogs <span class="sl-badge-ai">Auto-Generated</span></h2>
-          <p class="sl-section-desc">AI creates marketing blogs from your product details to drive traffic.</p>
+        <h2 class="sl-section-title">Launch Blogs <span class="sl-badge-ai">Auto-Generated</span></h2>
+        <p class="sl-section-desc">AI creates marketing blogs from your product details to drive traffic.</p>
         </div>
-      </div>
-      <div class="sl-blogs-ai" id="sl-blogs-ai">
+        </div>
+        <div class="sl-blogs-ai" id="sl-blogs-ai">
         <button type="button" class="sp-btn sp-btn-primary" id="sl-gen-blogs">
-          <i class="fas fa-pen-nib"></i> Generate Launch Blogs
+        <i class="fas fa-pen-nib"></i> Generate Launch Blogs
         </button>
         <div class="sl-loading" id="sl-blogs-loading" hidden><i class="fas fa-spinner fa-spin"></i> Writing blogs...</div>
         <div class="sl-blogs-list" id="sl-blogs-list" hidden></div>
-      </div>
-    </div>
+        </div>
+        </div>
+        
 
-    <!-- Enhanced Photo Section replaces original Photos section -->
-    <div class="sl-section" id="sl-section-photos">
-      <div class="sl-section-head">
+        <!-- Enhanced Photo Section replaces original Photos section -->
+        <div class="sl-section" id="sl-section-photos">
+        <div class="sl-section-head">
         <span class="sl-step">4</span>
         <div>
-          <h2 class="sl-section-title">Photos <span class="sl-badge-ai">AI Enhanced</span></h2>
-          <p class="sl-section-desc">Upload photos - AI removes background, fixes lighting, formats to marketplace standards.</p>
+        <h2 class="sl-section-title">Photos <span class="sl-badge-ai">AI Enhanced</span></h2>
+        <p class="sl-section-desc">Upload photos - AI removes background, fixes lighting, formats to marketplace standards.</p>
         </div>
-      </div>
-      <div class="sl-grid-fields">
+        </div>
+        <div class="sl-grid-fields">
         <div class="sl-col-6 sp-field">
-          <label class="sp-label">Main Photo</label>
-          <label class="sl-drop sl-drop-main" id="sl-drop-main">
-            <span class="sl-drop-preview" id="sl-main-preview"><i class="fas fa-image"></i></span>
-            <span><b>Click to upload</b> your main photo</span>
-            <span>JPG or PNG · square works best</span>
-            {{ form.image }}
-          </label>
-          <button type="button" class="sp-btn sp-btn-secondary sl-ai-btn" id="sl-enhance-main" hidden>
-            <i class="fas fa-wand-magic-sparkles"></i> Enhance with AI
-          </button>
-          <div class="sl-ai-compare" id="sl-main-compare" hidden>
-            <div class="sl-compare-item">
-              <label>Original</label>
-              <img id="sl-main-original" src="" alt="Original">
-            </div>
-            <div class="sl-compare-item">
-              <label>AI Enhanced</label>
-              <img id="sl-main-enhanced" src="" alt="Enhanced">
-            </div>
-            <button type="button" class="sp-btn sp-btn-primary" id="sl-use-enhanced-main">Use Enhanced</button>
-          </div>
+        <label class="sp-label">Main Photo</label>
+        <label class="sl-drop sl-drop-main" id="sl-drop-main">
+        <span class="sl-drop-preview" id="sl-main-preview"><i class="fas fa-image"></i></span>
+        <span><b>Click to upload</b> your main photo</span>
+        <span>JPG or PNG · square works best</span>
+        {{ form.image }}
+        </label>
+        <button type="button" class="sp-btn sp-btn-secondary sl-ai-btn" id="sl-enhance-main" hidden>
+        <i class="fas fa-wand-magic-sparkles"></i> Enhance with AI
+        </button>
+        <div class="sl-ai-compare" id="sl-main-compare" hidden>
+        <div class="sl-compare-item">
+        <label>Original</label>
+        <img id="sl-main-original" src="" alt="Original">
+        </div>
+        <div class="sl-compare-item">
+        <label>AI Enhanced</label>
+        <img id="sl-main-enhanced" src="" alt="Enhanced">
+        </div>
+        <button type="button" class="sp-btn sp-btn-primary" id="sl-use-enhanced-main">Use Enhanced</button>
+        </div>
         </div>
         <div class="sl-col-6 sp-field">
-          <label class="sp-label">Gallery Photos <span class="sl-badge-ai">AI Batch</span></label>
-          <label class="sl-drop" id="sl-drop-gallery">
-            <i class="fas fa-images"></i>
-            <span><b>Add multiple photos</b> - AI enhances all</span>
-            <span>Select several files at once</span>
-            {{ form.gallery_images }}
-          </label>
-          <button type="button" class="sp-btn sp-btn-secondary sl-ai-btn" id="sl-enhance-gallery" hidden>
-            <i class="fas fa-wand-magic-sparkles"></i> Enhance All with AI
-          </button>
-          <div class="sl-new-photos" id="sl-new-gallery" hidden></div>
+        <label class="sp-label">Gallery Photos <span class="sl-badge-ai">AI Batch</span></label>
+        <label class="sl-drop" id="sl-drop-gallery">
+        <i class="fas fa-images"></i>
+        <span><b>Add multiple photos</b> - AI enhances all</span>
+        <span>Select several files at once</span>
+        {{ form.gallery_images }}
+        </label>
+        <button type="button" class="sp-btn sp-btn-secondary sl-ai-btn" id="sl-enhance-gallery" hidden>
+        <i class="fas fa-wand-magic-sparkles"></i> Enhance All with AI
+        </button>
+        <div class="sl-new-photos" id="sl-new-gallery" hidden></div>
         </div>
-      </div>
-    </div>
+        </div>
+        </div>
+        
 
         <div class="sl-section" style="border-top:1px solid var(--aq-border);">
-          <div style="display:flex;align-items:center;justify-content:flex-end;gap:1rem;">
-            <a href="{% url 'seller:seller_dashboard' %}" class="sp-btn sp-btn-secondary">Cancel</a>
-            <button type="submit" class="sp-btn sp-btn-primary"><i class="fas fa-check"></i> Publish listing</button>
-          </div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:1rem;">
+        <a href="{% url 'seller:seller_dashboard' %}" class="sp-btn sp-btn-secondary">Cancel</a>
+        <button type="submit" class="sp-btn sp-btn-primary"><i class="fas fa-check"></i> Publish listing</button>
         </div>
-      </form>
+        </div>
 
-      <!-- ── Side panel ── -->
-      <aside class="sl-side">
-        <div class="sl-side-card">
+          </form>
+
+          <aside class="sl-side">
+          <div class="sl-side-card">
           <h2 class="sl-side-title"><i class="fas fa-eye"></i> Live preview</h2>
           <div class="sl-preview">
-            <div class="sl-preview-media" id="sl-preview-media"><i class="fas fa-box-open"></i></div>
-            <div class="sl-preview-name" id="sl-preview-name">Your product name appears here</div>
-            <div class="sl-preview-cat" id="sl-preview-cat">Pick a category</div>
-            <div class="sl-preview-price" id="sl-preview-price">—</div>
+          <div class="sl-preview-media" id="sl-preview-media"><i class="fas fa-box-open"></i></div>
+          <div class="sl-preview-name" id="sl-preview-name">Your product name appears here</div>
+          <div class="sl-preview-cat" id="sl-preview-cat">Pick a category</div>
+          <div class="sl-preview-price" id="sl-preview-price">—</div>
           </div>
-        </div>
-
-        <div class="sl-side-card">
+          </div>
+          
+          <div class="sl-side-card">
           <h2 class="sl-side-title"><i class="fas fa-clipboard-check"></i> Listing readiness</h2>
           <div class="sl-score-row">
-            <span>Ready to publish</span>
-            <div class="sl-score" id="sl-score">0<em>%</em></div>
+          <span>Ready to publish</span>
+          <div class="sl-score" id="sl-score">0<em>%</em></div>
           </div>
           <div class="sl-progress"><span class="sl-progress-bar" id="sl-progress-bar"></span></div>
           <ul class="sl-check-list">
-            <li class="sl-check" data-check="title"><span class="ic"><i class="fas fa-check"></i></span> Give your product a clear title</li>
-            <li class="sl-check" data-check="category"><span class="ic"><i class="fas fa-check"></i></span> Choose a category</li>
-            <li class="sl-check" data-check="price"><span class="ic"><i class="fas fa-check"></i></span> Set a price</li>
-            <li class="sl-check" data-check="description"><span class="ic"><i class="fas fa-check"></i></span> Add a description</li>
-            <li class="sl-check" data-check="photo"><span class="ic"><i class="fas fa-check"></i></span> Add a product photo</li>
-            <li class="sl-check" data-check="variant"><span class="ic"><i class="fas fa-check"></i></span> Add at least one option</li>
-            <li class="sl-check" data-check="stock"><span class="ic"><i class="fas fa-check"></i></span> Set stock for an option</li>
+          <li class="sl-check" data-check="title"><span class="ic"><i class="fas fa-check"></i></span> Give your product a clear title</li>
+          <li class="sl-check" data-check="category"><span class="ic"><i class="fas fa-check"></i></span> Choose a category</li>
+          <li class="sl-check" data-check="price"><span class="ic"><i class="fas fa-check"></i></span> Set a price</li>
+          <li class="sl-check" data-check="description"><span class="ic"><i class="fas fa-check"></i></span> Add a description</li>
+          <li class="sl-check" data-check="photo"><span class="ic"><i class="fas fa-check"></i></span> Add a product photo</li>
+          <li class="sl-check" data-check="variant"><span class="ic"><i class="fas fa-check"></i></span> Add at least one option</li>
+          <li class="sl-check" data-check="stock"><span class="ic"><i class="fas fa-check"></i></span> Set stock for an option</li>
           </ul>
-        </div>
-
-        <div class="sl-side-card">
+          </div>
+          
+          <div class="sl-side-card">
           <div class="sl-side-cta">
-            <button type="submit" form="sl-form" class="sp-btn sp-btn-primary"><i class="fas fa-check"></i> Publish listing</button>
-            <a href="{% url 'seller:seller_dashboard' %}" class="sp-btn sp-btn-secondary">Cancel</a>
+          <button type="submit" form="sl-form" class="sp-btn sp-btn-primary"><i class="fas fa-check"></i> Publish listing</button>
+          <a href="{% url 'seller:seller_dashboard' %}" class="sp-btn sp-btn-secondary">Cancel</a>
+          </div>
+          </div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- Text Mode Panel -->
+      <div class="sl-ai-panel" data-panel="text" role="tabpanel" hidden>
+      <div class="sl-section">
+      <div class="sl-section-head">
+      <h2 class="sl-section-title">Describe your product naturally</h2>
+      <p class="sl-section-desc">Write in any language - AI extracts details and fills the form.</p>
+      </div>
+      <div class="sp-field">
+      <label class="sp-label">Language</label>
+      <select id="sl-text-language" class="sp-input">
+      {% for code, name in ai_config.languages %}
+      <option value="{{ code }}">{{ name }}</option>
+      {% endfor %}
+      </select>
+      </div>
+      <div class="sp-field">
+      <textarea id="sl-text-input" class="sp-input" rows="6" placeholder="e.g. लाल हैंडलूम कॉटन साड़ी, 5.5 मीटर, जरी बॉर्डर, ऑफिस वियर के लिए..."></textarea>
+      <div class="sl-input-hint"><i class="fas fa-circle-info"></i> Include material, size, color, technique, occasion, special features for best results.</div>
+      </div>
+      <button type="button" class="sp-btn sp-btn-primary" id="sl-text-submit">
+      <i class="fas fa-magic"></i> Generate Listing
+      </button>
+      <div id="sl-text-loading" class="sl-loading" hidden><i class="fas fa-spinner fa-spin"></i> AI is analyzing...</div>
+      </div>
+      </div>
+      
+
+      <!-- Voice Mode Panel -->
+      <!-- Voice Mode Panel -->
+      <div class="sl-ai-panel" data-panel="voice" role="tabpanel" hidden>
+      <div class="sl-section">
+      <div class="sl-section-head">
+      <h2 class="sl-section-title">Record your product description</h2>
+      <p class="sl-section-desc">Speak naturally in your language - AI transcribes and creates the listing.</p>
+      </div>
+      <div class="sp-field">
+      <label class="sp-label">Language</label>
+      <select id="sl-voice-language" class="sp-input">
+      {% for code, name in ai_config.languages %}
+      <option value="{{ code }}">{{ name }}</option>
+      {% endfor %}
+      </select>
+      </div>
+      <div class="sl-voice-recorder">
+      <div class="sl-voice-stage">
+      <button type="button" class="sl-voice-btn" id="sl-voice-btn" aria-label="Start recording">
+      <i class="fas fa-microphone"></i>
+      <span>Tap to Record</span>
+      </button>
+      <div class="sl-voice-rings" aria-hidden="true"><i></i><i></i><i></i></div>
+      </div>
+      <div class="sl-voice-wave" id="sl-voice-wave" hidden>
+      <span class="sl-wave-bar"></span><span class="sl-wave-bar"></span><span class="sl-wave-bar"></span>
+      <span class="sl-wave-bar"></span><span class="sl-wave-bar"></span><span class="sl-wave-bar"></span><span class="sl-wave-bar"></span>
+      </div>
+      <p class="sl-voice-timer" id="sl-voice-timer" hidden>00:00</p>
+      <p class="sl-voice-transcript" id="sl-voice-transcript" hidden></p>
+      </div>
+      <div class="sl-voice-actions">
+      <button type="button" class="sp-btn sp-btn-secondary" id="sl-voice-retry" hidden><i class="fas fa-redo"></i> Re-record</button>
+      <button type="button" class="sp-btn sp-btn-primary" id="sl-voice-submit" hidden><i class="fas fa-magic"></i> Generate Listing</button>
+      </div>
+      </div>
+      </div>
+      
+
+      <!-- AI Assist Mode Panel (interactive chat) -->
+      <div class="sl-ai-panel" data-panel="ai-assist" role="tabpanel" hidden>
+        <div class="sl-chat">
+          <div class="sl-chat-head">
+            <div class="sl-chat-avatar"><i class="fas fa-robot"></i></div>
+            <div class="sl-chat-head-info">
+              <b>SeedAI Assistant</b>
+              <span><i class="fas fa-circle sl-chat-online"></i> Online — ask me anything</span>
+            </div>
+            <button type="button" class="sl-chat-clear" id="sl-chat-clear" title="Start over"><i class="fas fa-rotate-left"></i> Reset</button>
+          </div>
+
+          <div class="sl-chat-body" id="sl-chat-body" aria-live="polite">
+            <div class="sl-chat-day"><span>Start your product journey</span></div>
+            <div class="sl-msg sl-msg-ai">
+              <div class="sl-msg-avatar"><i class="fas fa-robot"></i></div>
+              <div class="sl-msg-bubble">
+                <p>Aajaaiye! 👋 I'm <b>SeedAI</b>, your personal listing assistant on the side. Tell me about the product you want to create — <b>type</b> or just <b>tap the mic and talk</b> in any language (हिंदी, English, தமிழ்…). I'll keep collecting the details until we can build your listing together.</p>
+                <span class="sl-msg-time">now</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sl-chat-quick" id="sl-chat-quick">
+            <span class="sl-chat-quick-label">Try saying:</span>
+            <button type="button" class="sl-chat-chip" data-quick="Mai ek laal handloom cotton saree bechta hu, 5.5 meter, jari border">I sell a red handloom silk saree</button>
+            <button type="button" class="sl-chat-chip" data-quick="यह ब्रास की दीया है, 4 इंच, हाथ से बनी">Brass handcrafted diya set</button>
+            <button type="button" class="sl-chat-chip" data-quick="I make embroidered kurtas around ₹800">Embroidered kurta around ₹800</button>
+          </div>
+
+          <div class="sl-chat-input" id="sl-chat-input">
+            <button type="button" class="sl-chat-mic" id="sl-chat-mic" title="Talk — speak in any language">
+              <i class="fas fa-microphone"></i>
+            </button>
+            <input type="text" id="sl-chat-text" class="sp-input" placeholder="Type your product idea, or tap the mic to talk…"
+                   autocomplete="off" aria-label="Chat message">
+            <button type="button" class="sp-btn sp-btn-primary sl-chat-send" id="sl-chat-send" title="Send">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+
+          <div class="sl-chat-build">
+            <div class="sl-chat-rec" id="sl-chat-rec" hidden>
+              <span class="sl-chat-rec-bar"></span><span class="sl-chat-rec-bar"></span><span class="sl-chat-rec-bar"></span>
+              <em>Listening… speak now</em>
+            </div>
+            <button type="button" class="sp-btn sp-btn-primary sl-chat-build-btn" id="sl-chat-build" disabled>
+              <i class="fas fa-wand-magic-sparkles"></i> Build my listing from chat
+            </button>
+            <span class="sl-chat-hint" id="sl-chat-hint">Answer my questions until the Build button lights up.</span>
           </div>
         </div>
-      </aside>
-    </div>
-  </div>
-</div>
+      </div>
+       
+     </div>
+   </div>
+ </div>
 
 <!-- Mobile publish bar -->
 <div class="sl-mobilebar">
