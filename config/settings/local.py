@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'notifications.apps.NotificationsConfig',
     'newsletter.apps.NewsletterConfig',
     'jobs.apps.JobsConfig',
+    'ai_services.apps.AIServicesConfig',
 ]
 
 MIDDLEWARE = [
@@ -306,14 +307,20 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
 # ---------------------------------------------------------------------------
-# AI API Configuration (Mock for MVP)
+# AI API Configuration (OpenRouter + Mock Fallback)
 # ---------------------------------------------------------------------------
 AI_API = {
     'CATALOG_URL': os.getenv('AI_CATALOG_URL', 'http://localhost:8001/api/ai/v1/catalog'),
     'IMAGE_URL': os.getenv('AI_IMAGE_URL', 'http://localhost:8001/api/ai/v1/image'),
     'PRICING_URL': os.getenv('AI_PRICING_URL', 'http://localhost:8001/api/ai/v1/pricing'),
-    'TIMEOUT': int(os.getenv('AI_API_TIMEOUT', '15')),
+    'TIMEOUT': int(os.getenv('AI_API_TIMEOUT', '30')),
 }
+
+# OpenRouter Configuration
+AI_PROVIDER = os.getenv('AI_PROVIDER', 'auto')
+AI_BASE_URL = os.getenv('AI_BASE_URL', 'https://openrouter.ai/api/v1')
+AI_API_KEY = os.getenv('AI_API_KEY', '')
+AI_MODEL = os.getenv('AI_MODEL', 'nvidia/nemotron-3-ultra')
 
 AI_SUPPORTED_LANGUAGES = [
     ('hi-IN', 'हिंदी'),

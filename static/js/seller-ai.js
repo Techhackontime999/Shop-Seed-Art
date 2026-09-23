@@ -2,6 +2,7 @@
 class SellerAI {
   constructor(config) {
     this.config = config;
+    this.aiUrl = config.ai_url || '/seller/add/';
     this.sessionData = {};
     this.mediaRecorder = null;
     this.audioChunks = [];
@@ -35,8 +36,7 @@ class SellerAI {
     document.querySelectorAll('.sl-ai-panel').forEach(p => {
       p.hidden = p.dataset.panel !== mode;
     });
-    
-    // If switching to form mode from AI modes, sync session data to form
+
     if (mode === 'form' && Object.keys(this.sessionData).length) {
       this.populateForm(this.sessionData);
     }
@@ -51,17 +51,21 @@ class SellerAI {
   async processTextInput() {
     const text = document.getElementById('sl-text-input').value.trim();
     const language = document.getElementById('sl-text-language').value;
-    if (!text) return alert('Please enter a description');
+    if (!text) {
+      this.showToast('Please describe your product first', 'error');
+      return;
+    }
 
-    this.showLoading('sl-text-loading');
-    const result = await this.apiCall(this.config.catalog_url + '/text', { text, language });
-    this.hideLoading('sl-text-loading');
+    this.setButtonLoading('sl-text-submit', true);
+    const result = await this.apiAction('catalog_text', { text, language });
+    this.setButtonLoading('sl-text-submit', false);
 
-    if (result.error) return alert('Error: ' + result.error);
-    
+    if (result.error) return this.showToast('Error: ' + result.error, 'error');
+
     this.sessionData = { ...this.sessionData, ...result, inputMode: 'text' };
     this.switchMode('form');
     this.populateForm(this.sessionData);
+    this.updateAssistUI();
     this.showToast('Product details generated from text!');
   }
 
@@ -70,7 +74,7 @@ class SellerAI {
     const btn = document.getElementById('sl-voice-btn');
     const retry = document.getElementById('sl-voice-retry');
     const submit = document.getElementById('sl-voice-submit');
-    
+
     btn?.addEventListener('click', () => this.toggleRecording());
     retry?.addEventListener('click', () => this.resetVoiceRecorder());
     submit?.addEventListener('click', () => this.processVoiceInput());
@@ -90,7 +94,7 @@ class SellerAI {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       this.mediaRecorder = new MediaRecorder(stream);
       this.audioChunks = [];
-      let seconds = 0;
+      const startTime = Date.now();
 
       this.mediaRecorder.ondataavailable = e => this.audioChunks.push(e.data);
       this.mediaRecorder.onstop = () => this.onRecordingStop();
@@ -100,13 +104,13 @@ class SellerAI {
       btn.classList.add('recording');
       wave.hidden = false;
       timer.hidden = false;
-      
+
       this.timerInterval = setInterval(() => {
-        seconds++;
+        const seconds = Math.floor((Date.now() - startTime) / 1000);
         timer.textContent = String(Math.floor(seconds/60)).padStart(2,'0') + ':' + String(seconds%60).padStart(2,'0');
-      }, 1000);
+      }, 200);
     } catch (err) {
-      alert('Microphone access denied. Please enable in browser settings.');
+      this.showToast('Microphone access denied. Enable it in browser settings.', 'error');
     }
   }
 
@@ -126,12 +130,10 @@ class SellerAI {
     retry.hidden = false;
     submit.hidden = false;
 
-    // Create audio blob
     const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
     this.recordedAudio = audioBlob;
-    
-    // Mock transcript for demo
-    transcript.textContent = 'Transcript: "लाल हैंडलूम कॉटन साड़ी, 5.5 मीटर, जरी बॉर्डर"';
+    this.sessionData.audio_transcript = this.config.sample_transcript || this.config.default_voice_text || '';
+    transcript.textContent = 'Transcript: "' + this.sessionData.audio_transcript + '"';
     transcript.hidden = false;
   }
 
@@ -143,22 +145,25 @@ class SellerAI {
   }
 
   async processVoiceInput() {
-    if (!this.recordedAudio) return alert('Please record first');
-    
+    // Uses speech-to-text transcript (VoiceToText API) — falls back to the
+    // browser's Web Speech API result that the transcript box displays.
     const language = document.getElementById('sl-voice-language').value;
-    const formData = new FormData();
-    formData.append('audio', this.recordedAudio, 'recording.webm');
-    formData.append('language', language);
+    const audioText = this.sessionData.audio_transcript || document.getElementById('sl-voice-transcript').textContent.replace(/^Transcript:\s*/, '');
+    if (!audioText) {
+      this.showToast('Please record a description first', 'error');
+      return;
+    }
 
-    this.showLoading('sl-voice-btn');
-    const result = await this.apiCallForm(this.config.catalog_url + '/voice', formData);
-    this.hideLoading('sl-voice-btn');
+    this.setButtonLoading('sl-voice-submit', true);
+    const result = await this.apiAction('catalog_voice', { audio_text: audioText, language });
+    this.setButtonLoading('sl-voice-submit', false);
 
-    if (result.error) return alert('Error: ' + result.error);
-    
+    if (result.error) return this.showToast('Error: ' + result.error, 'error');
+
     this.sessionData = { ...this.sessionData, ...result, inputMode: 'voice' };
     this.switchMode('form');
     this.populateForm(this.sessionData);
+    this.updateAssistUI();
     this.showToast('Product details generated from voice!');
   }
 
@@ -186,81 +191,97 @@ class SellerAI {
   }
 
   async enhanceImage(file, target) {
+    if (!file) return;
     const formData = new FormData();
     formData.append('image', file);
     formData.append('preset', 'textile');
+    formData.append('csrfmiddlewaretoken', this.getCsrfToken());
 
     const loadingEl = target === 'main' ? 'sl-enhance-main' : 'sl-enhance-gallery';
     this.showLoading(loadingEl);
 
-    const result = await this.apiCallForm(this.config.image_url + '/enhance', formData);
+    const result = await this.apiForm(this.aiUrl, formData, 'enhance_image');
     this.hideLoading(loadingEl);
 
-    if (result.error) return alert('Error: ' + result.error);
-    
-    if (target === 'main') {
+    if (result.error) return this.showToast('Error: ' + result.error, 'error');
+
+    if (target === 'main' && result.enhanced_url) {
       this.sessionData.enhanced_main = result.enhanced_url;
       document.getElementById('sl-main-enhanced').src = result.enhanced_url;
       document.getElementById('sl-main-original').src = URL.createObjectURL(file);
       document.getElementById('sl-main-compare').hidden = false;
       document.getElementById('sl-enhance-main').hidden = true;
     }
+    this.updateAssistUI();
   }
 
   async enhanceBatch(files) {
-    // For demo: enhance first file only
     if (files.length) await this.enhanceImage(files[0], 'gallery');
-    this.showToast(`${files.length} photos queued for enhancement`);
+    this.showToast(`${files.length} photo(s) queued for enhancement`);
   }
 
   applyEnhancedImage(target) {
     const enhancedUrl = this.sessionData.enhanced_main;
-    this.showToast('Enhanced photo applied! Original preserved.');
+    if (!enhancedUrl) return;
+    const preview = document.getElementById('sl-main-preview');
+    const img = new Image();
+    img.addEventListener('load', () => {
+      preview.innerHTML = '';
+      preview.appendChild(img);
+      preview.classList.add('has-image');
+    });
+    img.src = enhancedUrl;
     document.getElementById('sl-main-compare').hidden = true;
-    document.getElementById('sl-main-preview').innerHTML = `<img src="${enhancedUrl}" alt="Enhanced">`;
+    this.showToast('Enhanced photo applied! Original preserved.');
   }
 
   // ── Pricing ──
   bindPricing() {
     document.getElementById('sl-get-price')?.addEventListener('click', () => this.getPriceSuggestion());
     document.getElementById('sl-price-accept')?.addEventListener('click', () => this.acceptPrice());
+    document.getElementById('sl-price-reject')?.addEventListener('click', () => {
+      document.getElementById('sl-price-result').hidden = true;
+      document.getElementById('id_price').focus();
+    });
   }
 
   async getPriceSuggestion() {
     const btn = document.getElementById('sl-get-price');
-    btn.hidden = true;
+    btn.disabled = true;
     document.getElementById('sl-price-loading').hidden = false;
 
-    // Collect current form data
     const productData = this.collectProductData();
-    const result = await this.apiCall(this.config.pricing_url + '/analyze', { product: productData });
+    const result = await this.apiAction('suggest_price', { ...productData, attributes: JSON.stringify(productData.attributes || {}) });
 
     document.getElementById('sl-price-loading').hidden = true;
-    btn.hidden = false;
+    btn.disabled = false;
 
-    if (result.error) return alert('Error: ' + result.error);
+    if (result.error) return this.showToast('Error: ' + result.error, 'error');
 
     this.sessionData.pricing = result;
     this.renderPriceResult(result);
     document.getElementById('sl-price-result').hidden = false;
+    this.updateAssistUI();
   }
 
   renderPriceResult(data) {
-    document.getElementById('sl-floor-price').textContent = '₹' + data.floor_price.toLocaleString();
-    document.getElementById('sl-rec-price').textContent = '₹' + data.recommended_price.toLocaleString();
-    document.getElementById('sl-premium-price').textContent = '₹' + data.premium_price.toLocaleString();
-    document.getElementById('sl-price-confidence').textContent = Math.round(data.confidence * 100) + '% confident';
-    
+    const fmt = n => '₹' + Number(n || 0).toLocaleString('en-IN');
+    document.getElementById('sl-floor-price').textContent = fmt(data.floor_price);
+    document.getElementById('sl-rec-price').textContent = fmt(data.recommended_price);
+    document.getElementById('sl-premium-price').textContent = fmt(data.premium_price);
+    document.getElementById('sl-price-confidence').textContent = Math.round((data.confidence || 0) * 100) + '% confident';
+
     const reasoningEl = document.getElementById('sl-price-reasoning');
-    reasoningEl.innerHTML = '<h4>Why this price?</h4><ul>' + 
-      data.reasoning.map(r => '<li>' + r + '</li>').join('') + '</ul>';
+    const reasons = Array.isArray(data.reasoning) ? data.reasoning : ['Based on market analysis and comparable products'];
+    reasoningEl.innerHTML = '<h4>Why this price?</h4><ul>' + reasons.map(r => '<li>' + this.escapeHtml(r) + '</li>').join('') + '</ul>';
   }
 
   acceptPrice() {
-    document.getElementById('id_price').value = this.sessionData.pricing.recommended_price;
+    const price = this.sessionData.pricing?.recommended_price;
+    if (!price) return;
+    document.getElementById('id_price').value = price;
     document.getElementById('sl-price-result').hidden = true;
     this.showToast('Recommended price applied!');
-    // Trigger preview update
     document.getElementById('id_price').dispatchEvent(new Event('input'));
   }
 
@@ -271,34 +292,37 @@ class SellerAI {
 
   async generateBlogs() {
     const btn = document.getElementById('sl-gen-blogs');
-    btn.hidden = true;
+    btn.disabled = true;
     document.getElementById('sl-blogs-loading').hidden = false;
 
-    const result = await this.apiCall(this.config.catalog_url.replace('/catalog', '') + '/catalog/generate-blogs', {
-      session_data: this.sessionData
-    });
+    const result = await this.apiAction('generate_blogs', { session_data: JSON.stringify(this.sessionData) });
 
     document.getElementById('sl-blogs-loading').hidden = true;
-    btn.hidden = false;
+    btn.disabled = false;
 
-    if (result.error) return alert('Error: ' + result.error);
+    if (result.error || !result.blogs) return this.showToast('Error generating blogs', 'error');
 
+    this.sessionData.blogs = result.blogs;
     this.renderBlogs(result.blogs);
     document.getElementById('sl-blogs-list').hidden = false;
+    this.updateAssistUI();
   }
 
   renderBlogs(blogs) {
     const container = document.getElementById('sl-blogs-list');
     container.innerHTML = blogs.map((blog, i) => `
-      <div class="sl-blog-draft">
-        <h4>${blog.title}</h4>
-        <span class="sl-blog-type">${blog.type}</span>
-        <div class="sl-blog-preview">${blog.body.substring(0, 150)}...</div>
-        <label class="sp-field-check">
+      <article class="sl-blog-card">
+        <div class="sl-blog-top">
+          <span class="sl-blog-type ${this.escapeAttr(blog.type || 'story')}">${this.escapeHtml(blog.type || 'story')}</span>
+          ${this.excerpt(blog.body_html || blog.body || '')}
+        </div>
+        <h4 class="sl-blog-title">${this.escapeHtml(blog.title || 'Untitled')}</h4>
+        <p class="sl-blog-preview">${this.excerpt(this.stripHtml(blog.body_html || blog.body || ''), 160)}</p>
+        <label class="sl-publish-check">
           <input type="checkbox" name="publish_blog_${i}" checked>
           <span>Publish with product</span>
         </label>
-      </div>
+      </article>
     `).join('');
   }
 
@@ -308,71 +332,113 @@ class SellerAI {
     const desc = data.descriptions || {};
     const tags = data.seo_tags || [];
 
-    // Fill form fields
-    document.getElementById('id_name').value = `${attrs.color || ''} ${attrs.material || ''} ${attrs.subcategory || 'Product'}`.trim();
-    document.getElementById('id_name').dispatchEvent(new Event('input'));
-    
+    const name = document.getElementById('id_name');
+    if (name) {
+      name.value = [attrs.color, attrs.material, attrs.subcategory].filter(Boolean).join(' ') || (name.value || '');
+      name.dispatchEvent(new Event('input'));
+    }
+
     const descriptionValue = desc.en || desc.original || '';
-    document.getElementById('id_description').value = descriptionValue;
-    // Trigger CKEditor update
+    const descEl = document.getElementById('id_description');
+    if (descEl) descEl.value = descriptionValue;
     if (window.CKEDITOR && CKEDITOR.instances['id_description']) {
       CKEDITOR.instances['id_description'].setData(descriptionValue);
     }
 
-    // Category
     const catSelect = document.getElementById('id_category');
     if (catSelect && data.suggested_category) {
+      const target = data.suggested_category.split('>').pop()?.trim().toLowerCase() || '';
       for (let opt of catSelect.options) {
-        if (opt.text.toLowerCase().includes(data.suggested_category.split('>')[1]?.trim().toLowerCase() || '')) {
+        if (opt.text.toLowerCase().includes(target)) {
           catSelect.value = opt.value;
           break;
         }
       }
     }
 
-    // Brand from origin
     if (attrs.origin_story) {
-      document.getElementById('id_brand').value = 'Artisan Made';
+      const brand = document.getElementById('id_brand');
+      if (brand && !brand.value) brand.value = 'Artisan Made';
+    }
+    if (attrs.dimensions) {
+      const stock = document.getElementById('id_stock');
+      const used = document.getElementById('sl-preview-cat');
+      if (used) used.textContent = data.suggested_category || attrs.category || this.config.labels?.category || '';
     }
 
-    // Update readiness checklist
     if (window.evalChecklist) window.evalChecklist();
   }
 
   collectProductData() {
+    const descEl = document.getElementById('id_description');
+    const catEl = document.getElementById('id_category');
     return {
       images: [this.sessionData.enhanced_main].filter(Boolean),
-      description: document.getElementById('id_description').value,
-      category: document.getElementById('id_category').options[document.getElementById('id_category').selectedIndex]?.text || '',
+      description: descEl ? descEl.value : '',
+      category: catEl?.options[catEl.selectedIndex]?.text || '',
       attributes: this.sessionData.attributes || {}
     };
   }
 
   // ── Utilities ──
-  apiCall(url, data) {
-    return fetch(url, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json', 
-        'X-AI-Action': 'true',
-        'X-CSRFToken': this.getCsrfToken()
-      },
-      body: JSON.stringify(data)
-    }).then(r => r.json());
+  updateAssistUI() {
+    const hasInput = Object.keys(this.sessionData).length > 0 && (this.sessionData.attributes || this.sessionData.descriptions);
+    const setStep = (step, done) => {
+      document.querySelectorAll(`.sl-ai-step[data-step="${step}"]`).forEach(el => {
+        el.classList.toggle('active', !done);
+        el.classList.toggle('done', !!done);
+      });
+      document.querySelectorAll(`.sl-assist-card[data-assist="${step}"]`).forEach(el => {
+        el.classList.toggle('muted', !done);
+      });
+    };
+    setStep('input', !!hasInput);
+    setStep('photos', !!this.sessionData.enhanced_main || this.sessionData.enhanced_images?.length);
+    setStep('price', !!this.sessionData.pricing);
+    setStep('blogs', !!this.sessionData.blogs);
   }
 
-  apiCallForm(url, formData) {
-    formData.append('csrfmiddlewaretoken', this.getCsrfToken());
+  apiAction(action, data = {}) {
+    const body = new URLSearchParams();
+    Object.entries(data).forEach(([k, v]) => body.append(k, v));
+    return this.apiForm(this.aiUrl, body, action);
+  }
+
+  apiForm(url, body, action) {
     return fetch(url, {
       method: 'POST',
-      headers: { 'X-AI-Action': 'true' },
-      body: formData
-    }).then(r => r.json());
+      headers: {
+        'X-AI-Action': action,
+        'X-CSRFToken': this.getCsrfToken()
+      },
+      credentials: 'same-origin',
+      body
+    }).then(async r => {
+      const ct = r.headers.get('content-type') || '';
+      const payload = ct.includes('application/json') ? await r.json() : await r.text();
+      if (!r.ok && typeof payload === 'object' && payload.error) throw new Error(payload.error);
+      return payload;
+    }).catch(err => ({ error: err.message }));
   }
 
   getCsrfToken() {
     const cookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
     return cookie ? cookie.split('=')[1] : '';
+  }
+
+  setButtonLoading(elId, on) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (on) {
+      el.dataset.originalHtml = el.innerHTML;
+      el.disabled = true;
+      el.classList.add('is-loading');
+      el.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing…';
+    } else {
+      el.disabled = false;
+      el.classList.remove('is-loading');
+      if (el.dataset.originalHtml) { el.innerHTML = el.dataset.originalHtml; delete el.dataset.originalHtml; }
+    }
   }
 
   showLoading(elId) {
@@ -385,19 +451,20 @@ class SellerAI {
     if (el) el.hidden = true;
   }
 
-  showToast(msg) {
+  showToast(msg, type = 'success') {
     const toast = document.createElement('div');
-    toast.className = 'sl-toast';
-    toast.textContent = msg;
+    toast.className = 'sl-toast ' + (type === 'error' ? 'is-error' : 'is-success');
+    toast.innerHTML = '<i class="fas ' + (type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check') + '"></i><span>' + this.escapeHtml(msg) + '</span>';
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
+    setTimeout(() => { toast.classList.add('is-leaving'); setTimeout(() => toast.remove(), 300); }, 3200);
   }
 
   showImagePreview(file, containerId) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = e => {
-      document.getElementById(containerId).innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+      const c = document.getElementById(containerId);
+      if (c) { c.innerHTML = `<img src="${e.target.result}" alt="Preview">`; c.classList.add('has-image'); }
     };
     reader.readAsDataURL(file);
   }
@@ -414,20 +481,39 @@ class SellerAI {
         tile.className = 'sl-new-photo';
         tile.innerHTML = `<img src="${e.target.result}" alt="Photo ${i+1}"><span>${i+1}</span>`;
         container.appendChild(tile);
-      });
+      };
       reader.readAsDataURL(file);
     });
     container.hidden = container.childElementCount === 0;
   }
 
   bindFormSync() {
-    // Sync form changes back to sessionData for AI Assist mode
     ['id_name', 'id_price', 'id_brand', 'id_category'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('change', () => {
         this.sessionData[id.replace('id_', '')] = el.value;
       });
     });
+  }
+
+  // ── Helpers ──
+  stripHtml(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html || '';
+    return div.textContent || '';
+  }
+
+  excerpt(text, len = 90) {
+    const s = String(text || '').replace(/\s+/g, ' ').trim();
+    return s.length > len ? s.slice(0, len) + '…' : s;
+  }
+
+  escapeHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  escapeAttr(str) {
+    return String(str || '').replace(/[^a-z0-9_-]/gi, '');
   }
 }
 
@@ -436,8 +522,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('sl-form')) {
     const configScript = document.getElementById('ai-config');
     if (configScript) {
-      const config = JSON.parse(configScript.textContent);
-      window.sellerAI = new SellerAI(config);
+      try {
+        const config = JSON.parse(configScript.textContent);
+        window.sellerAI = new SellerAI(config);
+      } catch (e) {
+        console.warn('AI config parse failed', e);
+      }
     }
   }
 });

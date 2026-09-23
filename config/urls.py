@@ -49,6 +49,7 @@ urlpatterns = [
     path('contact/', include('contact.urls', namespace='contact')),
     path('coupons/', include('coupons.urls', namespace='coupons')),
     path('seller/', include('seller.urls', namespace='seller')),
+    path('ai/', include('ai_services.urls', namespace='ai_services')),
     path('payments/', include('payments.urls', namespace='payments')),
     path('shipping/', include('shipping.urls', namespace='shipping')),
     path('logistics/', include('logistics.urls', namespace='logistics')),

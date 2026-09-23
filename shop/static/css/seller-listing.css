@@ -118,6 +118,7 @@
 .sl-col-12 { grid-column: span 12; }
 .sl-col-8 { grid-column: span 8; }
 .sl-col-7 { grid-column: span 7; }
+.sl-col-6 { grid-column: span 6; }
 .sl-col-5 { grid-column: span 5; }
 .sl-col-4 { grid-column: span 4; }
 
@@ -675,7 +676,7 @@
   .sl-inner { padding: 1.5rem 0.75rem 5rem; }
   .sl-section { padding: 1.5rem 1.25rem; }
   .sl-grid-fields { grid-template-columns: 1fr; }
-  .sl-col-12, .sl-col-8, .sl-col-7, .sl-col-5, .sl-col-4 { grid-column: span 1; }
+  .sl-col-12, .sl-col-8, .sl-col-7, .sl-col-6, .sl-col-5, .sl-col-4 { grid-column: span 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
