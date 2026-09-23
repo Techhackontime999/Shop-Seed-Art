@@ -23,6 +23,9 @@ import os
 import math
 import json
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
 
 @login_required
 def seller_dashboard(request):
@@ -240,6 +243,17 @@ def add_product(request):
             session_data = json.loads(request.POST.get('session_data', '{}'))
             blogs = ai_generate_blogs(session_data)
             return JsonResponse({'blogs': blogs})
+        
+        elif action == 'chat':
+            message = request.POST.get('message', '')
+            language = request.POST.get('language', 'en-IN')
+            session_data = json.loads(request.POST.get('session_data', '{}'))
+            if not message:
+                return JsonResponse({'error': 'message is required for chat'}, status=400)
+            from ai_services.services.chat import ChatService
+            from ai_services.clients import OpenRouterFallbackClient
+            result = _run_ai(ChatService(OpenRouterFallbackClient()).process(message, language, session_data))
+            return JsonResponse(result)
 
     # Standard form submission
     if request.method == 'POST':

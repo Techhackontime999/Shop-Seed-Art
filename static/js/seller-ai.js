@@ -19,6 +19,7 @@ class SellerAI {
     this.bindPricing();
     this.bindBlogs();
     this.bindFormSync();
+    this.bindChat();
   }
 
   // ── Mode Tabs ──
@@ -382,20 +383,8 @@ class SellerAI {
 
   // ── Utilities ──
   updateAssistUI() {
-    const hasInput = Object.keys(this.sessionData).length > 0 && (this.sessionData.attributes || this.sessionData.descriptions);
-    const setStep = (step, done) => {
-      document.querySelectorAll(`.sl-ai-step[data-step="${step}"]`).forEach(el => {
-        el.classList.toggle('active', !done);
-        el.classList.toggle('done', !!done);
-      });
-      document.querySelectorAll(`.sl-assist-card[data-assist="${step}"]`).forEach(el => {
-        el.classList.toggle('muted', !done);
-      });
-    };
-    setStep('input', !!hasInput);
-    setStep('photos', !!this.sessionData.enhanced_main || this.sessionData.enhanced_images?.length);
-    setStep('price', !!this.sessionData.pricing);
-    setStep('blogs', !!this.sessionData.blogs);
+    // Chat assistant is stateless about progress steps; kept as a no-op hook
+    // so existing callers stay valid.
   }
 
   apiAction(action, data = {}) {
@@ -494,6 +483,260 @@ class SellerAI {
         this.sessionData[id.replace('id_', '')] = el.value;
       });
     });
+  }
+
+  // ── Interactive Chat Assistant ──
+  bindChat() {
+    this.chatSession = {};
+    this.speechRecognition = null;
+    this.speechListening = false;
+
+    const body = document.getElementById('sl-chat-body');
+    const text = document.getElementById('sl-chat-text');
+    const send = document.getElementById('sl-chat-send');
+    const mic = document.getElementById('sl-chat-mic');
+    const build = document.getElementById('sl-chat-build');
+    const clear = document.getElementById('sl-chat-clear');
+
+    // Support both prefixed and standard SpeechRecognition
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SR) {
+      this.speechRecognition = new SR();
+      this.speechRecognition.lang = 'hi-IN';
+      this.speechRecognition.interimResults = false;
+      this.speechRecognition.continuous = false;
+      this.speechRecognition.onresult = (e) => {
+        const transcript = Array.from(e.results).map(r => r[0].transcript).join(' ');
+        this.setChatListening(false);
+        document.getElementById('sl-chat-input').classList.remove('is-listening');
+        if (transcript) {
+          const input = document.getElementById('sl-chat-text');
+          input.value = transcript;
+          this.sendChatMessage();
+        }
+      };
+      this.speechRecognition.onerror = (e) => {
+        this.setChatListening(false);
+        this.showToast('Voice not recognized — try typing instead', 'error');
+      };
+      this.speechRecognition.onend = () => {
+        this.setChatListening(false);
+      };
+    } else {
+      if (mic) mic.title = 'Voice not supported in this browser — type instead';
+    }
+
+    const onSend = () => {
+      const val = (text ? text.value : '').trim();
+      if (val) this.sendChatMessage();
+    };
+
+    text?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); onSend(); }
+    });
+    send?.addEventListener('click', onSend);
+
+    mic?.addEventListener('click', () => {
+      if (!this.speechRecognition) {
+        this.showToast('Voice input needs Chrome/Edge — try typing', 'error');
+        return;
+      }
+      if (this.speechListening) {
+        this.speechRecognition.stop();
+        this.setChatListening(false);
+        return;
+      }
+      try {
+        this.speechRecognition.lang = this.detectChatLanguage() || 'hi-IN';
+        this.speechRecognition.start();
+        this.setChatListening(true);
+        this.scrollChat();
+      } catch (e) {
+        this.showToast('Could not start microphone', 'error');
+      }
+    });
+
+    document.querySelectorAll('.sl-chat-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        this.addChatMsg(chip.textContent.trim(), 'user');
+        this.runChatAssistant(chip.dataset.quick || chip.textContent);
+      });
+    });
+
+    build?.addEventListener('click', () => this.buildListingFromChat());
+    clear?.addEventListener('click', () => this.resetChat());
+  }
+
+  setChatListening(on) {
+    this.speechListening = on;
+    const input = document.getElementById('sl-chat-input');
+    const mic = document.getElementById('sl-chat-mic');
+    const rec = document.getElementById('sl-chat-rec');
+    if (input) input.classList.toggle('is-listening', on);
+    if (mic) mic.classList.toggle('recording', on);
+    if (rec) rec.hidden = !on;
+    if (on) this.scrollChat();
+  }
+
+  detectChatLanguage() {
+    // Simple heuristics from the raw description so the mic matches the seller's language.
+    const raw = String(this.chatSession?.raw_description || '').slice(-120);
+    const scripts = {
+      'hi-IN': /[\u0900-\u097F]/,
+      'ta-IN': /[\u0B80-\u0BFF]/,
+      'te-IN': /[\u0C00-\u0C7F]/,
+      'bn-IN': /[\u0980-\u09FF]/,
+      'mr-IN': /[\u0900-\u097F]/,
+      'gu-IN': /[\u0A80-\u0AFF]/,
+      'kn-IN': /[\u0C80-\u0CFF]/,
+      'ml-IN': /[\u0D00-\u0D7F]/,
+    };
+    return this.config.languages?.find(([code]) => {
+      const re = scripts[code];
+      return re && re.test(raw);
+    })?.[0] || 'hi-IN';
+  }
+
+  addChatMsg(text, role) {
+    const body = document.getElementById('sl-chat-body');
+    if (!body) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'sl-msg ' + (role === 'user' ? 'sl-msg-user is-new' : 'sl-msg-ai is-new');
+    const avatar = document.createElement('div');
+    avatar.className = 'sl-msg-avatar';
+    avatar.innerHTML = role === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
+    const bubble = document.createElement('div');
+    bubble.className = 'sl-msg-bubble';
+    const p = document.createElement('p');
+    p.textContent = text;
+    const time = document.createElement('span');
+    time.className = 'sl-msg-time';
+    time.textContent = 'now';
+    bubble.appendChild(p);
+    bubble.appendChild(time);
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubble);
+    body.appendChild(wrap);
+    this.scrollChat();
+    requestAnimationFrame(() => wrap.classList.remove('is-new'));
+  }
+
+  scrollChat() {
+    const body = document.getElementById('sl-chat-body');
+    if (body) body.scrollTop = body.scrollHeight;
+  }
+
+  async runChatAssistant(message) {
+    const build = document.getElementById('sl-chat-build');
+    if (build) {
+      build.disabled = true;
+      build.classList.add('is-loading');
+      build.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Thinking…';
+    }
+    const result = await this.apiAction('chat', {
+      message,
+      language: this.detectChatLanguage(),
+      session_data: JSON.stringify(this.chatSession)
+    });
+
+    if (result.error) {
+      this.addChatMsg('Sorry, I hit an error. Could you rephrase that?', 'ai');
+      if (build) {
+        build.disabled = !(this.chatSession?.price_hint !== undefined);
+        build.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Build my listing from chat';
+      }
+      return;
+    }
+
+    this.chatSession = result.session || this.chatSession;
+    this.addChatMsg(result.reply, 'ai');
+
+    const ready = !!result.ready;
+    if (build) {
+      build.disabled = !ready;
+      if (ready) build.classList.add('is-ready');
+      build.innerHTML = ready
+        ? '<i class="fas fa-wand-magic-sparkles"></i> Build my listing from chat'
+        : '<i class="fas fa-spinner fa-spin"></i> Thinking…';
+    }
+    const hint = document.getElementById('sl-chat-hint');
+    if (hint) {
+      hint.textContent = ready
+        ? 'You’re ready! Build your listing, or keep refining below.'
+        : 'Answer my questions until the Build button lights up.';
+    }
+    document.getElementById('sl-chat-text')?.focus();
+  }
+
+  async sendChatMessage() {
+    const text = document.getElementById('sl-chat-text');
+    const val = (text ? text.value : '').trim();
+    if (!val) return;
+    if (text) text.value = '';
+    this.addChatMsg(val, 'user');
+    await this.runChatAssistant(val);
+  }
+
+  resetChat() {
+    this.chatSession = {};
+    const body = document.getElementById('sl-chat-body');
+    if (body) {
+      const first = body.querySelector('.sl-msg-ai');
+      body.querySelectorAll('.sl-msg').forEach(m => {
+        if (m !== first) m.remove();
+      });
+      this.scrollChat();
+    }
+    const build = document.getElementById('sl-chat-build');
+    if (build) {
+      build.disabled = true;
+      build.classList.remove('is-ready');
+    }
+    const hint = document.getElementById('sl-chat-hint');
+    if (hint) hint.textContent = 'Answer my questions until the Build button lights up.';
+    this.showToast('Chat reset — let’s start over');
+  }
+
+  async buildListingFromChat() {
+    const raw = String(this.chatSession?.raw_description || '');
+    if (!raw) {
+      this.showToast('Tell me something about your product first', 'error');
+      return;
+    }
+    const build = document.getElementById('sl-chat-build');
+    if (build) {
+      build.disabled = true;
+      build.classList.add('is-loading');
+      build.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Building your listing…';
+    }
+
+    const result = await this.apiAction('catalog_text', {
+      text: raw,
+      language: this.detectChatLanguage()
+    });
+
+    if (build) {
+      build.disabled = false;
+      build.classList.remove('is-loading');
+      build.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Build my listing from chat';
+    }
+
+    if (result.error) {
+      this.addChatMsg('I couldn’t build it just yet — please make sure your product description is a little more detailed.', 'ai');
+      this.showToast('Could not build listing', 'error');
+      return;
+    }
+
+    // Merge the chat-collected price hint & keep generated catalog structure.
+    if (this.chatSession?.price_hint) {
+      result.pricing = result.pricing || {};
+      result.pricing.recommended_price = this.chatSession.price_hint;
+    }
+    this.sessionData = { ...result, inputMode: 'chat' };
+    this.populateForm(this.sessionData);
+    this.updateAssistUI();
+    this.switchMode('form');
+    this.showToast('Listing built from chat — review & publish!');
   }
 
   // ── Helpers ──

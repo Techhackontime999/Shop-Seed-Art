@@ -4,5 +4,6 @@ from .catalog import CatalogService
 from .image import ImageService
 from .pricing import PricingService
 from .blog import BlogService
+from .chat import ChatService
 
-__all__ = ['AIOrchestrator', 'CatalogService', 'ImageService', 'PricingService', 'BlogService']
+__all__ = ['AIOrchestrator', 'CatalogService', 'ImageService', 'PricingService', 'BlogService', 'ChatService']

@@ -54,8 +54,8 @@
       <button class="sl-ai-tab" data-mode="voice" role="tab" aria-selected="false" title="Speak in your language">
         <i class="fas fa-microphone"></i> Voice
       </button>
-      <button class="sl-ai-tab" data-mode="ai-assist" role="tab" aria-selected="false" title="AI fills everything">
-        <i class="fas fa-magic"></i> Assist
+      <button class="sl-ai-tab" data-mode="ai-assist" role="tab" aria-selected="false" title="Chat or talk with the AI assistant side panel">
+        <i class="fas fa-robot"></i> Chat
       </button>
     </div>
 
@@ -526,46 +526,59 @@
       </div>
       
 
-      <!-- AI Assist Mode Panel -->
-      <!-- AI Assist Mode Panel -->
+      <!-- AI Assist Mode Panel (interactive chat) -->
       <div class="sl-ai-panel" data-panel="ai-assist" role="tabpanel" hidden>
-      <div class="sl-section">
-      <div class="sl-section-head">
-      <h2 class="sl-section-title">AI Assist — The full journey</h2>
-      <p class="sl-section-desc">Start from any input below; AI carries your product through every step.</p>
+        <div class="sl-chat">
+          <div class="sl-chat-head">
+            <div class="sl-chat-avatar"><i class="fas fa-robot"></i></div>
+            <div class="sl-chat-head-info">
+              <b>SeedAI Assistant</b>
+              <span><i class="fas fa-circle sl-chat-online"></i> Online — ask me anything</span>
+            </div>
+            <button type="button" class="sl-chat-clear" id="sl-chat-clear" title="Start over"><i class="fas fa-rotate-left"></i> Reset</button>
+          </div>
+
+          <div class="sl-chat-body" id="sl-chat-body" aria-live="polite">
+            <div class="sl-chat-day"><span>Start your product journey</span></div>
+            <div class="sl-msg sl-msg-ai">
+              <div class="sl-msg-avatar"><i class="fas fa-robot"></i></div>
+              <div class="sl-msg-bubble">
+                <p>Aajaaiye! 👋 I'm <b>SeedAI</b>, your personal listing assistant on the side. Tell me about the product you want to create — <b>type</b> or just <b>tap the mic and talk</b> in any language (हिंदी, English, தமிழ்…). I'll keep collecting the details until we can build your listing together.</p>
+                <span class="sl-msg-time">now</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sl-chat-quick" id="sl-chat-quick">
+            <span class="sl-chat-quick-label">Try saying:</span>
+            <button type="button" class="sl-chat-chip" data-quick="Mai ek laal handloom cotton saree bechta hu, 5.5 meter, jari border">I sell a red handloom silk saree</button>
+            <button type="button" class="sl-chat-chip" data-quick="यह ब्रास की दीया है, 4 इंच, हाथ से बनी">Brass handcrafted diya set</button>
+            <button type="button" class="sl-chat-chip" data-quick="I make embroidered kurtas around ₹800">Embroidered kurta around ₹800</button>
+          </div>
+
+          <div class="sl-chat-input">
+            <button type="button" class="sl-chat-mic" id="sl-chat-mic" title="Talk — speak in any language">
+              <i class="fas fa-microphone"></i>
+            </button>
+            <input type="text" id="sl-chat-text" class="sp-input" placeholder="Type your product idea, or tap the mic to talk…"
+                   autocomplete="off" aria-label="Chat message">
+            <button type="button" class="sp-btn sp-btn-primary sl-chat-send" id="sl-chat-send" title="Send">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+
+          <div class="sl-chat-build">
+            <div class="sl-chat-rec" id="sl-chat-rec" hidden>
+              <span class="sl-chat-rec-bar"></span><span class="sl-chat-rec-bar"></span><span class="sl-chat-rec-bar"></span>
+              <em>Listening… speak now</em>
+            </div>
+            <button type="button" class="sp-btn sp-btn-primary sl-chat-build-btn" id="sl-chat-build" disabled>
+              <i class="fas fa-wand-magic-sparkles"></i> Build my listing from chat
+            </button>
+            <span class="sl-chat-hint" id="sl-chat-hint">Answer my questions until the Build button lights up.</span>
+          </div>
+        </div>
       </div>
-      <div class="sl-ai-progress">
-      <div class="sl-ai-step active" data-step="input">1. Input</div>
-      <div class="sl-ai-step" data-step="photos">2. Photos</div>
-      <div class="sl-ai-step" data-step="details">3. Details</div>
-      <div class="sl-ai-step" data-step="price">4. Pricing</div>
-      <div class="sl-ai-step" data-step="blogs">5. Blogs</div>
-      <div class="sl-ai-step" data-step="publish">6. Publish</div>
-      </div>
-      <div class="sl-assist-flow">
-      <div class="sl-assist-card" data-assist="input">
-      <span class="sl-assist-ic"><i class="fas fa-microphone-lines"></i></span>
-      <div><b>Speak or type your idea</b><span>Use the Voice or Text tab above — any language works.</span></div>
-      </div>
-      <div class="sl-assist-card muted" data-assist="photos">
-      <span class="sl-assist-ic"><i class="fas fa-images"></i></span>
-      <div><b>Photos, AI-optimized</b><span>Upload below — backgrounds, lighting and framing are fixed automatically.</span></div>
-      </div>
-      <div class="sl-assist-card muted" data-assist="details">
-      <span class="sl-assist-ic"><i class="fas fa-file-lines"></i></span>
-      <div><b>Details &amp; SEO copy</b><span>Title, description and tags are generated for you in English + Hindi.</span></div>
-      </div>
-      <div class="sl-assist-card muted" data-assist="price">
-      <span class="sl-assist-ic"><i class="fas fa-calculator"></i></span>
-      <div><b>Smart pricing</b><span>Floor / recommended / premium from live market reasoning.</span></div>
-      </div>
-      <div class="sl-assist-card muted" data-assist="blogs">
-      <span class="sl-assist-ic"><i class="fas fa-pen-nib"></i></span>
-      <div><b>Launch blogs</b><span>Story, how-it's-made, care and styling posts auto-written.</span></div>
-      </div>
-      </div>
-      </div>
-</div>
        
      </div>
    </div>
