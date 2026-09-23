@@ -80,7 +80,11 @@
         <div class="sl-grid-fields">
         <div class="sl-col-12 sp-field">
         <label class="sp-label" for="{{ form.name.id_for_label }}">Title *</label>
+        <div class="sl-field-row">
         {{ form.name }}
+        <button type="button" class="sl-translate-btn" data-translate="id_name" data-target="hi-IN" title="Translate to Hindi">
+        <i class="fas fa-language"></i> हिंदी</button>
+        </div>
         <span class="sl-counter"><span class="sl-counter-bar"><i></i></span><span id="sl-name-count">0 / 120</span></span>
         <p class="sp-help">Clear titles sell. Include what it is plus the details buyers search for — color, size or material.</p>
         {% for error in form.name.errors %}<p class="sp-error">{{ error }}</p>{% endfor %}
@@ -145,7 +149,11 @@
         </div>
         <div class="sp-field">
         <label class="sp-label" for="{{ form.description.id_for_label }}">Product description</label>
+        <div class="sl-field-row sl-field-row-top">
         {{ form.description }}
+        <button type="button" class="sl-translate-btn" data-translate="id_description" data-target="hi-IN" title="Translate to Hindi">
+        <i class="fas fa-language"></i> हिंदी</button>
+        </div>
         <p class="sp-help">Describe materials, what's included, and how it's used. Rich descriptions answer questions before buyers ask.</p>
         {% for error in form.description.errors %}<p class="sp-error">{{ error }}</p>{% endfor %}
         </div>

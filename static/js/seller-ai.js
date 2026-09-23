@@ -20,6 +20,7 @@ class SellerAI {
     this.bindBlogs();
     this.bindFormSync();
     this.bindChat();
+    this.bindTranslate();
   }
 
   // ── Mode Tabs ──
@@ -489,6 +490,62 @@ class SellerAI {
     });
   }
 
+  // ── Bilingual translate (English <-> Hindi, everywhere) ──
+  bindTranslate() {
+    document.querySelectorAll('[data-translate]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const fieldId = btn.dataset.translate;
+        let text = this.getFieldValue(fieldId);
+        if (!text) {
+          this.showToast('Nothing to translate yet — add some text first', 'error');
+          return;
+        }
+        const target = btn.dataset.target === 'hi-IN' ? 'hi-IN' : 'en-IN';
+        btn.classList.add('is-loading');
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner"></i>';
+        const result = await this.apiAction('translate', {
+          text,
+          target_language: target
+        });
+        btn.classList.remove('is-loading');
+        btn.innerHTML = original;
+        if (result.error) {
+          this.showToast('Translation failed: ' + result.error, 'error');
+          return;
+        }
+        this.setFieldValue(fieldId, result.translation);
+        // Swap the button so the next click goes the other direction.
+        btn.dataset.target = target === 'hi-IN' ? 'en-IN' : 'hi-IN';
+        btn.title = target === 'hi-IN' ? 'Translate to English' : 'Translate to Hindi';
+        btn.innerHTML = target === 'hi-IN'
+          ? '<i class="fas fa-language"></i> English'
+          : '<i class="fas fa-language"></i> हिंदी';
+        this.showToast('Translated to ' + (target === 'hi-IN' ? 'हिंदी' : 'English'));
+      });
+    });
+  }
+
+  getFieldValue(fieldId) {
+    const el = document.getElementById(fieldId);
+    if (!el) return '';
+    if (fieldId === 'id_description' && window.CKEDITOR && CKEDITOR.instances['id_description']) {
+      return CKEDITOR.instances['id_description'].getData();
+    }
+    return el.value;
+  }
+
+  setFieldValue(fieldId, value) {
+    const el = document.getElementById(fieldId);
+    if (!el) return;
+    if (fieldId === 'id_description' && window.CKEDITOR && CKEDITOR.instances['id_description']) {
+      CKEDITOR.instances['id_description'].setData(value);
+      return;
+    }
+    el.value = value;
+    el.dispatchEvent(new Event('input'));
+  }
+
   // ── Interactive Chat Assistant ──
   bindChat() {
     this.chatSession = {};
@@ -584,22 +641,10 @@ class SellerAI {
   }
 
   detectChatLanguage() {
-    // Simple heuristics from the raw description so the mic matches the seller's language.
-    const raw = String(this.chatSession?.raw_description || '').slice(-120);
-    const scripts = {
-      'hi-IN': /[\u0900-\u097F]/,
-      'ta-IN': /[\u0B80-\u0BFF]/,
-      'te-IN': /[\u0C00-\u0C7F]/,
-      'bn-IN': /[\u0980-\u09FF]/,
-      'mr-IN': /[\u0900-\u097F]/,
-      'gu-IN': /[\u0A80-\u0AFF]/,
-      'kn-IN': /[\u0C80-\u0CFF]/,
-      'ml-IN': /[\u0D00-\u0D7F]/,
-    };
-    return this.config.languages?.find(([code]) => {
-      const re = scripts[code];
-      return re && re.test(raw);
-    })?.[0] || 'hi-IN';
+    // Bilingual only: Devanagari → Hindi, else English.
+    const raw = String(this.chatSession?.raw_description || '');
+    if (/[\u0900-\u097F]/.test(raw.slice(-200))) return 'hi-IN';
+    return 'en-IN';
   }
 
   addChatMsg(text, role) {

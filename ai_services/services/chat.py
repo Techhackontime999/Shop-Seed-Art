@@ -12,6 +12,7 @@ import re
 from typing import Any, Dict, List, Optional
 
 from ..clients import OpenRouterFallbackClient
+from .translate import TranslateService
 
 logger = logging.getLogger(__name__)
 
@@ -316,11 +317,32 @@ class ChatService:
                            missing=missing)
 
     def _reply(self, text: str, session: Dict[str, Any], stage: str,
-               ready: bool, missing: Any = None) -> Dict[str, Any]:
+               ready: bool, missing: Any = None,
+               language: str = 'en-IN') -> Dict[str, Any]:
+        reply = text
+        # Bilingual-only: mirror every reply into the "other" language so the
+        # seller always sees English + Hindi (uses the same lightweight
+        # dictionary fallback as the TranslateService — no extra AI call).
+        if language.startswith('hi'):
+            mirror = self._en_mirror(text)
+            if mirror and mirror != text:
+                reply = text + '\n\n' + mirror
+        else:
+            mirror = self._hi_mirror(text)
+            if mirror and mirror != text:
+                reply = text + '\n\n' + mirror
         return {
-            'reply': text,
+            'reply': reply,
             'session': session,
             'stage': stage,
             'ready': ready,
             'missing': missing,
         }
+
+    @staticmethod
+    def _hi_mirror(text: str) -> str:
+        return TranslateService(None)._fallback_translate(text, 'hi')
+
+    @staticmethod
+    def _en_mirror(text: str) -> str:
+        return TranslateService(None)._fallback_translate(text, 'en')

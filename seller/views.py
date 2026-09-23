@@ -137,10 +137,7 @@ def _ensure_default_variant(product):
 # AI API Configuration
 AI_TIMEOUT = getattr(settings, 'AI_API', {}).get('TIMEOUT', 30)
 AI_SUPPORTED_LANGUAGES = getattr(settings, 'AI_SUPPORTED_LANGUAGES', [
-    ('hi-IN', 'हिंदी'), ('en-IN', 'English'), ('ta-IN', 'தமிழ்'),
-    ('te-IN', 'తెలుగు'), ('bn-IN', 'বাংলা'), ('mr-IN', 'मराठी'),
-    ('gu-IN', 'ગુજરાતી'), ('kn-IN', 'કન્નડ'), ('ml-IN', 'മലയാളം'),
-    ('pa-IN', 'ਪੰਜਾਬੀ'),
+    ('en-IN', 'English'), ('hi-IN', 'हिंदी'),
 ])
 
 
@@ -191,6 +188,13 @@ def ai_generate_blogs(session_data):
     images = session_data.get('enhanced_images', [])
     session_data.setdefault('pricing', {})
     return _run_ai(BlogService(OpenRouterFallbackClient()).generate(session_data))
+
+
+def ai_translate(text, target_language='hi-IN'):
+    """Translate text between English and Hindi via AI services."""
+    from ai_services.services.translate import TranslateService
+    from ai_services.clients import OpenRouterFallbackClient
+    return TranslateService(OpenRouterFallbackClient()).translate(text, target_language)
 
 
 @login_required
@@ -254,6 +258,13 @@ def add_product(request):
             from ai_services.clients import OpenRouterFallbackClient
             result = _run_ai(ChatService(OpenRouterFallbackClient()).process(message, language, session_data))
             return JsonResponse(result)
+
+        elif action == 'translate':
+            text = request.POST.get('text', '')
+            target_language = request.POST.get('target_language', 'hi-IN')
+            if not text:
+                return JsonResponse({'error': 'text is required for translation'}, status=400)
+            return JsonResponse(ai_translate(text, target_language))
 
     # Standard form submission
     if request.method == 'POST':

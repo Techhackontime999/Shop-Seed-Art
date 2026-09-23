@@ -152,6 +152,30 @@
 }
 .sl-ai-panel textarea.sp-input { resize: vertical; min-height: 120px; line-height: 1.6; }
 
+.sl-field-row { display: flex; gap: 0.5rem; align-items: flex-start; }
+.sl-field-row-top { align-items: flex-start; }
+.sl-field-row > .sp-input, .sl-field-row > input, .sl-field-row > textarea { flex: 1; }
+.sl-translate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--aq-border);
+  border-radius: var(--aq-radius-md);
+  background: var(--aq-surface);
+  color: var(--aq-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--aq-transition), color var(--aq-transition), border-color var(--aq-transition);
+  white-space: nowrap;
+}
+.sl-translate-btn:hover { background: var(--aq-accent-subtle); border-color: var(--aq-accent); }
+.sl-translate-btn.is-loading { opacity: 0.7; pointer-events: none; }
+.sl-translate-btn.is-loading i { animation: slSpin 0.8s linear infinite; }
+@keyframes slSpin { to { transform: rotate(360deg); } }
+
 .sl-input-hint {
   display: flex;
   align-items: center;

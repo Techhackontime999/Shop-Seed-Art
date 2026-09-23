@@ -323,14 +323,6 @@ AI_API_KEY = os.getenv('AI_API_KEY', '')
 AI_MODEL = os.getenv('AI_MODEL', 'nvidia/nemotron-3-ultra')
 
 AI_SUPPORTED_LANGUAGES = [
-    ('hi-IN', 'हिंदी'),
     ('en-IN', 'English'),
-    ('ta-IN', 'தமிழ்'),
-    ('te-IN', 'తెలుగు'),
-    ('bn-IN', 'বাংলা'),
-    ('mr-IN', 'मराठी'),
-    ('gu-IN', 'ગુજરાતી'),
-    ('kn-IN', 'ಕನ್ನಡ'),
-    ('ml-IN', 'മലയാളം'),
-    ('pa-IN', 'ਪੰਜਾਬੀ'),
+    ('hi-IN', 'हिंदी'),
 ]
