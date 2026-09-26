@@ -117,12 +117,9 @@ services:
 # mean the always-on async-worker plus an always-awake web will exceed the cap
 # and trigger suspension; the guaranteed no-spin-down option is a Starter web.
 crons:
-  - type: cron
-    name: refund-reconcile
+  - name: refund-reconcile
     schedule: "*/10 * * * *"
-    runtime: python
-    buildCommand: bash build.sh
-    startCommand: python manage.py reconcile_refunds
+    command: bash build.sh && python manage.py reconcile_refunds
     envVars:
       - key: DJANGO_ENV
         value: production
@@ -143,15 +140,9 @@ crons:
       - key: RAZORPAY_WEBHOOK_SECRET
         sync: false
 
-  - type: cron
-    name: job-reconcile
+  - name: job-reconcile
     schedule: "*/5 * * * *"
-    runtime: python
-    buildCommand: bash build.sh
-    # Reconcile the queue, then (re)warm the free web service. `;` keeps the
-    # keep-alive running even if reconciliation errors; keepalive exits
-    # non-zero on a failed ping so the run shows red in the Render dashboard.
-    startCommand: python manage.py reconcile_jobs; python manage.py keepalive
+    command: bash build.sh && python manage.py reconcile_jobs && python manage.py keepalive
     envVars:
       - key: DJANGO_ENV
         value: production
@@ -170,12 +161,9 @@ crons:
       - key: KEEPALIVE_URL
         sync: false
 
-  - type: cron
-    name: tracking-sync
+  - name: tracking-sync
     schedule: "*/30 * * * *"
-    runtime: python
-    buildCommand: bash build.sh
-    startCommand: python manage.py sync_tracking_status --limit 100 --min-age-hours 1
+    command: bash build.sh && python manage.py sync_tracking_status --limit 100 --min-age-hours 1
     envVars:
       - key: DJANGO_ENV
         value: production
@@ -190,12 +178,9 @@ crons:
           name: shop-seed-art-db
           property: connectionString
 
-  - type: cron
-    name: exchange-rate-refresh
+  - name: exchange-rate-refresh
     schedule: "0 */12 * * *"
-    runtime: python
-    buildCommand: bash build.sh
-    startCommand: python manage.py update_currency_rates
+    command: bash build.sh && python manage.py update_currency_rates
     envVars:
       - key: DJANGO_ENV
         value: production
