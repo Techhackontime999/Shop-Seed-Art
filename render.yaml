@@ -116,10 +116,12 @@ services:
 # one. The 750 free instance-hours/month per workspace (~one always-on service)
 # mean the always-on async-worker plus an always-awake web will exceed the cap
 # and trigger suspension; the guaranteed no-spin-down option is a Starter web.
-crons:
-  - name: refund-reconcile
+  - type: cron
+    name: refund-reconcile
+    runtime: python
     schedule: "*/10 * * * *"
-    command: bash build.sh && python manage.py reconcile_refunds
+    buildCommand: bash build.sh
+    startCommand: python manage.py reconcile_refunds
     envVars:
       - key: DJANGO_ENV
         value: production
@@ -140,9 +142,12 @@ crons:
       - key: RAZORPAY_WEBHOOK_SECRET
         sync: false
 
-  - name: job-reconcile
+  - type: cron
+    name: job-reconcile
+    runtime: python
     schedule: "*/5 * * * *"
-    command: bash build.sh && python manage.py reconcile_jobs && python manage.py keepalive
+    buildCommand: bash build.sh
+    startCommand: python manage.py reconcile_jobs && python manage.py keepalive
     envVars:
       - key: DJANGO_ENV
         value: production
@@ -161,9 +166,12 @@ crons:
       - key: KEEPALIVE_URL
         sync: false
 
-  - name: tracking-sync
+  - type: cron
+    name: tracking-sync
+    runtime: python
     schedule: "*/30 * * * *"
-    command: bash build.sh && python manage.py sync_tracking_status --limit 100 --min-age-hours 1
+    buildCommand: bash build.sh
+    startCommand: python manage.py sync_tracking_status --limit 100 --min-age-hours 1
     envVars:
       - key: DJANGO_ENV
         value: production
@@ -178,9 +186,12 @@ crons:
           name: shop-seed-art-db
           property: connectionString
 
-  - name: exchange-rate-refresh
+  - type: cron
+    name: exchange-rate-refresh
+    runtime: python
     schedule: "0 */12 * * *"
-    command: bash build.sh && python manage.py update_currency_rates
+    buildCommand: bash build.sh
+    startCommand: python manage.py update_currency_rates
     envVars:
       - key: DJANGO_ENV
         value: production
