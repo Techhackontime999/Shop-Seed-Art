@@ -42,7 +42,6 @@ services:
     # Migrations + cache table + collectstatic run ONCE in preDeployCommand;
     # the start command must stay a pure gunicorn so they never run twice.
     startCommand: gunicorn config.wsgi --bind 0.0.0.0:$PORT --workers=2 --access-logfile=-
-    preDeployCommand: bash setup.sh
     healthCheckPath: /healthz
     envVars:
       - key: DJANGO_ENV
