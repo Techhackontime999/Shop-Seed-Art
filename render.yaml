@@ -116,7 +116,7 @@ services:
 # one. The 750 free instance-hours/month per workspace (~one always-on service)
 # mean the always-on async-worker plus an always-awake web will exceed the cap
 # and trigger suspension; the guaranteed no-spin-down option is a Starter web.
-cron:
+crons:
   - type: cron
     name: refund-reconcile
     schedule: "*/10 * * * *"
