@@ -15,6 +15,11 @@ db.sqlite3
 media
 staticfiles/
 
+# Unused local copy of the FontAwesome webfonts. The site loads FontAwesome
+# from the cdnjs CDN (see shop/base/base.html), so a vendored copy here is
+# never served — but collectstatic would ship it on every build.
+/static/fonts/
+
 # Environment variants
 .env.*
 !.env.example
