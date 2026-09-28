@@ -13,6 +13,8 @@ import hashlib
 import hmac
 import json
 import logging
+import re
+import time
 from decimal import Decimal
 
 from django.conf import settings
@@ -90,12 +92,35 @@ def verify_payment_link_signature(payment_link_id, reference_id, status, payment
     return hmac.compare_digest(expected, signature or '')
 
 
+def _payment_link_customer(name, email, contact):
+    """Build the ``customer`` object for a Payment Link, dropping unusable values.
+
+    Razorpay validates each sub-field strictly and rejects the *whole* request
+    when one is malformed: an empty ``contact`` trips the 8–14 character rule and
+    a blank/invalid ``email`` trips the format check. Sending only the details we
+    actually have keeps the hosted link creatable for guest checkouts too — the
+    customer types their own contact details on the hosted page.
+    """
+    customer = {'name': (name or '').strip() or 'Guest'}
+    email = (email or '').strip()
+    if '@' in email and '.' in email.rpartition('@')[2]:
+        customer['email'] = email
+    contact = re.sub(r'[^\d+]', '', contact or '')
+    if 8 <= len(contact) <= 14:
+        customer['contact'] = contact
+    return customer
+
+
 def create_payment_link(order, amount, currency, callback_url, name, email, contact=''):
     """Create a hosted Payment Link and return the ``(plink_id, short_url)``.
 
     The hosted page runs on Razorpay's own domain as a top-level page, so it
     works even when browsers block third-party cookies (which breaks the old
     iframe-based checkout).
+
+    Only fields from the documented Payment Links create schema are sent: the
+    API answers ``400 extra fields sent`` for anything else (e.g. ``theme``, which
+    is a checkout.js option and now requires a dashboard-created ``options`` id).
     """
     client = get_razorpay_client()
     link = client.payment_link.create({
@@ -103,14 +128,12 @@ def create_payment_link(order, amount, currency, callback_url, name, email, cont
         'currency': currency,
         'accept_partial': False,
         'description': f'Order {order.order_number}',
-        'theme': {'color': '#EA580C'},
-        'customer': {
-            'name': name,
-            'email': email,
-            'contact': contact,
-        },
+        'customer': _payment_link_customer(name, email, contact),
         'notify': {'sms': False, 'email': False},
         'reminder_enable': False,
+        # Some Razorpay orgs enforce expire_by as mandatory; the API caps it at
+        # six months from creation.
+        'expire_by': int(time.time()) + 60 * 60 * 24 * 180,
         'callback_url': callback_url,
         'callback_method': 'get',
         'notes': {'order_id': str(order.id), 'order_number': order.order_number},

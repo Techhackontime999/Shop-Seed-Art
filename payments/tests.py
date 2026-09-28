@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import time
 from decimal import Decimal
 from unittest import mock
 
@@ -15,6 +16,7 @@ from shop.models import Category, Product
 from .models import Payment, PaymentAuditLog
 from .services import (
     _fail_and_refund_captured,
+    create_payment_link,
     finalize_payment,
     gateway_charge,
     refund_captured_payment,
@@ -143,6 +145,65 @@ class GatewayChargeTests(TestCase):
         self.assertEqual(currency, 'USD')
         self.assertEqual(amount, Decimal('14.07'))
         self.assertEqual(minor, 1407)
+
+
+class PaymentLinkTests(TestCase):
+    """The hosted Payment Link is the fallback when the embedded checkout can't run."""
+
+    ALLOWED_FIELDS = {
+        'amount', 'currency', 'accept_partial', 'first_min_partial_amount',
+        'upi_link', 'description', 'reference_id', 'customer', 'expire_by',
+        'notify', 'reminder_enable', 'callback_url', 'callback_method', 'notes',
+    }
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(username='payer_plink', password='pass1234')
+        self.order = Order.objects.create(
+            user=self.user, first_name='Ada', last_name='Lovelace', email='ada@example.com',
+            address='5 Analytical Way', postal_code='560001', city='Bangalore',
+            phone='+919876543210',
+        )
+
+    def _create(self, **kwargs):
+        payload = {
+            'amount': 1000, 'currency': 'INR',
+            'callback_url': 'https://shop.test/payments/link-callback/',
+            'name': 'Ada Lovelace', 'email': 'ada@example.com',
+            'contact': '+919876543210',
+        }
+        payload.update(kwargs)
+        with mock.patch('payments.services.get_razorpay_client') as client:
+            client.return_value.payment_link.create.return_value = {
+                'id': 'plink_1', 'short_url': 'https://rzp.test/plink_1',
+            }
+            plink_id, short_url = create_payment_link(self.order, **payload)
+        sent = client.return_value.payment_link.create.call_args[0][0]
+        return sent, plink_id, short_url
+
+    def test_payload_only_uses_documented_fields(self):
+        sent, plink_id, short_url = self._create()
+        self.assertEqual(plink_id, 'plink_1')
+        self.assertEqual(short_url, 'https://rzp.test/plink_1')
+        self.assertEqual(set(sent) - self.ALLOWED_FIELDS, set())
+        self.assertNotIn('theme', sent)
+        self.assertEqual(sent['callback_method'], 'get')
+        self.assertEqual(sent['accept_partial'], False)
+        self.assertEqual(sent['notes']['order_id'], str(self.order.id))
+        self.assertGreater(sent['expire_by'], int(time.time()))
+
+    def test_blank_contact_and_email_are_omitted(self):
+        # A guest checkout with no phone would otherwise trip Razorpay's
+        # 8-14 character contact rule and 400 the whole request.
+        sent, _, _ = self._create(email='', contact='')
+        self.assertEqual(sent['customer'], {'name': 'Ada Lovelace'})
+
+    def test_nameless_customer_gets_a_placeholder(self):
+        sent, _, _ = self._create(name='   ')
+        self.assertEqual(sent['customer']['name'], 'Guest')
+
+    def test_contact_is_normalised_to_digits(self):
+        sent, _, _ = self._create(contact='+91 98765-43210')
+        self.assertEqual(sent['customer']['contact'], '+919876543210')
 
 
 class SignatureTests(TestCase):
