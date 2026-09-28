@@ -69,6 +69,62 @@
       </div>
     </div>
 
+    <!-- AI SELLER ASSISTANT
+         Introduction only. The feature cards are a preview of the AI flow;
+         the single CTA is the only navigation and hands the seller off to
+         the existing add-product experience, where the multi-step AI
+         workflow will be added. -->
+    <section class="seller-ai" aria-labelledby="seller-ai-title">
+      <div class="seller-ai-head">
+        <span class="seller-ai-badge">
+          <i class="fas fa-sparkles" aria-hidden="true"></i>
+          <span>AI Powered</span>
+        </span>
+        <h2 class="seller-ai-title" id="seller-ai-title">AI Seller Assistant</h2>
+        <p class="seller-ai-sub">Create a professional product listing in minutes.</p>
+        <p class="seller-ai-note">Just upload a photo and tell us about your product.</p>
+      </div>
+
+      <ul class="seller-ai-grid">
+        <li class="seller-ai-card">
+          <span class="seller-ai-card-icon" aria-hidden="true">
+            <i class="fas fa-camera"></i>
+          </span>
+          <span class="seller-ai-card-title">Image AI</span>
+          <span class="seller-ai-card-desc">Enhance product photos</span>
+        </li>
+        <li class="seller-ai-card">
+          <span class="seller-ai-card-icon" aria-hidden="true">
+            <i class="fas fa-microphone"></i>
+          </span>
+          <span class="seller-ai-card-title">Voice AI</span>
+          <span class="seller-ai-card-desc">Describe in your language</span>
+        </li>
+        <li class="seller-ai-card">
+          <span class="seller-ai-card-icon" aria-hidden="true">
+            <i class="fas fa-wand-magic-sparkles"></i>
+          </span>
+          <span class="seller-ai-card-title">Text AI</span>
+          <span class="seller-ai-card-desc">Generate product listings</span>
+        </li>
+        <li class="seller-ai-card">
+          <span class="seller-ai-card-icon" aria-hidden="true">
+            <i class="fas fa-tags"></i>
+          </span>
+          <span class="seller-ai-card-title">Smart Pricing</span>
+          <span class="seller-ai-card-desc">Get pricing suggestions</span>
+        </li>
+      </ul>
+
+      <div class="seller-ai-cta">
+        <a href="{% url 'seller:add_product' %}" class="btn-aq btn-aq-primary seller-ai-btn" data-seller-ai-entry>
+          <i class="fas fa-sparkles" aria-hidden="true"></i>
+          <span>Create with AI</span>
+          <i class="fas fa-arrow-right seller-ai-arrow" aria-hidden="true"></i>
+        </a>
+      </div>
+    </section>
+
     <div class="seller-dash-actions">
       <a href="{% url 'seller:add_product' %}" class="seller-dash-action-card">
         <i class="fas fa-plus-circle"></i>
