@@ -2,6 +2,7 @@ import re
 from html import unescape
 
 from django.contrib.auth import get_user_model
+from django.contrib.staticfiles import finders
 from django.test import TestCase, Client
 from django.urls import reverse
 from accounts.models import SellerProfile
@@ -218,3 +219,38 @@ class TestHomepageRoleSelection(TestCase):
 
     def test_customer_card_opens_the_existing_shop_listing(self):
         self.assertEqual(self.card_href('customer'), reverse('shop:product_list'))
+
+    def test_flow_rail_has_one_marker_per_stage(self):
+        # A marker per stage is what makes the rail read as a sequence.
+        html = self.client.get(self.url).content.decode()
+        seller = re.search(r'role-aq-card--seller.*?role-aq-flow-dots(.*?)</div>', html, re.S)
+        customer = re.search(r'role-aq-card--customer.*?role-aq-flow-dots(.*?)</div>', html, re.S)
+        self.assertIsNotNone(seller)
+        self.assertIsNotNone(customer)
+        self.assertEqual(seller.group(1).count('role-aq-dot'), 6)
+        self.assertEqual(customer.group(1).count('role-aq-dot'), 3)
+
+    def test_scroll_choreography_is_wired_up(self):
+        html = self.client.get(self.url).content.decode()
+        self.assertIn('role-select.js', html)
+        self.assertIn('role-select.css', html)
+        self.assertIn('roles-aq-wash', html)
+
+    def test_visibility_is_gated_on_javascript(self):
+        # The aq-js class is what lets the stylesheet hide the start states at
+        # all, so it has to be set before the section paints.
+        html = self.client.get(self.url).content.decode()
+        gate = html.index("classList.add('aq-js')")
+        self.assertLess(gate, html.index('roles-aq-grid'))
+
+    def test_motion_off_resolves_to_the_visible_state(self):
+        # A CSS-only guarantee: with reduced motion the section must not be
+        # left stranded behind the staged transition delays.
+        path = finders.find('css/role-select.css')
+        self.assertIsNotNone(path, 'role-select.css is not discoverable by staticfiles')
+        with open(path, encoding='utf-8') as handle:
+            css = handle.read()
+        self.assertIn('.roles-aq.is-armed.roles-aq-motion-off', css)
+        reduced = css[css.index('.roles-aq.is-armed.roles-aq-motion-off .roles-aq-intro > *'):]
+        self.assertIn('opacity: 1;', reduced)
+        self.assertIn('transition-delay: 0ms !important;', reduced)

@@ -260,7 +260,7 @@
   position: absolute;
   inset: 0;
   background: var(--aq-gradient-1);
-  transform: scaleX(0);
+  transform: scaleX(1);
   transform-origin: left center;
   transition: transform 0.55s var(--role-ease);
 }
@@ -269,10 +269,28 @@
   background: var(--aq-gradient-blue);
 }
 
-@media (hover: hover) {
-  .role-aq-card:hover .role-aq-flow-fill {
-    transform: scaleX(1);
-  }
+/* Step markers sitting on the track. They light up in order when the section
+   scrolls into view, which is what turns the rail into a readable sequence. */
+.role-aq-flow-dots {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1px;
+}
+
+.role-aq-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  background: var(--aq-surface);
+  border: 1.5px solid var(--aq-tertiary);
+  border-radius: 50%;
+  transition:
+    background-color 0.3s var(--role-ease),
+    border-color 0.3s var(--role-ease),
+    transform 0.3s var(--role-ease);
 }
 
 .role-aq-flow-steps {
@@ -354,4 +372,151 @@
   .role-aq-card:hover::after {
     opacity: 1;
   }
+}
+
+/* ==========================================================================
+   Scroll reveal
+   The section enters as one staged sequence: the intro settles, the seller
+   card slides in from the left, the customer card follows from the right, and
+   each card then reveals its own contents in reading order while its flow
+   rail draws and its step markers light up.
+
+   Every start state is gated behind .aq-js (set inline in extra_head) and then
+   .is-armed (set by the script), so with JavaScript off — or with
+   prefers-reduced-motion on — the section simply renders in its final state
+   rather than being stranded at opacity 0.
+   ========================================================================== */
+
+.roles-aq {
+  /* Written by the scroll script; falls back to 0 when it never runs. */
+  --roles-shift: 0px;
+}
+
+/* Drifting accent wash, so the section still feels attached to the parallax
+   hero above it as you pass through. */
+.roles-aq-wash {
+  position: absolute;
+  inset: -10% -5% auto -5%;
+  height: 60%;
+  pointer-events: none;
+  background:
+    radial-gradient(45% 60% at 22% 40%, rgba(249, 115, 22, 0.07) 0%, transparent 70%),
+    radial-gradient(40% 55% at 78% 30%, rgba(30, 64, 175, 0.06) 0%, transparent 70%);
+  transform: translate3d(0, var(--roles-shift), 0);
+  will-change: transform;
+  z-index: 0;
+}
+
+.roles-aq > .container-aq {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Start states ── */
+
+.roles-aq.is-armed .roles-aq-intro > * {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.roles-aq.is-armed .role-aq-card--seller {
+  opacity: 0;
+  transform: translateX(-40px);
+}
+
+.roles-aq.is-armed .role-aq-card--customer {
+  opacity: 0;
+  transform: translateX(40px);
+}
+
+.roles-aq.is-armed .role-aq-card > * {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.roles-aq.is-armed .role-aq-flow-fill {
+  transform: scaleX(0);
+}
+
+.roles-aq.is-armed .role-aq-dot {
+  transform: scale(0.5);
+  border-color: var(--aq-border);
+}
+
+/* ── Motion ── */
+
+.roles-aq .roles-aq-intro > *,
+.roles-aq .role-aq-card > * {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.roles-aq.is-inview .roles-aq-intro > *,
+.roles-aq.is-inview .role-aq-card > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.roles-aq.is-inview .role-aq-card--seller,
+.roles-aq.is-inview .role-aq-card--customer {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* The customer card trails the seller by 140ms so the pair reads as a
+   left-to-right sequence rather than appearing at once. */
+.role-aq-card--seller { --role-seq: 0ms; }
+.role-aq-card--customer { --role-seq: 140ms; }
+
+.roles-aq.is-inview .role-aq-card > :nth-child(1) { transition-delay: calc(200ms + var(--role-seq)); }
+.roles-aq.is-inview .role-aq-card > :nth-child(2) { transition-delay: calc(270ms + var(--role-seq)); }
+.roles-aq.is-inview .role-aq-card > :nth-child(3) { transition-delay: calc(340ms + var(--role-seq)); }
+.roles-aq.is-inview .role-aq-card > :nth-child(4) { transition-delay: calc(410ms + var(--role-seq)); }
+.roles-aq.is-inview .role-aq-card > :nth-child(5) { transition-delay: calc(500ms + var(--role-seq)); }
+
+.roles-aq.is-inview .role-aq-card--seller { transition-delay: 90ms; }
+.roles-aq.is-inview .role-aq-card--customer { transition-delay: 230ms; }
+
+/* The rail draws after the chips land, and the markers follow the draw so
+   each stage appears to complete in turn. */
+.roles-aq.is-inview .role-aq-flow-fill {
+  transition-delay: calc(470ms + var(--role-seq));
+}
+
+.roles-aq.is-inview .role-aq-dot {
+  border-color: var(--role-accent);
+  background: var(--role-accent);
+  transform: scale(1);
+}
+
+.roles-aq.is-inview .role-aq-dot:nth-child(1) { transition-delay: calc(560ms + var(--role-seq)); }
+.roles-aq.is-inview .role-aq-dot:nth-child(2) { transition-delay: calc(700ms + var(--role-seq)); }
+.roles-aq.is-inview .role-aq-dot:nth-child(3) { transition-delay: calc(840ms + var(--role-seq)); }
+.roles-aq.is-inview .role-aq-dot:nth-child(4) { transition-delay: calc(980ms + var(--role-seq)); }
+.roles-aq.is-inview .role-aq-dot:nth-child(5) { transition-delay: calc(1120ms + var(--role-seq)); }
+.roles-aq.is-inview .role-aq-dot:nth-child(6) { transition-delay: calc(1260ms + var(--role-seq)); }
+
+/* ── Reduced motion ──
+   Matched on the element rather than the media query so the override wins
+   over the staged delays above, which would otherwise hold the section in its
+   hidden state for over a second. */
+
+.roles-aq.is-armed.roles-aq-motion-off .roles-aq-intro > *,
+.roles-aq.is-armed.roles-aq-motion-off .role-aq-card,
+.roles-aq.is-armed.roles-aq-motion-off .role-aq-card > *,
+.roles-aq.is-armed.roles-aq-motion-off .role-aq-flow-fill,
+.roles-aq.is-armed.roles-aq-motion-off .role-aq-dot {
+  opacity: 1;
+  transform: none;
+}
+
+.roles-aq.is-armed.roles-aq-motion-off .role-aq-flow-fill {
+  transform: scaleX(1);
+}
+
+.roles-aq.is-armed.roles-aq-motion-off * {
+  transition-delay: 0ms !important;
+}
+
+.roles-aq-motion-off .roles-aq-wash {
+  display: none;
 }

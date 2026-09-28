@@ -7,7 +7,14 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/hero-video.css' %}?v=5">
-<link rel="stylesheet" href="{% static 'css/role-select.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/role-select.css' %}?v=2">
+{% endblock %}
+
+{% block extra_head %}
+{# Lets the stylesheet hide the role section's start states only when
+   JavaScript is around to animate them back in. Without it the section
+   renders in its final state instead of being stuck at opacity 0. #}
+<script>document.documentElement.classList.add('aq-js');</script>
 {% endblock %}
 
 {% block content %}
@@ -39,8 +46,9 @@
      keyboard users get one stop instead of a decorative CTA bolted onto a
      non-interactive card. -->
 <section class="section-aq roles-aq" id="choose-your-path" aria-labelledby="roles-aq-title">
+  <div class="roles-aq-wash" aria-hidden="true"></div>
   <div class="container-aq">
-    <div class="text-center mb-5 fade-up">
+    <div class="text-center mb-5 roles-aq-intro">
       <span class="hero-aq-badge mx-auto" style="justify-content:center">
         <i class="fas fa-compass"></i> {% trans 'Two ways in' %}
       </span>
@@ -55,7 +63,7 @@
     <div class="roles-aq-grid">
       <!-- Seller: verified sellers land on the dashboard, everyone else on the
            existing sign-up flow (become_seller is @login_required). -->
-      <a class="role-aq-card role-aq-card--seller fade-up fade-up-delay-1"
+      <a class="role-aq-card role-aq-card--seller"
          href="{% if user.is_authenticated %}{% if is_seller %}{% url 'seller:seller_dashboard' %}{% else %}{% url 'accounts:become_seller' %}{% endif %}{% else %}{% url 'accounts:become_seller' %}{% endif %}">
         <div class="role-aq-head">
           <div class="role-aq-icon" aria-hidden="true">{% trans '🧑‍🎨' %}</div>
@@ -74,6 +82,10 @@
         <div class="role-aq-flow">
           <div class="role-aq-flow-track" aria-hidden="true">
             <div class="role-aq-flow-fill"></div>
+            <div class="role-aq-flow-dots">
+              <span class="role-aq-dot"></span><span class="role-aq-dot"></span><span class="role-aq-dot"></span>
+              <span class="role-aq-dot"></span><span class="role-aq-dot"></span><span class="role-aq-dot"></span>
+            </div>
           </div>
           <div class="role-aq-flow-steps">
             <span>{% trans 'Photo' %}</span>
@@ -90,7 +102,7 @@
         </span>
       </a>
 
-      <a class="role-aq-card role-aq-card--customer fade-up fade-up-delay-2" href="{% url 'shop:product_list' %}">
+      <a class="role-aq-card role-aq-card--customer" href="{% url 'shop:product_list' %}">
         <div class="role-aq-head">
           <div class="role-aq-icon" aria-hidden="true">{% trans '🛍️' %}</div>
         </div>
@@ -106,6 +118,9 @@
         <div class="role-aq-flow">
           <div class="role-aq-flow-track" aria-hidden="true">
             <div class="role-aq-flow-fill"></div>
+            <div class="role-aq-flow-dots">
+              <span class="role-aq-dot"></span><span class="role-aq-dot"></span><span class="role-aq-dot"></span>
+            </div>
           </div>
           <div class="role-aq-flow-steps">
             <span>{% trans 'Discover' %}</span>
@@ -430,4 +445,5 @@
 
 {% block extra_js %}
 <script src="{% static 'js/hero-video.js' %}?v=3"></script>
+<script src="{% static 'js/role-select.js' %}?v=1"></script>
 {% endblock %}
