@@ -4,6 +4,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/seller-listing.css' %}">
+<link rel="stylesheet" href="{% static 'css/ckeditor-responsive.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -428,6 +429,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/ckeditor-responsive.js' %}"></script>
 <script>
   (function () {
     var list = document.querySelector('[data-variant-list]');

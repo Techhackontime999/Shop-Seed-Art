@@ -2,7 +2,7 @@
 from django import forms
 from accounts.models import SellerDocument
 from shop.models import Product, ProductVariant
-from ckeditor.widgets import CKEditorWidget
+from core.ckeditor import responsive_richtext
 from django.forms.models import inlineformset_factory
 
 
@@ -48,9 +48,9 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
         exclude = ['seller', 'created', 'updated']
-        widgets = {
-            'description': CKEditorWidget(),
-        }
+        # RichTextField ignores Meta.widgets, so the fluid editor has to be
+        # attached through formfield_callback. See core.ckeditor.
+        formfield_callback = staticmethod(responsive_richtext)
 
 
 class ProductVariantForm(forms.ModelForm):
@@ -63,12 +63,12 @@ class ProductVariantForm(forms.ModelForm):
     class Meta:
         model = ProductVariant
         fields = ['name', 'sku', 'price', 'stock', 'description', 'image', 'active']
+        formfield_callback = staticmethod(responsive_richtext)
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': 'e.g. Size 3-6'}),
             'sku': forms.TextInput(attrs={'placeholder': 'Optional SKU'}),
             'price': forms.NumberInput(attrs={'step': '0.01', 'placeholder': 'Optional'}),
             'stock': forms.NumberInput(attrs={'min': 0}),
-            'description': CKEditorWidget(),
         }
 
 

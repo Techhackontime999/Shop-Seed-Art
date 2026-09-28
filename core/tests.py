@@ -151,3 +151,108 @@ class UploadValidatorTests(SimpleTestCase):
 
     def test_accepts_png_images(self):
         validate_image_file(self._upload('photo.png', b'\x89PNG'))
+
+
+class CKEditorMediaTests(SimpleTestCase):
+    """django-ckeditor's init script must render as a whole <script> tag."""
+
+    def test_init_script_is_not_truncated(self):
+        from seller.forms import ProductForm
+
+        html = str(ProductForm().media)
+        self.assertIn(
+            '<script src="/static/ckeditor/ckeditor-init.js" '
+            'data-ckeditor-basepath="/static/ckeditor/ckeditor/" '
+            'id="ckeditor-init-script"></script>',
+            html,
+        )
+
+    def test_every_js_path_has_an_opening_and_closing_tag(self):
+        from seller.forms import ProductForm
+
+        html = str(ProductForm().media)
+        for tag in html.splitlines():
+            self.assertTrue(
+                tag.startswith('<script src="'),
+                f'js_asset fragment leaked without its tag: {tag!r}',
+            )
+            self.assertTrue(tag.endswith('"></script>'), f'unclosed script tag: {tag!r}')
+
+    def test_plain_paths_still_render(self):
+        from django.forms.widgets import Media
+
+        html = '\n'.join(Media(js=['js/app.js']).render_js())
+        self.assertEqual(html, '<script src="/static/js/app.js"></script>')
+
+
+class CKEditorResponsiveTests(SimpleTestCase):
+    """The seller editors must fill their column instead of a fixed pixel width.
+
+    django-ckeditor defaults to an 835px editor and its RichTextFormField
+    discards any ``Meta.widgets`` entry, so these assert the form-field
+    callback actually reaches the rendered widget.
+    """
+
+    def _config(self, widget):
+        return widget.config
+
+    def test_product_description_is_fluid(self):
+        from core.ckeditor import ResponsiveCKEditorWidget
+        from seller.forms import ProductForm
+
+        widget = ProductForm().fields['description'].widget
+        self.assertIsInstance(widget, ResponsiveCKEditorWidget)
+        self.assertEqual(self._config(widget)['width'], '100%')
+        self.assertTrue(self._config(widget)['resize_enabled'])
+
+    def test_variant_description_is_fluid(self):
+        from core.ckeditor import ResponsiveCKEditorWidget
+        from seller.forms import ProductVariantForm
+
+        widget = ProductVariantForm().fields['description'].widget
+        self.assertIsInstance(widget, ResponsiveCKEditorWidget)
+        self.assertEqual(self._config(widget)['width'], '100%')
+
+    def test_contents_css_points_at_the_iframe_stylesheet(self):
+        from django.contrib.staticfiles import finders
+        from seller.forms import ProductForm
+
+        # The WYSIWYG document is a separate page: page CSS cannot reach it, so
+        # CKEditor has to load it as contentsCss.
+        url = self._config(ProductForm().fields['description'].widget)['contentsCss']
+        self.assertEqual(url, '/static/css/ckeditor-content.css')
+        self.assertIsNotNone(finders.find('css/ckeditor-content.css'))
+
+    def test_non_richtext_fields_survive_the_callback(self):
+        from django import forms
+        from seller.forms import ProductForm
+
+        fields = ProductForm().fields
+        # formfield_callback has to build every field, not just the rich ones.
+        self.assertIsInstance(fields['name'].widget, forms.TextInput)
+        self.assertIsInstance(fields['price'].widget, forms.NumberInput)
+
+    def test_rendered_config_reaches_the_browser(self):
+        import json
+        from html import unescape
+
+        from seller.forms import ProductForm
+
+        html = str(ProductForm()['description'])
+        start = html.index('data-config="') + len('data-config="')
+        # The template engine escapes the JSON; getAttribute() hands the browser
+        # the unescaped string, so unescape before parsing.
+        config = json.loads(unescape(html[start:html.index('" data-external', start)]))
+        self.assertEqual(config['width'], '100%')
+        self.assertEqual(config['contentsCss'], '/static/css/ckeditor-content.css')
+
+    def test_stylesheet_and_reflow_script_are_collectable(self):
+        from django.contrib.staticfiles import finders
+
+        for path in (
+            'css/ckeditor-responsive.css',
+            'css/ckeditor-content.css',
+            'js/ckeditor-responsive.js',
+        ):
+            with self.subTest(path=path):
+                self.assertIsNotNone(finders.find(path))

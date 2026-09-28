@@ -1,0 +1,181 @@
+/* CKEditor 4 · WYSIWYG document styles
+   ---------------------------------------------------------------------------
+   Loaded through `config.contentsCss`, so these rules apply to the editing
+   surface itself. The document is a separate page: it inherits nothing from
+   the seller template, which is why colours are literals and every rule that
+   depends on viewport width has to be written out per breakpoint. */
+
+body {
+  margin: 0;
+  padding: 12px 16px;
+  font: 400 16px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: #0f172a;
+  background: #ffffff;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Long, unbreakable strings (URLs, SKUs) must not widen the document. */
+p, li, td, th, dd, dt, figcaption {
+  overflow-wrap: anywhere;
+}
+
+/* Media never exceeds the column; the iframe scrolls only when it must. */
+img {
+  max-width: 100% !important;
+  height: auto !important;
+  box-sizing: border-box;
+}
+
+video,
+iframe,
+embed,
+object {
+  max-width: 100% !important;
+}
+
+/* Tables keep their own scroll container rather than stretching the editor. */
+table {
+  max-width: 100% !important;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+table table {
+  margin: 0;
+}
+
+td,
+th {
+  padding: 6px 8px;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  vertical-align: top;
+  word-break: break-word;
+}
+
+thead th {
+  background: rgba(15, 23, 42, 0.04);
+  text-align: left;
+}
+
+pre,
+code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+pre {
+  max-width: 100%;
+  margin: 0 0 1em;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.05);
+  font: 400 14px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  overflow-x: auto;
+}
+
+pre code {
+  padding: 0;
+  background: none;
+  font: inherit;
+}
+
+blockquote {
+  margin: 0 0 1em;
+  padding: 4px 0 4px 16px;
+  border-left: 3px solid rgba(249, 115, 22, 0.55);
+  color: #334155;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 1.2em 0 0.5em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+
+p, ul, ol, dl, table, blockquote, pre {
+  margin: 0 0 1em;
+}
+
+/* ── Phones ─────────────────────────────────────────────────────────────── */
+@media screen and (max-width: 768px) {
+  body {
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.3rem; }
+  h3 { font-size: 1.15rem; }
+
+  /* Native controls, not the desktop-looking UA defaults. */
+  ul, ol {
+    padding-left: 1.35em;
+  }
+
+  a {
+    /* Long URLs are common in descriptions; break them so the caret stays
+       reachable instead of scrolling the document sideways. */
+    overflow-wrap: anywhere;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  body {
+    padding: 10px;
+    font-size: 15px;
+  }
+
+  h1 { font-size: 1.35rem; }
+  h2 { font-size: 1.2rem; }
+  h3 { font-size: 1.1rem; }
+
+  blockquote {
+    padding-left: 12px;
+  }
+
+  pre {
+    padding: 10px;
+    font-size: 13px;
+  }
+}
+
+/* ── Dark mode ──────────────────────────────────────────────────────────── */
+@media screen and (prefers-color-scheme: dark) {
+  body {
+    color: #e2e8f0;
+    background: #0b1220;
+  }
+
+  td,
+  th {
+    border-color: rgba(226, 232, 240, 0.2);
+  }
+
+  thead th {
+    background: rgba(226, 232, 240, 0.07);
+  }
+
+  pre {
+    background: rgba(226, 232, 240, 0.08);
+  }
+
+  blockquote {
+    color: #cbd5e1;
+    border-left-color: rgba(249, 115, 22, 0.6);
+  }
+
+  hr {
+    border-top-color: rgba(226, 232, 240, 0.16);
+  }
+}

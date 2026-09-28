@@ -1,0 +1,157 @@
+/* CKEditor 4 · responsive chrome
+   ---------------------------------------------------------------------------
+   CKEditor locks the editor chrome to a pixel width measured once from the
+   textarea, and `.django-ckeditor-widget` ships as `display: inline-block`.
+   On phones that fixed width overflows the form column, so everything below
+   forces the chrome to the width of its container. The WYSIWYG body lives in
+   an iframe and cannot be reached from here — see ckeditor-content.css. */
+
+.django-ckeditor-widget {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+.django-ckeditor-widget .cke,
+.django-ckeditor-widget .cke_chrome,
+.django-ckeditor-widget .cke_inner,
+.django-ckeditor-widget .cke_top,
+.django-ckeditor-widget .cke_contents,
+.django-ckeditor-widget .cke_bottom {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* The skin's resize grip is a 10px dashed triangle — too small to grab on a
+   touch screen. Widen the hit area without changing the drawn triangle. */
+.django-ckeditor-widget .cke_bottom {
+  padding: 4px 8px 2px;
+}
+.django-ckeditor-widget .cke_resizer {
+  border-width: 18px 18px 0 0;
+  padding-top: 8px;
+}
+
+.django-ckeditor-widget .cke_wysiwyg_frame,
+.django-ckeditor-widget .cke_wysiwyg_div {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* The contents pane is the only part allowed to scroll on its own. */
+.django-ckeditor-widget .cke_contents {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.django-ckeditor-widget .cke_source {
+  width: 100%;
+  min-height: 220px;
+  box-sizing: border-box;
+}
+
+/* Panels (font/size/format dropdowns) are sized by the skin; cap them so they
+   cannot escape a narrow column. */
+.django-ckeditor-widget .cke_panel,
+.django-ckeditor-widget .cke_combopanel {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.django-ckeditor-widget .cke_combo_text {
+  max-width: 7.5rem;
+}
+
+.django-ckeditor-widget .cke_notification {
+  max-width: calc(100% - 2rem);
+  box-sizing: border-box;
+}
+
+/* Popup dialogs (link, image, table). CKEditor measures the viewport at
+   startup, so a dialog opened after a rotation can be wider than the screen. */
+.cke_dialog .cke_dialog_body,
+.cke_dialog .cke_dialog_titlebar,
+.cke_dialog .cke_dialog_footer,
+.cke_dialog .cke_dialog_ui,
+.cke_dialog .cke_dialog_ui_outer,
+.cke_dialog .cke_dialog_ui_inner {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.cke_dialog .cke_dialog_ui_outer {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cke_dialog .cke_dialog_ui,
+.cke_dialog .cke_dialog_ui_outer,
+.cke_dialog .cke_dialog_ui_inner,
+.cke_dialog .cke_dialog_body {
+  width: 100% !important;
+}
+
+.cke_dialog .cke_dialog_footer > * {
+  max-width: 100%;
+}
+
+/* ── Narrow screens ─────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .django-ckeditor-widget .cke_top {
+    padding: 8px 6px 4px;
+  }
+
+  /* 26px toolbar buttons are hard to hit; give every control a finger-sized
+     target without inflating the icons themselves. */
+  .django-ckeditor-widget a.cke_button,
+  .django-ckeditor-widget a.cke_combo_button {
+    padding: 8px 7px;
+    min-height: 34px;
+    box-sizing: content-box;
+  }
+
+  .django-ckeditor-widget .cke_combo {
+    margin-bottom: 6px;
+  }
+
+  .django-ckeditor-widget .cke_combo_text {
+    max-width: 4.5rem;
+    line-height: 32px;
+  }
+
+  .django-ckeditor-widget .cke_combo_open {
+    height: 28px;
+    line-height: 26px;
+  }
+
+  .django-ckeditor-widget .cke_combo_arrow {
+    margin-top: 13px;
+  }
+
+  .django-ckeditor-widget .cke_toolgroup {
+    margin: 1px 4px 6px 0;
+  }
+
+  /* Panels are anchored to their button; once the toolbar wraps they can
+     start at the far edge of the column. */
+  .django-ckeditor-widget .cke_panel,
+  .django-ckeditor-widget .cke_combopanel {
+    max-width: calc(100vw - 2rem);
+  }
+
+  .django-ckeditor-widget .cke_wysiwyg_div {
+    padding: 0 6px;
+  }
+
+  .django-ckeditor-widget .cke_path {
+    display: none;
+  }
+}
+
+/* The iframe is transparent until it paints; paint it with the card colour so
+   a re-layout never flashes white. */
+.django-ckeditor-widget .cke_wysiwyg_frame {
+  background: var(--aq-surface, #ffffff);
+}
