@@ -11,9 +11,7 @@
 {% endblock %}
 
 {% block extra_head %}
-{# Lets the stylesheet hide the role section's start states only when
-   JavaScript is around to animate them back in. Without it the section
-   renders in its final state instead of being stuck at opacity 0. #}
+
 <script>document.documentElement.classList.add('aq-js');</script>
 {% endblock %}
 
@@ -92,6 +90,7 @@
             <span>{% trans 'Photo' %}</span>
             <span>{% trans 'Enhance' %}</span>
             <span>{% trans 'Voice' %}</span>
+            <span>{% trans 'Text' %}</span>
             <span>{% trans 'Catalog' %}</span>
             <span>{% trans 'Price' %}</span>
             <span>{% trans 'Publish' %}</span>
@@ -115,6 +114,8 @@
           <span class="role-aq-chip"><i class="fas fa-layer-group" aria-hidden="true"></i> {% trans 'Categories' %}</span>
           <span class="role-aq-chip"><i class="fas fa-fire" aria-hidden="true"></i> {% trans 'Best Sellers' %}</span>
           <span class="role-aq-chip"><i class="fas fa-bolt" aria-hidden="true"></i> {% trans 'Hot Deals' %}</span>
+          <span class="role-aq-chip"><i class="fas fa-arrow-trend-up" aria-hidden="true"></i> {% trans 'Trending Products' %}</span>
+          <span class="role-aq-chip"><i class="fas fa-newspaper" aria-hidden="true"></i> {% trans 'Trending Blog' %}</span>
         </div>
         <div class="role-aq-flow">
           <div class="role-aq-flow-track" aria-hidden="true">
@@ -127,6 +128,7 @@
             <span>{% trans 'Discover' %}</span>
             <span>{% trans 'Explore' %}</span>
             <span>{% trans 'Shop' %}</span>
+            <span>{% trans 'Review' %}</span>
           </div>
         </div>
         <span class="btn-aq btn-aq-blue role-aq-cta">
