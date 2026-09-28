@@ -1,0 +1,1279 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   AI PRODUCT STUDIO — seller wizard (UI prototype)
+   -----------------------------------------------------------------------
+   Demonstrates the SIH 2026 problem 26090 workflow:
+     upload → enhance → speak → AI catalog → smart price → preview
+   Front-end only. No AI service is connected; every "AI" state is a
+   labelled demo value produced by static/js/ai-studio.js. Reuses the
+   site's --aq-* / --ds-* tokens, .sp-* form primitives and .btn-aq CTAs.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Several panels below set an explicit `display`, which would otherwise beat
+   the UA stylesheet's `[hidden] { display: none }` and leave toggled-off
+   states on screen. Keep `hidden` authoritative. */
+[hidden] {
+  display: none !important;
+}
+
+.ais {
+  min-height: 100dvh;
+  background: var(--aq-canvas);
+}
+
+.ais-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4.5rem;
+}
+
+@media (min-width: 768px) {
+  .ais-inner { padding: 2.5rem 1.5rem 5rem; }
+}
+
+/* ─── Header ─────────────────────────────────────────────────────── */
+
+.ais-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.ais-header-text { min-width: 0; }
+
+.ais-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--ds-touch);
+  padding: 0 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--aq-body);
+  text-decoration: none;
+  transition: color var(--aq-transition);
+}
+
+.ais-back i { font-size: 0.8125rem; transition: transform var(--aq-transition); }
+
+.ais-title {
+  margin: 0.25rem 0 0;
+  font-size: clamp(1.5rem, 4.2vw, 2.125rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  color: var(--aq-ink);
+}
+
+.ais-sub {
+  margin: 0.375rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--aq-body);
+  max-width: 52ch;
+}
+
+.ais-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.875rem;
+  background: var(--aq-accent-subtle);
+  border: 1px solid rgba(249, 115, 22, 0.22);
+  border-radius: var(--ds-radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--aq-accent-dark);
+  white-space: nowrap;
+}
+
+.ais-badge i { font-size: 0.6875rem; }
+
+/* Persistent "this is a demo" disclosure. */
+.ais-demo-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  background: var(--aq-surface);
+  border: 1px dashed rgba(30, 64, 175, 0.28);
+  border-radius: var(--ds-radius-sm);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--aq-body);
+}
+
+.ais-demo-note i {
+  color: var(--aq-blue);
+  font-size: 0.875rem;
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+}
+
+.ais-demo-note strong { color: var(--aq-ink); }
+
+/* ─── Stepper ────────────────────────────────────────────────────── */
+
+.ais-stepper {
+  margin-bottom: 0.75rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.ais-stepper-list {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: max-content;
+  margin: 0;
+  padding: 0 0 0.25rem;
+  list-style: none;
+}
+
+.ais-step-li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.ais-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem 0.375rem 0.375rem;
+  background: var(--aq-surface);
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-full);
+  font-family: var(--aq-font);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--aq-body);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--aq-transition),
+    border-color var(--aq-transition),
+    color var(--aq-transition);
+}
+
+.ais-step:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
+/* Connector chevron between pills (drawn, so it can never fall back to a
+   missing-glyph box if the icon font is unavailable). */
+.ais-step-li + .ais-step-li::before {
+  content: '';
+  width: 0.375rem;
+  height: 0.375rem;
+  flex: 0 0 auto;
+  border-top: 1.5px solid var(--aq-tertiary);
+  border-right: 1.5px solid var(--aq-tertiary);
+  transform: rotate(45deg);
+  opacity: 0.7;
+}
+
+.ais-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 auto;
+  border-radius: var(--ds-radius-full);
+  background: var(--aq-canvas);
+  border: 1px solid var(--aq-border);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--aq-body);
+  font-variant-numeric: tabular-nums;
+  transition:
+    background var(--aq-transition),
+    border-color var(--aq-transition),
+    color var(--aq-transition);
+}
+
+.ais-step.is-done {
+  border-color: rgba(249, 115, 22, 0.3);
+  color: var(--aq-accent-dark);
+}
+
+.ais-step.is-done .ais-step-num {
+  background: var(--aq-accent);
+  border-color: var(--aq-accent);
+  color: #fff;
+}
+
+.ais-step.is-active {
+  background: var(--aq-accent-subtle);
+  border-color: rgba(249, 115, 22, 0.35);
+  color: var(--aq-accent-dark);
+  font-weight: 600;
+}
+
+.ais-step.is-active .ais-step-num {
+  background: var(--aq-accent);
+  border-color: var(--aq-accent);
+  color: #fff;
+  box-shadow: 0 0 0 3px var(--aq-accent-glow);
+}
+
+/* Step names are the first thing to go when space is tight. */
+@media (max-width: 479px) {
+  .ais-step-name { display: none; }
+  .ais-step { padding: 0.375rem; }
+  .ais-step-li + .ais-step-li::before { display: none; }
+  .ais-step.is-active { padding: 0.375rem 0.75rem 0.375rem 0.375rem; }
+  .ais-step.is-active .ais-step-name { display: inline; }
+}
+
+.ais-progress { margin-bottom: 1.5rem; }
+
+.ais-progress-track {
+  height: 4px;
+  background: var(--aq-border);
+  border-radius: var(--ds-radius-full);
+  overflow: hidden;
+}
+
+.ais-progress-fill {
+  height: 100%;
+  width: 20%;
+  background: var(--aq-gradient-1);
+  border-radius: var(--ds-radius-full);
+  transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ais-progress-text {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--aq-body);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Workspace ──────────────────────────────────────────────────── */
+
+.ais-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .ais-workspace {
+    grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+    gap: 2rem;
+  }
+
+  /* The media rail is the constant half of the workspace. */
+  .ais-media {
+    position: sticky;
+    top: calc(var(--ds-navbar-h) + 1rem);
+  }
+}
+
+/* ─── Left rail: image + checklist ───────────────────────────────── */
+
+.ais-media-card {
+  padding: 1.25rem;
+  background: var(--aq-surface);
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-md);
+  box-shadow: var(--ds-shadow-sm);
+}
+
+.ais-media-label {
+  margin: 0 0 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--aq-tertiary);
+}
+
+.ais-media-frame {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  background: var(--aq-canvas);
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-sm);
+  overflow: hidden;
+}
+
+.ais-media-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+  color: var(--aq-tertiary);
+}
+
+.ais-media-empty i { font-size: 1.5rem; }
+.ais-media-empty p { margin: 0; font-size: 0.8125rem; }
+
+.ais-media-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+}
+
+.ais-media-meta,
+.ais-media-state {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--aq-body);
+}
+
+.ais-media-meta i { color: #16a34a; }
+.ais-media-state i { color: var(--aq-accent); }
+
+.ais-media-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.875rem;
+}
+
+.ais-checklist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ais-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  background: var(--aq-canvas);
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-full);
+  font-size: 0.75rem;
+  color: var(--aq-tertiary);
+  transition:
+    color var(--aq-transition),
+    border-color var(--aq-transition),
+    background-color var(--aq-transition);
+}
+
+.ais-check i { font-size: 0.625rem; opacity: 0.35; }
+
+.ais-check.is-ready {
+  background: var(--aq-accent-subtle);
+  border-color: rgba(249, 115, 22, 0.3);
+  color: var(--aq-accent-dark);
+}
+
+.ais-check.is-ready i { opacity: 1; }
+
+/* ─── Step panels ────────────────────────────────────────────────── */
+
+.ais-panel {
+  background: var(--aq-surface);
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-md);
+  box-shadow: var(--ds-shadow-sm);
+  padding: 1.5rem 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .ais-panel { padding: 2rem; }
+}
+
+.ais-step-panel { outline: none; }
+
+.ais-h {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.6vw, 1.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  color: var(--aq-ink);
+}
+
+.ais-h-sub {
+  margin: 0.5rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--aq-body);
+  max-width: 54ch;
+}
+
+/* Direction-aware entrance so Back reads as a step backwards. */
+.ais-step-panel.is-entering { animation: ais-in 0.36s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.ais-step-panel.is-entering-back { animation: ais-in-back 0.36s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes ais-in {
+  from { opacity: 0; transform: translate3d(14px, 0, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes ais-in-back {
+  from { opacity: 0; transform: translate3d(-14px, 0, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ─── Inline demo / preview disclaimers ──────────────────────────── */
+
+.ais-preview-tag {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0.5rem 0.75rem;
+  background: var(--aq-canvas);
+  border-radius: var(--ds-radius-sm);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--aq-body);
+}
+
+.ais-preview-tag i { color: var(--aq-blue); margin-top: 0.125rem; flex-shrink: 0; }
+
+/* ─── Step 1: upload ─────────────────────────────────────────────── */
+
+.ais-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.25rem;
+  margin-top: 1.25rem;
+  padding: 2rem 1.25rem;
+  background: var(--aq-canvas);
+  border: 2px dashed var(--aq-border);
+  border-radius: var(--ds-radius-md);
+  transition:
+    border-color var(--aq-transition),
+    background-color var(--aq-transition);
+}
+
+@media (min-width: 768px) {
+  .ais-drop { padding: 2.75rem 2rem; }
+}
+
+.ais-drop.is-over {
+  border-color: var(--aq-accent);
+  background: var(--aq-accent-subtle);
+}
+
+.ais-drop-icon {
+  font-size: 1.75rem;
+  color: var(--aq-accent);
+  margin-bottom: 0.5rem;
+}
+
+.ais-drop-title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--aq-ink);
+}
+
+.ais-drop-hint {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--aq-body);
+}
+
+.ais-drop-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.75rem;
+  color: var(--aq-tertiary);
+}
+
+/* One picker, two labels: phones get the camera-first wording. */
+.ais-btn-short { display: none; }
+
+@media (max-width: 639px) {
+  .ais-btn-long { display: none; }
+  .ais-btn-short { display: inline; }
+}
+
+.ais-picked {
+  margin-top: 1.25rem;
+  padding: 1.25rem;
+  background: var(--aq-canvas);
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-md);
+  text-align: center;
+}
+
+.ais-picked-label {
+  margin: 0 0 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--aq-tertiary);
+}
+
+.ais-picked-img {
+  display: block;
+  width: 100%;
+  max-height: 20rem;
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-sm);
+}
+
+.ais-picked-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0.875rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #16a34a;
+}
+
+.ais-picked-ok i { font-size: 0.8125rem; }
+
+/* Shown in place of the <img> when the browser cannot paint the photo.
+   Deliberately quiet: the seller did nothing wrong, so it must not read as
+   a failure state, and it must never show a broken-image glyph. */
+.ais-picked-standin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 9rem;
+  padding: 1.5rem 1rem;
+  background: var(--aq-canvas);
+  border: 1px dashed var(--aq-border);
+  border-radius: var(--ds-radius-sm);
+  color: var(--aq-body);
+  text-align: center;
+}
+
+.ais-picked-standin i { font-size: 1.5rem; opacity: 0.55; }
+.ais-picked-standin span { font-size: 0.8125rem; font-weight: 500; }
+
+.ais-blank {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2.25rem 1.25rem;
+  background: var(--aq-canvas);
+  border: 1px dashed var(--aq-border);
+  border-radius: var(--ds-radius-sm);
+  text-align: center;
+}
+
+.ais-blank-icon { font-size: 1.625rem; color: var(--aq-tertiary); }
+.ais-blank-title { margin: 0; font-weight: 600; font-size: 0.9375rem; }
+.ais-blank-sub { margin: 0; max-width: 34ch; font-size: 0.8125rem; line-height: 1.6; color: var(--aq-body); }
+
+.ais-error {
+  margin: 1rem 0 0;
+  padding: 0.625rem 0.875rem;
+  background: rgba(220, 38, 38, 0.06);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  border-radius: var(--ds-radius-sm);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: #b91c1c;
+}
+
+/* ─── Step 2: before / after ─────────────────────────────────────── */
+
+.ais-cmp {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.875rem;
+  align-items: center;
+  margin-top: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .ais-cmp { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+}
+
+.ais-cmp-side { margin: 0; }
+
+.ais-cmp-wrap {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #fff;
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-sm);
+  overflow: hidden;
+}
+
+.ais-cmp-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Purely cosmetic preview of a "cleaner" result — not AI processing. */
+.ais-cmp-wrap.is-demo .ais-cmp-img {
+  filter: brightness(1.06) contrast(1.1) saturate(1.12);
+}
+
+.ais-cmp-wrap.is-demo::after {
+  content: 'DEMO';
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  background: rgba(15, 23, 42, 0.72);
+  border-radius: var(--ds-radius-xs);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #fff;
+}
+
+.ais-cmp-cap {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  color: var(--aq-body);
+  text-align: center;
+}
+
+.ais-cmp-arrow {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: var(--aq-accent);
+  font-size: 1.125rem;
+}
+
+@media (min-width: 640px) {
+  .ais-cmp-arrow { display: inline-flex; }
+}
+
+.ais-opts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 480px) {
+  .ais-opts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.ais-opt {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.25rem;
+  font-size: 0.875rem;
+  color: var(--aq-body);
+}
+
+.ais-opt i { color: #16a34a; font-size: 0.75rem; }
+
+/* ─── Step 3: voice / type ───────────────────────────────────────── */
+
+.ais-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.25rem;
+  margin: 1.25rem 0 1.5rem;
+  padding: 0.25rem;
+  background: var(--aq-canvas);
+  border-radius: var(--ds-radius-sm);
+}
+
+.ais-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: var(--ds-touch);
+  background: transparent;
+  border: none;
+  border-radius: var(--ds-radius-xs);
+  font-family: var(--aq-font);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--aq-body);
+  cursor: pointer;
+  transition:
+    background-color var(--aq-transition),
+    color var(--aq-transition);
+}
+
+.ais-tab.is-active {
+  background: var(--aq-surface);
+  color: var(--aq-ink);
+  box-shadow: var(--ds-shadow-xs);
+}
+
+.ais-tabpanel { text-align: center; }
+
+.ais-mic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(6.5rem, 26vw, 8.5rem);
+  aspect-ratio: 1 / 1;
+  margin: 0.5rem auto 0;
+  background: var(--aq-accent-subtle);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+  border-radius: var(--ds-radius-full);
+  font-size: clamp(1.75rem, 7vw, 2.5rem);
+  color: var(--aq-accent);
+  cursor: pointer;
+  transition:
+    transform var(--aq-spring),
+    background-color var(--aq-transition),
+    border-color var(--aq-transition);
+}
+
+.ais-mic:active { transform: scale(0.95); }
+
+.ais-mic.is-live {
+  background: var(--aq-accent);
+  border-color: var(--aq-accent);
+  color: #fff;
+  animation: ais-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes ais-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.35); }
+  50% { box-shadow: 0 0 0 14px rgba(249, 115, 22, 0); }
+}
+
+.ais-mic-label {
+  margin: 1rem 0 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--aq-ink);
+}
+
+.ais-mic-sub {
+  margin: 0.25rem auto 0;
+  max-width: 34ch;
+  font-size: 0.875rem;
+  color: var(--aq-body);
+}
+
+.ais-timer {
+  margin: 0.75rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--aq-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.ais-lang {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+}
+
+.ais-lang-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--aq-ink);
+}
+
+.ais-select,
+.ais-textarea {
+  width: 100%;
+  font-family: var(--aq-font);
+  font-size: 0.9375rem;
+  color: var(--aq-ink);
+  background: var(--aq-surface);
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-sm);
+}
+
+.ais-select { min-height: var(--ds-touch); padding: 0 2.25rem 0 0.75rem; }
+.ais-textarea { padding: 0.75rem; min-height: 9rem; resize: vertical; }
+
+.ais-textarea::placeholder { color: var(--aq-tertiary); }
+
+.ais-select:focus,
+.ais-textarea:focus {
+  outline: none;
+  border-color: var(--aq-accent);
+  box-shadow: 0 0 0 3px var(--aq-accent-glow);
+}
+
+.ais-transcript {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  background: var(--aq-canvas);
+  border: 1px solid var(--aq-border);
+  border-left: 3px solid var(--aq-accent);
+  border-radius: var(--ds-radius-sm);
+  text-align: left;
+}
+
+.ais-transcript-label {
+  margin: 0 0 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--aq-tertiary);
+}
+
+.ais-transcript-text {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--aq-ink);
+}
+
+/* ─── Step 4: catalog form ───────────────────────────────────────── */
+
+.ais-field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ais-ai-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  padding: 0.125rem 0.5rem;
+  background: var(--aq-accent-subtle);
+  border-radius: var(--ds-radius-full);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--aq-accent-dark);
+  white-space: nowrap;
+}
+
+.ais-ai-mark i { font-size: 0.625rem; }
+
+.ais-grid-2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 1rem;
+}
+
+@media (min-width: 480px) {
+  .ais-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.ais-panel input[type="text"],
+.ais-panel input[type="number"],
+.ais-panel select,
+.ais-panel textarea {
+  border-radius: var(--ds-radius-sm);
+}
+
+.ais-seg {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--aq-canvas);
+  border-radius: var(--ds-radius-sm);
+  max-width: 22rem;
+}
+
+.ais-seg-btn {
+  min-height: var(--ds-touch);
+  background: transparent;
+  border: none;
+  border-radius: var(--ds-radius-xs);
+  font-family: var(--aq-font);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--aq-body);
+  cursor: pointer;
+  transition:
+    background-color var(--aq-transition),
+    color var(--aq-transition);
+}
+
+.ais-seg-btn.is-active {
+  background: var(--aq-surface);
+  color: var(--aq-ink);
+  box-shadow: var(--ds-shadow-xs);
+}
+
+.ais-kw {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ais-kw-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  background: var(--aq-accent-subtle);
+  border: 1px solid rgba(249, 115, 22, 0.22);
+  border-radius: var(--ds-radius-full);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--aq-accent-dark);
+}
+
+.ais-kw-item span { font-size: 0.75rem; opacity: 0.6; }
+
+.ais-kw.is-busy .ais-kw-item { opacity: 0.45; }
+
+/* ─── Step 5: pricing ────────────────────────────────────────────── */
+
+.ais-price {
+  margin-top: 1.25rem;
+  padding: 1.5rem 1.25rem;
+  background: var(--aq-canvas);
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-md);
+  text-align: center;
+}
+
+.ais-price-label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--aq-tertiary);
+}
+
+.ais-price-value {
+  margin: 0.25rem 0 1.5rem;
+  font-size: clamp(2.25rem, 9vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--aq-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.ais-range {
+  position: relative;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+}
+
+.ais-range-track {
+  position: absolute;
+  inset-inline: 0;
+  height: 6px;
+  background: var(--aq-border);
+  border-radius: var(--ds-radius-full);
+  overflow: hidden;
+}
+
+.ais-range-fill {
+  height: 100%;
+  width: 50%;
+  background: var(--aq-gradient-1);
+  border-radius: var(--ds-radius-full);
+}
+
+.ais-range-input {
+  position: relative;
+  width: 100%;
+  height: 2rem;
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.ais-range-input:focus { outline: none; }
+
+.ais-range-input:focus-visible {
+  outline: 2px solid var(--aq-accent);
+  outline-offset: 4px;
+  border-radius: var(--ds-radius-xs);
+}
+
+/* Painted in the accent gradient so it matches the fill behind it. */
+.ais-range-input::-webkit-slider-runnable-track { height: 2rem; background: transparent; }
+.ais-range-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: 0.25rem;
+  background: var(--aq-accent);
+  border: 2px solid #fff;
+  border-radius: var(--ds-radius-full);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.45);
+  cursor: pointer;
+}
+
+.ais-range-input::-moz-range-track { height: 2rem; background: transparent; }
+.ais-range-input::-moz-range-thumb {
+  width: 1.5rem;
+  height: 1.5rem;
+  background: var(--aq-accent);
+  border: 2px solid #fff;
+  border-radius: var(--ds-radius-full);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.45);
+  cursor: pointer;
+}
+
+.ais-range-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--aq-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ais-range-now {
+  margin: 0.375rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--aq-accent-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.ais-price-edit { margin-top: 1.25rem; text-align: left; }
+
+/* ─── Step 6: preview card ───────────────────────────────────────── */
+
+.ais-card {
+  margin-top: 1.25rem;
+  background: var(--aq-surface);
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-md);
+  box-shadow: var(--ds-shadow-md);
+  overflow: hidden;
+}
+
+.ais-card-media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--aq-canvas);
+  border-bottom: 1px solid var(--aq-border);
+}
+
+.ais-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #fff;
+}
+
+.ais-card-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 100%;
+  color: var(--aq-tertiary);
+  font-size: 0.8125rem;
+}
+
+.ais-card-empty i { font-size: 1.375rem; }
+.ais-card-empty p { margin: 0; }
+
+.ais-card-flag {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 0.1875rem 0.625rem;
+  background: var(--aq-accent);
+  border-radius: var(--ds-radius-full);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.ais-card-body { padding: 1.125rem 1.25rem 1.375rem; }
+
+.ais-card-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--aq-ink);
+}
+
+.ais-card-price {
+  margin: 0.375rem 0 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--aq-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.ais-card-desc {
+  margin: 0.625rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: var(--aq-body);
+}
+
+.ais-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin: 0.875rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ais-card-tags li {
+  padding: 0.1875rem 0.625rem;
+  background: var(--aq-canvas);
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-full);
+  font-size: 0.75rem;
+  color: var(--aq-body);
+}
+
+/* ─── Buttons, nav, end state ────────────────────────────────────── */
+
+.ais-btn {
+  justify-content: center;
+  text-align: center;
+}
+
+.ais-btn-sm {
+  padding: 0.5rem 1rem;
+  min-height: var(--ds-touch);
+  font-size: 0.8125rem;
+}
+
+.ais-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 1.5rem;
+}
+
+.ais-actions .btn-aq,
+.ais-actions .sp-btn { width: 100%; justify-content: center; }
+
+.ais-actions-center { justify-content: center; }
+
+@media (min-width: 480px) {
+  .ais-actions { flex-direction: row; flex-wrap: wrap; }
+
+  .ais-actions .btn-aq,
+  .ais-actions .sp-btn { width: auto; }
+
+  .ais-actions .ais-btn { flex: 1 1 14rem; }
+}
+
+.ais-nav {
+  display: flex;
+  gap: 0.625rem;
+  margin-top: 1.5rem;
+}
+
+.ais-nav .sp-btn,
+.ais-nav .btn-aq {
+  flex: 1 1 0;
+  justify-content: center;
+}
+
+.ais-nav .sp-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.ais-nav.is-hidden { display: none; }
+
+.ais-done {
+  margin-top: 1.5rem;
+  padding: 2rem 1.25rem;
+  background: var(--aq-surface);
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-md);
+  box-shadow: var(--ds-shadow-sm);
+  text-align: center;
+}
+
+.ais-done-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: 0 auto 1rem;
+  background: var(--aq-accent-subtle);
+  border-radius: var(--ds-radius-full);
+  font-size: 1.375rem;
+  color: var(--aq-accent);
+}
+
+.ais-done-h {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--aq-ink);
+}
+
+.ais-done-p {
+  margin: 0.5rem auto 0;
+  max-width: 46ch;
+  font-size: 0.9375rem;
+  color: var(--aq-body);
+}
+
+.ais-done-p code {
+  font-family: var(--aq-mono);
+  font-size: 0.8125rem;
+  color: var(--aq-ink);
+  overflow-wrap: anywhere;
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .ais-step-panel.is-entering,
+  .ais-step-panel.is-entering-back { animation: none; }
+
+  .ais-mic.is-live { animation: none; }
+
+  .ais-progress-fill { transition: none; }
+
+  .ais-back,
+  .ais-back i,
+  .ais-step,
+  .ais-step-num,
+  .ais-tab,
+  .ais-seg-btn,
+  .ais-mic,
+  .ais-range-fill,
+  .ais-check { transition: none; }
+}

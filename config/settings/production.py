@@ -354,7 +354,12 @@ SECURITY_CSP = '; '.join([
     "script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://www.googletagmanager.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
     "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com",
-    "img-src 'self' data: https:",
+    # `blob:` is required for client-side image previews: URL.createObjectURL()
+    # hands back a blob: URL, which is same-origin and document-scoped, so it
+    # adds no cross-origin reach. Without it the seller picks a photo and the
+    # preview frame stays blank with no error. Deliberately NOT added to
+    # script-src or object-src.
+    "img-src 'self' data: blob: https:",
     "connect-src 'self' https://api.razorpay.com https://*.razorpay.com https://www.google-analytics.com https://*.google-analytics.com https://*.googletagmanager.com https://stats.g.doubleclick.net",
     "media-src 'self' https: data:",
     "frame-src https://checkout.razorpay.com https://api.razorpay.com https://www.youtube-nocookie.com https://player.vimeo.com",

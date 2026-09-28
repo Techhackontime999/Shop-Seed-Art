@@ -54,6 +54,25 @@ def seller_dashboard(request):
 
 
 @login_required
+def ai_product_studio(request):
+    """AI Product Studio — front-end only.
+
+    Renders the SIH 2026 problem 26090 wizard shell
+    (image → enhance → voice/describe → AI catalog → smart price → preview).
+    Every AI capability is a demo state driven by ``static/js/ai-studio.js``;
+    no AI service, model or pricing data source is wired up yet, and nothing
+    this view receives is persisted. The real handlers will be attached to
+    ``data-studio-hook`` attributes when the services land.
+    """
+    try:
+        profile = request.user.sellerprofile
+    except SellerProfile.DoesNotExist:
+        return redirect('accounts:become_seller')
+
+    return render(request, 'seller/ai_studio.html', {'profile': profile})
+
+
+@login_required
 def seller_verification(request):
     """Seller-facing page: upload KYC / business documents and submit for
     admin review. Never auto-verifies."""

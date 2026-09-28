@@ -1,0 +1,505 @@
+{% extends 'shop/base/base.html' %}
+{% load static %}
+{% block title %}AI Product Studio — Shop-Seed Art{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/ai-studio.css' %}">
+{% endblock %}
+
+{% comment %}
+  UI/UX prototype only. No AI service, speech recognition, image processing
+  or pricing model is connected. Every "AI" result below is a labelled demo
+  state produced client-side by static/js/ai-studio.js. Integration points
+  are the data-studio-hook attributes on each action.
+{% endcomment %}
+
+{% block content %}
+<div class="ais" id="ais">
+  <div class="ais-inner">
+
+    <!-- ══ Header ══ -->
+    <header class="ais-header">
+      <div class="ais-header-text">
+        <a href="{% url 'seller:seller_dashboard' %}" class="ais-back">
+          <i class="fas fa-arrow-left" aria-hidden="true"></i>
+          <span>Back to Dashboard</span>
+        </a>
+        <h1 class="ais-title">AI Product Studio</h1>
+        <p class="ais-sub">Create a professional product listing with AI assistance.</p>
+      </div>
+      <span class="ais-badge"><i class="fas fa-sparkles" aria-hidden="true"></i> AI Powered</span>
+    </header>
+
+    <p class="ais-demo-note" role="note">
+      <i class="fas fa-flask" aria-hidden="true"></i>
+      <span><strong>Demo mode.</strong> This is a UI prototype for SIH 2026 problem 26090. Nothing is processed,
+      generated or saved — AI results are sample states so you can try the flow.</span>
+    </p>
+
+    <!-- ══ Stepper ══ -->
+    <nav class="ais-stepper" aria-label="AI Product Studio progress">
+      <ol class="ais-stepper-list" id="aisStepper">
+        <li class="ais-step-li">
+          <button type="button" class="ais-step is-active" data-goto="1" aria-current="step">
+            <span class="ais-step-num">1</span>
+            <span class="ais-step-name">Image</span>
+          </button>
+        </li>
+        <li class="ais-step-li">
+          <button type="button" class="ais-step" data-goto="2" disabled>
+            <span class="ais-step-num">2</span>
+            <span class="ais-step-name">Describe</span>
+          </button>
+        </li>
+        <li class="ais-step-li">
+          <button type="button" class="ais-step" data-goto="3" disabled>
+            <span class="ais-step-num">3</span>
+            <span class="ais-step-name">AI Catalog</span>
+          </button>
+        </li>
+        <li class="ais-step-li">
+          <button type="button" class="ais-step" data-goto="4" disabled>
+            <span class="ais-step-num">4</span>
+            <span class="ais-step-name">Smart Price</span>
+          </button>
+        </li>
+        <li class="ais-step-li">
+          <button type="button" class="ais-step" data-goto="5" disabled>
+            <span class="ais-step-num">5</span>
+            <span class="ais-step-name">Preview</span>
+          </button>
+        </li>
+      </ol>
+    </nav>
+
+    <!-- Progress rail (visual only) -->
+    <div class="ais-progress" role="presentation">
+      <div class="ais-progress-track"><div class="ais-progress-fill" id="aisProgressFill"></div></div>
+      <p class="ais-progress-text" id="aisProgressText">Step 1 of 5 · Image</p>
+    </div>
+
+    <!-- ══ Workspace ══ -->
+    <div class="ais-workspace" id="aisWorkspace">
+
+      <!-- ── Left: product image rail ── -->
+      <aside class="ais-media" aria-label="Product image">
+        <div class="ais-media-card">
+          <p class="ais-media-label">Product image</p>
+
+          <div class="ais-media-frame">
+            <img id="aisPreview" class="ais-media-img" alt="" hidden>
+            <div class="ais-media-empty" id="aisMediaEmpty">
+              <i class="fas fa-image" aria-hidden="true"></i>
+              <p>Your product image will appear here.</p>
+            </div>
+            <!-- Photo accepted but not paintable: distinct from "no photo yet"
+                 so the rail never implies the seller failed to add one. -->
+            <div class="ais-media-empty" id="aisPreviewStandin" hidden>
+              <i class="fas fa-image" aria-hidden="true"></i>
+              <p>Photo added</p>
+            </div>
+          </div>
+
+          <p class="ais-media-meta" id="aisMediaMeta" hidden>
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
+            <span id="aisMediaMetaText">Image uploaded</span>
+          </p>
+
+          <p class="ais-media-state" id="aisEnhanceState" hidden>
+            <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+            <span>Demo enhancement applied</span>
+          </p>
+
+          <div class="ais-media-actions" id="aisMediaActions" hidden>
+            <button type="button" class="sp-btn sp-btn-secondary ais-btn-sm" data-studio-hook="replace-image">
+              <i class="fas fa-rotate" aria-hidden="true"></i> Replace
+            </button>
+            <button type="button" class="sp-btn sp-btn-secondary ais-btn-sm" data-studio-hook="remove-image">
+              Remove
+            </button>
+          </div>
+        </div>
+
+        <ul class="ais-checklist" id="aisChecklist">
+          <li class="ais-check" data-check="image"><i class="fas fa-check" aria-hidden="true"></i> Image ready</li>
+          <li class="ais-check" data-check="description"><i class="fas fa-check" aria-hidden="true"></i> Description ready</li>
+          <li class="ais-check" data-check="price"><i class="fas fa-check" aria-hidden="true"></i> Price selected</li>
+        </ul>
+      </aside>
+
+      <!-- ── Right: the wizard steps ── -->
+      <div class="ais-panel" id="aisPanel">
+
+        <!-- STEP 1 · Product image -->
+        <section class="ais-step-panel is-active" data-step="1" data-tab-for="1" aria-labelledby="aisH1" tabindex="-1">
+          <h2 class="ais-h" id="aisH1">Start with a product photo</h2>
+          <p class="ais-h-sub">Upload a clear photo of your product. AI will help make it ready for your online store.</p>
+
+          <p class="ais-error" id="aisUploadError" role="alert" hidden></p>
+
+          <form id="aisUploadForm" novalidate>
+            <!-- empty state -->
+            <div class="ais-drop" id="aisDrop">
+              <i class="ais-drop-icon fas fa-camera" aria-hidden="true"></i>
+              <p class="ais-drop-title">Upload product image</p>
+              <p class="ais-drop-hint">Drag &amp; drop your image here<br>or</p>
+              <button type="button" class="btn-aq btn-aq-primary ais-btn" data-studio-hook="pick-image">
+                <i class="fas fa-upload" aria-hidden="true"></i>
+                <span class="ais-btn-long">Upload Image</span>
+                <span class="ais-btn-short">Take Photo or Upload</span>
+              </button>
+              <p class="ais-drop-note">Any photo from your phone or computer</p>
+            </div>
+
+            <!-- selected state -->
+            <div class="ais-picked" id="aisPicked" hidden>
+              <p class="ais-picked-label">Product image</p>
+              <img class="ais-picked-img" id="aisPickedImg" alt="Selected product image preview">
+              <!-- Fallback tile: the photo is accepted and kept, the browser
+                   just cannot paint it. Never shows a broken image. -->
+              <div class="ais-picked-standin" id="aisPickedStandin" hidden>
+                <i class="fas fa-image" aria-hidden="true"></i>
+                <span>Photo added</span>
+              </div>
+              <p class="ais-picked-ok">
+                <i class="fas fa-check-circle" aria-hidden="true"></i> Image uploaded
+              </p>
+              <div class="ais-actions">
+                <button type="button" class="sp-btn sp-btn-secondary" data-studio-hook="replace-image">Replace Image</button>
+                <button type="button" class="btn-aq btn-aq-primary ais-btn" data-studio-hook="enhance">
+                  <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> Enhance with AI
+                  <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- `accept="image/*"` rather than a format list on purpose: a
+               list makes the OS picker grey out or hide photos the seller
+               can plainly see in their gallery (HEIC, HEIF sequences, TIFF).
+               Every image is accepted and re-encoded in normalize(). -->
+          <input type="file" id="aisFile" accept="image/*"
+                 capture="environment" class="visually-hidden" tabindex="-1" aria-hidden="true">
+        </section>
+
+        <!-- STEP 2 · AI image enhancement -->
+        <section class="ais-step-panel" data-step="2" data-tab-for="2" aria-labelledby="aisH2" tabindex="-1" hidden>
+          <h2 class="ais-h" id="aisH2">Make your product photo marketplace-ready</h2>
+          <p class="ais-h-sub">AI can improve lighting, remove distractions and prepare your product image.</p>
+
+          <p class="ais-preview-tag">
+            <i class="fas fa-eye" aria-hidden="true"></i>
+            <span>Preview only — the &ldquo;after&rdquo; image is a visual demo, not a real AI edit.</span>
+          </p>
+
+          <div id="aisEnhanceBody">
+            <div class="ais-cmp">
+              <figure class="ais-cmp-side">
+                <img class="ais-cmp-img" id="aisBeforeImg" alt="Original uploaded product image">
+                <figcaption class="ais-cmp-cap">Before &middot; Original</figcaption>
+              </figure>
+              <span class="ais-cmp-arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></span>
+              <figure class="ais-cmp-side">
+                <div class="ais-cmp-wrap is-demo">
+                  <img class="ais-cmp-img" id="aisAfterImg" alt="Demonstration of the enhanced product image">
+                </div>
+                <figcaption class="ais-cmp-cap">After &middot; Demo enhancement</figcaption>
+              </figure>
+            </div>
+
+            <ul class="ais-opts">
+              <li class="ais-opt"><i class="fas fa-check" aria-hidden="true"></i> Background cleanup</li>
+              <li class="ais-opt"><i class="fas fa-check" aria-hidden="true"></i> Lighting correction</li>
+              <li class="ais-opt"><i class="fas fa-check" aria-hidden="true"></i> Product centering</li>
+              <li class="ais-opt"><i class="fas fa-check" aria-hidden="true"></i> E-commerce framing</li>
+            </ul>
+
+            <div class="ais-actions">
+              <button type="button" class="sp-btn sp-btn-secondary" data-studio-hook="keep-original">Keep Original</button>
+              <button type="button" class="btn-aq btn-aq-primary ais-btn" data-studio-hook="use-enhanced">
+                Use Enhanced Image <i class="fas fa-arrow-right" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Shown instead of the comparison when the browser cannot render
+               the photo. The seller is not blocked, and no format is named. -->
+          <div class="ais-blank" id="aisEnhanceBlank" hidden>
+            <i class="ais-blank-icon fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+            <p class="ais-blank-title">Preview unavailable for this photo</p>
+            <p class="ais-blank-sub">Your photo is saved for the listing. The preview will appear once the image is prepared on publish.</p>
+          </div>
+        </section>
+
+        <!-- STEP 3 · Voice / description -->
+        <section class="ais-step-panel" data-step="3" data-tab-for="2" aria-labelledby="aisH3" tabindex="-1" hidden>
+          <h2 class="ais-h" id="aisH3">Tell us about your product</h2>
+          <p class="ais-h-sub">You can type or simply speak naturally in your language.</p>
+
+          <div class="ais-tabs" role="tablist" aria-label="How to describe your product">
+            <button type="button" class="ais-tab is-active" id="aisTabVoice" role="tab"
+                    aria-selected="true" aria-controls="aisVoice" data-tab="voice">
+              <i class="fas fa-microphone" aria-hidden="true"></i> Voice
+            </button>
+            <button type="button" class="ais-tab" id="aisTabType" role="tab"
+                    aria-selected="false" aria-controls="aisType" data-tab="type">
+              <i class="fas fa-pen" aria-hidden="true"></i> Type
+            </button>
+          </div>
+
+          <!-- Voice -->
+          <div class="ais-tabpanel is-active" id="aisVoice" role="tabpanel" aria-labelledby="aisTabVoice">
+            <button type="button" class="ais-mic" id="aisMic" data-studio-hook="record"
+                    aria-live="off" aria-label="Tap to record a description of your product">
+              <i class="fas fa-microphone" aria-hidden="true"></i>
+            </button>
+            <p class="ais-mic-label" id="aisMicLabel">Tap to record</p>
+            <p class="ais-mic-sub">Speak about your product in Hindi or your preferred language.</p>
+            <p class="ais-timer" id="aisTimer" hidden>00:00</p>
+            <div class="ais-actions">
+              <button type="button" class="btn-aq btn-aq-primary ais-btn" data-studio-hook="record-toggle" id="aisRecordBtn">
+                <i class="fas fa-microphone" aria-hidden="true"></i> Start Recording
+              </button>
+              <label class="ais-lang">
+                <span class="ais-lang-label">Language</span>
+                <select id="aisLang" class="ais-select" aria-label="Spoken language">
+                  <option value="hi" selected lang="hi">हिंदी</option>
+                  <option value="en">English</option>
+                </select>
+              </label>
+            </div>
+            <p class="ais-preview-tag">
+              <i class="fas fa-flask" aria-hidden="true"></i>
+              <span>Demo: recording is simulated, nothing is captured and no speech recognition runs.</span>
+            </p>
+            <div class="ais-transcript" id="aisTranscript" hidden>
+              <p class="ais-transcript-label">You said</p>
+              <p class="ais-transcript-text" id="aisTranscriptText"></p>
+            </div>
+          </div>
+
+          <!-- Type -->
+          <div class="ais-tabpanel" id="aisType" role="tabpanel" aria-labelledby="aisTabType" hidden>
+            <label class="sp-label" for="aisDesc">Describe your product in your own words&hellip;</label>
+            <textarea class="ais-textarea" id="aisDesc" rows="6" lang="hi"
+                      placeholder="यह हाथ से बनी मधुबनी पेंटिंग है..."></textarea>
+            <p class="sp-help">A few sentences about what it is and how it was made is enough.</p>
+            <div class="ais-actions">
+              <button type="button" class="btn-aq btn-aq-primary ais-btn" data-studio-hook="generate">
+                <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> Generate with AI
+                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+              </button>
+            </div>
+            <p class="ais-preview-tag">
+              <i class="fas fa-flask" aria-hidden="true"></i>
+              <span>Demo: the listing below is a fixed sample, not generated from your text.</span>
+            </p>
+          </div>
+        </section>
+
+        <!-- STEP 4 · AI catalog -->
+        <section class="ais-step-panel" data-step="4" data-tab-for="3" aria-labelledby="aisH4" tabindex="-1" hidden>
+          <h2 class="ais-h" id="aisH4">Your AI-generated product listing</h2>
+          <p class="ais-h-sub">Review and edit the information before publishing.</p>
+
+          <p class="ais-preview-tag">
+            <i class="fas fa-flask" aria-hidden="true"></i>
+            <span>Sample listing for demo. Every field below is editable.</span>
+          </p>
+
+          <div class="sp-field">
+            <div class="ais-field-head">
+              <label class="sp-label" for="aisTitle">Product title</label>
+              <span class="ais-ai-mark"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> AI sample</span>
+            </div>
+            <input type="text" id="aisTitle" value="Handmade Madhubani Folk Art Painting" maxlength="120">
+            <p class="sl-counter"><span class="sl-counter-bar"><i></i></span><span id="aisTitleCount">0 / 120</span></p>
+          </div>
+
+          <div class="sp-field">
+            <div class="ais-field-head">
+              <label class="sp-label" for="aisCatalogDesc">Description</label>
+              <span class="ais-ai-mark"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> AI sample</span>
+            </div>
+            <textarea id="aisCatalogDesc" rows="5">Beautiful handmade Madhubani artwork inspired by traditional Indian folk art, hand-painted with natural colours on handmade paper.</textarea>
+          </div>
+
+          <div class="ais-grid-2">
+            <div class="sp-field">
+              <label class="sp-label" for="aisCategory">Category</label>
+              <select id="aisCategory">
+                <option selected>Paintings &amp; Wall Art</option>
+                <option>Home Decor</option>
+                <option>Textiles</option>
+                <option>Jewellery</option>
+              </select>
+            </div>
+            <div class="sp-field">
+              <label class="sp-label" for="aisSubcategory">Subcategory</label>
+              <select id="aisSubcategory">
+                <option selected>Madhubani Art</option>
+                <option>Wall Hangings</option>
+                <option>Framed Art</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="sp-field">
+            <span class="sp-label" id="aisLangLabel">Listing language</span>
+            <div class="ais-seg" role="group" aria-labelledby="aisLangLabel">
+              <button type="button" class="ais-seg-btn is-active" data-lang="en" aria-pressed="true">English</button>
+              <button type="button" class="ais-seg-btn" data-lang="hi" aria-pressed="false" lang="hi">हिंदी</button>
+            </div>
+            <p class="sp-help">Demo: switching language does not translate anything yet.</p>
+          </div>
+
+          <div class="sp-field">
+            <span class="sp-label" id="aisKwLabel">Keywords</span>
+            <ul class="ais-kw" aria-labelledby="aisKwLabel">
+              <li class="ais-kw-item">Madhubani<span aria-hidden="true">×</span></li>
+              <li class="ais-kw-item">Handmade<span aria-hidden="true">×</span></li>
+              <li class="ais-kw-item">Folk Art<span aria-hidden="true">×</span></li>
+              <li class="ais-kw-item">Indian Art<span aria-hidden="true">×</span></li>
+            </ul>
+            <div class="ais-actions">
+              <button type="button" class="sp-btn sp-btn-secondary ais-btn-sm" data-studio-hook="regen">
+                <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> Regenerate
+              </button>
+              <button type="button" class="sp-btn sp-btn-secondary ais-btn-sm" data-studio-hook="edit-listing">Edit</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 5 · Smart pricing -->
+        <section class="ais-step-panel" data-step="5" data-tab-for="4" aria-labelledby="aisH5" tabindex="-1" hidden>
+          <h2 class="ais-h" id="aisH5">Set your selling price</h2>
+          <p class="ais-h-sub">Use AI-assisted pricing to help choose a competitive price.</p>
+
+          <p class="ais-preview-tag">
+            <i class="fas fa-flask" aria-hidden="true"></i>
+            <span>AI estimated price &mdash; a fixed demo figure, not live market analysis.</span>
+          </p>
+
+          <div class="ais-price">
+            <p class="ais-price-label">Recommended price</p>
+            <p class="ais-price-value" id="aisPriceValue">&#8377;1,499</p>
+
+            <div class="ais-range" id="aisRange">
+              <div class="ais-range-track"><div class="ais-range-fill" id="aisRangeFill"></div></div>
+              <input type="range" class="ais-range-input" id="aisPriceRange"
+                     min="1200" max="1800" step="10" value="1499"
+                     aria-label="Set your selling price">
+            </div>
+            <div class="ais-range-ends" aria-hidden="true">
+              <span>&#8377;1,200</span>
+              <span>&#8377;1,800</span>
+            </div>
+            <p class="ais-range-now" id="aisRangeNow">&#8377;1,499</p>
+          </div>
+
+          <ul class="ais-opts">
+            <li class="ais-opt"><i class="fas fa-check" aria-hidden="true"></i> Product category</li>
+            <li class="ais-opt"><i class="fas fa-check" aria-hidden="true"></i> Material</li>
+            <li class="ais-opt"><i class="fas fa-check" aria-hidden="true"></i> Size</li>
+            <li class="ais-opt"><i class="fas fa-check" aria-hidden="true"></i> Product information</li>
+          </ul>
+
+          <div class="sp-field ais-price-edit" id="aisPriceEdit" hidden>
+            <label class="sp-label" for="aisPriceInput">Enter your own price</label>
+            <input type="number" id="aisPriceInput" min="1" step="1" value="1499" inputmode="numeric">
+            <p class="sp-help">Demo: this value stays in your browser and is not saved.</p>
+          </div>
+
+          <div class="ais-actions">
+            <button type="button" class="sp-btn sp-btn-secondary" data-studio-hook="edit-price">
+              <i class="fas fa-pen" aria-hidden="true"></i> Edit Price
+            </button>
+            <button type="button" class="btn-aq btn-aq-primary ais-btn" data-studio-hook="use-price" id="aisUsePriceBtn">
+              Use &#8377;1,499 <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </button>
+          </div>
+        </section>
+
+        <!-- STEP 6 · Preview -->
+        <section class="ais-step-panel" data-step="6" data-tab-for="5" data-nav="off" aria-labelledby="aisH6" tabindex="-1" hidden>
+          <h2 class="ais-h" id="aisH6">Your listing is ready</h2>
+          <p class="ais-h-sub">Review how customers will see your product.</p>
+
+          <p class="ais-preview-tag">
+            <i class="fas fa-flask" aria-hidden="true"></i>
+            <span>Preview only &mdash; nothing is saved or published in demo mode.</span>
+          </p>
+
+          <article class="ais-card">
+            <div class="ais-card-media">
+              <img class="ais-card-img" id="aisCardImg" alt="Product image preview" hidden>
+              <div class="ais-card-empty" id="aisCardEmpty">
+                <i class="fas fa-image" aria-hidden="true"></i>
+                <p>No image added</p>
+              </div>
+              <div class="ais-card-empty" id="aisCardStandin" hidden>
+                <i class="fas fa-image" aria-hidden="true"></i>
+                <p>Photo added</p>
+              </div>
+              <span class="ais-card-flag">New</span>
+            </div>
+            <div class="ais-card-body">
+              <h3 class="ais-card-title" id="aisCardTitle">Handmade Madhubani Folk Art Painting</h3>
+              <p class="ais-card-price" id="aisCardPrice">&#8377;1,499</p>
+              <p class="ais-card-desc" id="aisCardDesc"></p>
+              <ul class="ais-card-tags" id="aisCardTags">
+                <li>Handmade</li>
+                <li>Madhubani</li>
+                <li>Folk Art</li>
+              </ul>
+            </div>
+          </article>
+
+          <div class="ais-actions">
+            <button type="button" class="sp-btn sp-btn-secondary" data-studio-hook="edit-listing">
+              <i class="fas fa-arrow-left" aria-hidden="true"></i> Edit Listing
+            </button>
+            <button type="button" class="btn-aq btn-aq-primary ais-btn" data-studio-hook="publish">
+              <i class="fas fa-rocket" aria-hidden="true"></i> Publish Product
+            </button>
+          </div>
+        </section>
+
+      </div><!-- /.ais-panel -->
+    </div><!-- /.ais-workspace -->
+
+    <!-- ══ Step nav ══ -->
+    <div class="ais-nav">
+      <button type="button" class="sp-btn sp-btn-secondary" id="aisPrev" data-studio-hook="back" disabled>
+        <i class="fas fa-arrow-left" aria-hidden="true"></i> Back
+      </button>
+      <button type="button" class="btn-aq btn-aq-primary ais-btn" id="aisNext" data-studio-hook="next">
+        Next <i class="fas fa-arrow-right" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <!-- Demo result: shown instead of navigating, since publishing is not wired up -->
+    <div class="ais-done" id="aisDone" hidden>
+      <p class="ais-done-icon" aria-hidden="true"><i class="fas fa-flask"></i></p>
+      <h2 class="ais-done-h">Publishing is not connected yet</h2>
+      <p class="ais-done-p">
+        This demo stops here. The listing is not saved. Connect the product form
+        at <code>{% url 'seller:add_product' %}</code> to publish for real.
+      </p>
+      <div class="ais-actions ais-actions-center">
+        <a class="sp-btn sp-btn-secondary" href="{% url 'seller:add_product' %}">
+          Open the listing form
+        </a>
+        <a class="btn-aq btn-aq-primary ais-btn" href="{% url 'seller:seller_dashboard' %}">
+          Back to Dashboard
+        </a>
+      </div>
+    </div>
+
+  </div><!-- /.ais-inner -->
+</div><!-- /.ais -->
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/ai-studio.js' %}" defer></script>
+{% endblock %}

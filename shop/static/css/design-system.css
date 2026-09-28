@@ -196,6 +196,7 @@ p, h1, h2, h3, h4, h5, h6, li, a, span, td, th {
 .seller-pro,
 .svc-inner,
 .sl-inner,
+.ais-inner,
 .pdp-section {
   padding-top: max(calc(var(--ds-navbar-h) + var(--ds-news-ticker-h) + 1.5rem), 2rem) !important;
 }
