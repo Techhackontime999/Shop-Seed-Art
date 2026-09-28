@@ -39,8 +39,9 @@ services:
     region: singapore
     runtime: python
     buildCommand: bash build.sh
-    # Migrations + cache table + collectstatic run ONCE in preDeployCommand;
-    # the start command must stay a pure gunicorn so they never run twice.
+    # Migrations + cache table + collectstatic run ONCE in buildCommand (build.sh),
+    # since Render's free tier does not support preDeployCommand. The start
+    # command must stay a pure gunicorn so they never run twice.
     startCommand: gunicorn config.wsgi --bind 0.0.0.0:$PORT --workers=2 --access-logfile=-
     healthCheckPath: /healthz
     envVars:
