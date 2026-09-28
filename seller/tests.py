@@ -44,7 +44,7 @@ class UpdateOrderStatusTests(TestCase):
         )
         OrderItem.objects.create(order=self.order, product=self.product, price='50.00', quantity=1)
         self.client.force_login(self.seller_user)
-        self.url = reverse('seller:update_order_status', args=[self.order.id])
+        self.url = reverse('seller:update_order_status', args=[self.order.url_ref])
 
     def test_get_request_rejected(self):
         response = self.client.get(self.url)

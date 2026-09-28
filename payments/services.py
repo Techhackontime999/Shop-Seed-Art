@@ -540,7 +540,7 @@ def mark_payment_failed(payment, message='', source='gateway', actor=None):
         Notification.Category.PAYMENT,
         f'Payment failed for order {payment.order.order_number}',
         message or 'Your payment could not be processed. Please try again or use a different payment method.',
-        link=reverse('payments:checkout', args=[payment.order.id]),
+        link=reverse('payments:checkout', args=[payment.order.url_ref]),
         icon='credit-card',
     )
 

@@ -27,7 +27,7 @@ class Payment(models.Model):
         ordering = ('-created_at',)
 
     def __str__(self):
-        return f"Payment {self.razorpay_order_id} - {self.order.id}"
+        return f"Payment {self.razorpay_order_id} - {self.order.order_number or self.order_id}"
 
 
 class PaymentAuditLog(models.Model):

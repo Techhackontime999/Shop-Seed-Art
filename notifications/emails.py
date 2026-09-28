@@ -21,7 +21,7 @@ def _order_track_url(order):
     token = make_guest_access_token(order)
     return '{}{}?token={}'.format(
         settings.SITE_URL,
-        reverse('shipping:order_tracking', args=[order.id]),
+        reverse('shipping:order_tracking', args=[order.url_ref]),
         token,
     )
 

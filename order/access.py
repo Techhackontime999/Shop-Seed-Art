@@ -5,11 +5,14 @@ Guest checkout lets shoppers place an order without an account. Order access
 instead of a user FK: the order id is recorded in the session at creation time,
 so the same browser can follow the order through to completion. Signed-in users
 keep the normal user-based access.
+
+Orders are *addressed* in URLs by their public reference (``SEED-2026-000149``)
+rather than the primary key; legacy numeric URLs still resolve here and are
+redirected to the reference form by the views.
 """
 
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.http import Http404
-from django.shortcuts import get_object_or_404
 
 from .models import Order
 
@@ -43,8 +46,37 @@ def grant_guest_access(request, order):
     request.session[GUEST_ORDERS_SESSION_KEY] = sorted(ids)
 
 
-def get_order_for_request(request, order_id, queryset=None, token=None):
+def get_order_by_ref(ref, queryset=None):
+    """Resolve an order from a URL reference, or ``None``.
+
+    Accepts both forms found in the wild: the public reference
+    (``SEED-2026-000149``) and the legacy numeric primary key (``149``) that
+    older confirmation emails, in-flight payment links and bookmarks still use.
+    The reference is tried first — it is unique and indexed, so the common case is
+    a single indexed lookup.
+    """
+    qs = queryset if queryset is not None else Order.objects.all()
+    ref = str(ref or '').strip()
+    if not ref:
+        return None
+    order = qs.filter(order_number=ref).first()
+    if order is not None:
+        return order
+    if ref.isdigit():
+        return qs.filter(pk=int(ref)).first()
+    return None
+
+
+def is_canonical_ref(ref, order):
+    """True when ``ref`` is the reference form (not a legacy numeric id)."""
+    return str(ref) == order.url_ref
+
+
+def get_order_for_request(request, order_ref, queryset=None, token=None):
     """Fetch an order the caller is allowed to see, or 404.
+
+    ``order_ref`` is the URL reference: either the public reference
+    (``SEED-2026-000149``) or a legacy numeric order id.
 
     ``queryset`` lets callers attach prefetch/select_related while keeping the
     access check in one place. ``token`` is the signed link from the guest order
@@ -52,8 +84,9 @@ def get_order_for_request(request, order_id, queryset=None, token=None):
     the order, grants access for this browser session, and lets the link work
     even from a different device than the one used to check out.
     """
-    qs = queryset if queryset is not None else Order.objects.all()
-    order = get_object_or_404(qs, id=order_id)
+    order = get_order_by_ref(order_ref, queryset=queryset)
+    if order is None:
+        raise Http404
     if can_access_order(request, order):
         return order
     if token and order.user_id is None and _valid_guest_token(order, token):

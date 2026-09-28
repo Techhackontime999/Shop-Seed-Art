@@ -8,7 +8,7 @@ from .forms import ShippingAddressForm
 from cart.cart import Cart
 from core.security import safe_next_url
 from order.models import Order
-from order.access import get_order_for_request
+from order.access import get_order_for_request, is_canonical_ref
 from notifications.models import Notification
 from notifications.services import notify
 
@@ -65,8 +65,12 @@ def address_delete(request, address_id):
     return redirect('shipping:address_list')
 
 
-def shipping_select(request, order_id):
-    order = get_order_for_request(request, order_id)
+def shipping_select(request, order_ref):
+    order = get_order_for_request(request, order_ref)
+
+    if request.method == 'GET' and not is_canonical_ref(order_ref, order):
+        return redirect('shipping:shipping_select', order_ref=order.url_ref, permanent=True)
+
     cart = Cart(request)
     addresses = ShippingAddress.objects.filter(user=order.user)
     methods = ShippingMethod.objects.filter(is_active=True)
@@ -117,12 +121,12 @@ def shipping_select(request, order_id):
             notify(
                 order.user,
                 Notification.Category.SHIPPING,
-                f'Shipping arranged for order #{order.id}',
+                f'Shipping arranged for order #{order.order_number}',
                 f'{shipping_method.name} selected ({shipping_method.estimated_delivery_days}). Complete payment to dispatch your items.',
-                link=reverse('payments:checkout', args=[order.id]),
+                link=reverse('payments:checkout', args=[order.url_ref]),
                 icon='truck-fast',
             )
-        return redirect('payments:checkout', order_id=order.id)
+        return redirect('payments:checkout', order_ref=order.url_ref)
 
     return render(request, 'shipping/select.html', {
         'order': order, 'cart': cart,
@@ -131,10 +135,12 @@ def shipping_select(request, order_id):
     })
 
 
-def order_tracking(request, order_id):
+def order_tracking(request, order_ref):
     order = get_order_for_request(
-        request, order_id, token=request.GET.get('token'),
+        request, order_ref, token=request.GET.get('token'),
     )
+    if not is_canonical_ref(order_ref, order):
+        return redirect('shipping:order_tracking', order_ref=order.url_ref, permanent=True)
     logistics = (
         order.logistics_shipments.select_related('courier', 'service', 'warehouse')
         .prefetch_related('tracking_events', 'items__product')

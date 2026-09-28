@@ -169,18 +169,18 @@ class ReturnRequestFlowTests(TestCase):
         self.client.force_login(self.user)
 
     def _return_url(self):
-        return reverse('order:request_return', args=[self.order.pk])
+        return reverse('order:request_return', args=[self.order.url_ref])
 
     def test_return_only_allowed_after_delivery(self):
         response = self.client.post(self._return_url(), {'reason': 'defective', 'details': 'Does not switch on'})
-        self.assertRedirects(response, reverse('order:order_detail', args=[self.order.pk]))
+        self.assertRedirects(response, reverse('order:order_detail', args=[self.order.url_ref]))
         self.assertFalse(ReturnRequest.objects.filter(order=self.order).exists())
 
     def test_return_request_created_for_delivered_order(self):
         self.order.status = Order.Status.DELIVERED
         self.order.save()
         response = self.client.post(self._return_url(), {'reason': 'defective', 'details': 'Does not switch on'})
-        self.assertRedirects(response, reverse('order:order_detail', args=[self.order.pk]))
+        self.assertRedirects(response, reverse('order:order_detail', args=[self.order.url_ref]))
         ret = ReturnRequest.objects.get(order=self.order)
         self.assertEqual(ret.status, ReturnRequest.Status.PENDING)
         self.assertEqual(ret.reason, 'defective')
@@ -191,12 +191,12 @@ class ReturnRequestFlowTests(TestCase):
         self.order.save()
         ReturnRequest.objects.create(order=self.order, user=self.user, reason='defective')
         response = self.client.post(self._return_url(), {'reason': 'damaged'})
-        self.assertRedirects(response, reverse('order:order_detail', args=[self.order.pk]))
+        self.assertRedirects(response, reverse('order:order_detail', args=[self.order.url_ref]))
         self.assertEqual(ReturnRequest.objects.filter(order=self.order).count(), 1)
 
     def test_invalid_reason_rejected(self):
         self.order.status = Order.Status.DELIVERED
         self.order.save()
         response = self.client.post(self._return_url(), {'reason': 'made_up_reason'})
-        self.assertRedirects(response, reverse('order:order_detail', args=[self.order.pk]))
+        self.assertRedirects(response, reverse('order:order_detail', args=[self.order.url_ref]))
         self.assertFalse(ReturnRequest.objects.filter(order=self.order).exists())

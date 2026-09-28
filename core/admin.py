@@ -75,7 +75,7 @@ def _build_dashboard_extras():
         for order in Order.objects.order_by('-created')[:4]:
             raw.append((order.created, {
                 'kind': 'order', 'url': 'admin:order_order_changelist',
-                'title': f'Order #{order.id} placed',
+                'title': f'Order #{order.order_number} placed',
                 'desc': f'{order.first_name} {order.last_name} · {order.city}',
             }))
         for review in ProductReview.objects.select_related('product', 'reviewer').order_by('-created')[:3]:

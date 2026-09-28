@@ -323,7 +323,7 @@
             <div class="myo-total-value">{% price order.get_total_cost %}</div>
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;">
-          <a href="{% url 'order:order_detail' order.id %}" class="myo-btn myo-btn-outline">
+          <a href="{% url 'order:order_detail' order.url_ref %}" class="myo-btn myo-btn-outline">
             <i class="fas fa-receipt"></i> {% trans 'View Details' %}
           </a>
           {% if order.tl_shipment %}
@@ -331,7 +331,7 @@
             <i class="fas fa-location-dot"></i> {% trans 'Track Order' %}
           </a>
           {% else %}
-          <a href="{% url 'shipping:order_tracking' order.id %}" class="myo-btn myo-btn-outline">
+          <a href="{% url 'shipping:order_tracking' order.url_ref %}" class="myo-btn myo-btn-outline">
             <i class="fas fa-location-dot"></i> {% trans 'Track Order' %}
           </a>
           {% endif %}

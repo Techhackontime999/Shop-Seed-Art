@@ -98,7 +98,7 @@ class CheckoutFlowTests(TestCase):
         response = self._order_post(token='premade-token')
         self.assertRedirects(
             response,
-            reverse('shipping:shipping_select', args=[existing.id]),
+            reverse('shipping:shipping_select', args=[existing.url_ref]),
             fetch_redirect_response=False,
         )
         self.assertEqual(Order.objects.filter(user=self.user, checkout_token='premade-token').count(), 1)

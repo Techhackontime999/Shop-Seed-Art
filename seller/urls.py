@@ -16,7 +16,9 @@ urlpatterns = [
     path('product/image/main/<int:pk>/<int:image_id>/', views.set_product_main_image, name='set_product_main_image'),
     path('product/variant-image/delete/<int:pk>/<int:image_id>/', views.delete_variant_image, name='delete_variant_image'),
     path('orders/', views.seller_orders, name='orders'),
-    path('orders/update/<int:order_id>/', views.update_order_status, name='update_order_status'),
+    path('orders/update/<orderref:order_ref>/', views.update_order_status, name='update_order_status'),
+    # Legacy numeric order id in the dashboard form action.
+    path('orders/update/<int:order_ref>/', views.update_order_status, name='update_order_status_legacy'),
     path('payouts/', views.seller_payouts, name='payouts'),
     path('payouts/request/', views.request_payout, name='request_payout'),
     path('profile/', views.private_profile, name='private_profile'),

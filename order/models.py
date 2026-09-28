@@ -104,6 +104,16 @@ class Order(models.Model):
     def __str__(self):
         return 'Order {}'.format(self.order_number or self.id)
 
+    @property
+    def url_ref(self):
+        """The public identifier this order is addressed by in URLs.
+
+        ``SEED-2026-000149`` — the same reference shown to the customer on the
+        order page, invoice and emails. Falls back to the primary key for rows
+        that somehow have no reference yet, so a URL is never built as ``None``.
+        """
+        return self.order_number or str(self.pk)
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         if not self.order_number:

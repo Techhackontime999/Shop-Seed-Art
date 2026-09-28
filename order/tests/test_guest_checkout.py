@@ -72,7 +72,7 @@ class GuestCheckoutTests(TestCase):
         order = Order.objects.get(checkout_token='token-guest')
         session = self.client.session
         self.assertIn(order.id, session.get(GUEST_ORDERS_SESSION_KEY, []))
-        response = self.client.get(reverse('shipping:shipping_select', args=[order.id]))
+        response = self.client.get(reverse('shipping:shipping_select', args=[order.url_ref]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Payment method')
 
@@ -80,7 +80,7 @@ class GuestCheckoutTests(TestCase):
         self._seed_session_cart()
         self._order_post()
         order = Order.objects.get(checkout_token='token-guest')
-        response = self.client.get(reverse('order:order_detail', args=[order.id]))
+        response = self.client.get(reverse('order:order_detail', args=[order.url_ref]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Earbuds')
 
@@ -90,7 +90,7 @@ class GuestCheckoutTests(TestCase):
         order = Order.objects.get(checkout_token='token-guest')
         # A different browser/session has no access.
         other = Client(SERVER_NAME='localhost')
-        response = other.get(reverse('order:order_detail', args=[order.id]))
+        response = other.get(reverse('order:order_detail', args=[order.url_ref]))
         self.assertEqual(response.status_code, 404)
 
     def test_signed_in_guest_order_is_not_visible_to_other_users(self):
@@ -101,7 +101,7 @@ class GuestCheckoutTests(TestCase):
         order = Order.objects.get(checkout_token='token-guest')
         other = Client(SERVER_NAME='localhost')
         other.force_login(stranger)
-        response = other.get(reverse('order:order_detail', args=[order.id]))
+        response = other.get(reverse('order:order_detail', args=[order.url_ref]))
         self.assertEqual(response.status_code, 404)
 
     def test_guest_my_orders_lists_session_orders_without_login(self):
@@ -174,7 +174,7 @@ class GuestEmailLinkTests(TestCase):
         token = make_guest_access_token(order)
         # Brand-new client: no session access, no login.
         response = self.fresh.get(
-            reverse('shipping:order_tracking', args=[order.id]) + f'?token={token}'
+            reverse('shipping:order_tracking', args=[order.url_ref]) + f'?token={token}'
         )
         self.assertEqual(response.status_code, 200)
 
@@ -182,23 +182,23 @@ class GuestEmailLinkTests(TestCase):
         order = self._place_guest_order()
         token = make_guest_access_token(order)
         detail = self.fresh.get(
-            reverse('order:order_detail', args=[order.id]) + f'?token={token}'
+            reverse('order:order_detail', args=[order.url_ref]) + f'?token={token}'
         )
         self.assertEqual(detail.status_code, 200)
         invoice = self.fresh.get(
-            reverse('order:order_invoice', args=[order.id]) + f'?token={token}'
+            reverse('order:order_invoice', args=[order.url_ref]) + f'?token={token}'
         )
         self.assertEqual(invoice.status_code, 200)
 
     def test_missing_or_forged_token_is_rejected(self):
         order = self._place_guest_order()
         self.assertEqual(
-            self.fresh.get(reverse('shipping:order_tracking', args=[order.id])).status_code,
+            self.fresh.get(reverse('shipping:order_tracking', args=[order.url_ref])).status_code,
             404,
         )
         self.assertEqual(
             self.fresh.get(
-                reverse('shipping:order_tracking', args=[order.id]) + '?token=forged'
+                reverse('shipping:order_tracking', args=[order.url_ref]) + '?token=forged'
             ).status_code,
             404,
         )
@@ -209,7 +209,7 @@ class GuestEmailLinkTests(TestCase):
         last = 'a' if token[-1] != 'a' else 'b'
         tampered = token[:-1] + last
         response = self.fresh.get(
-            reverse('shipping:order_tracking', args=[order.id]) + f'?token={tampered}'
+            reverse('shipping:order_tracking', args=[order.url_ref]) + f'?token={tampered}'
         )
         self.assertEqual(response.status_code, 404)
 
@@ -221,7 +221,7 @@ class GuestEmailLinkTests(TestCase):
             token = TimestampSigner().sign('{}:{}'.format(order.id, order.email))
         self.assertIsNone(order_id_from_guest_token(token))
         response = self.fresh.get(
-            reverse('shipping:order_tracking', args=[order.id]) + f'?token={token}'
+            reverse('shipping:order_tracking', args=[order.url_ref]) + f'?token={token}'
         )
         self.assertEqual(response.status_code, 404)
 
@@ -240,7 +240,7 @@ class GuestEmailLinkTests(TestCase):
         )
         token = make_guest_access_token(order)
         response = self.fresh.get(
-            reverse('shipping:order_tracking', args=[order.id]) + f'?token={token}'
+            reverse('shipping:order_tracking', args=[order.url_ref]) + f'?token={token}'
         )
         self.assertEqual(response.status_code, 404)
 
@@ -267,7 +267,7 @@ class GuestEmailLinkTests(TestCase):
         from notifications.emails import _order_track_url
         order = self._place_guest_order()
         url = _order_track_url(order)
-        self.assertIn('/shipping/tracking/{}/'.format(order.id), url)
+        self.assertIn('/shipping/tracking/{}/'.format(order.url_ref), url)
         self.assertIn('?token=', url)
         token = url.split('?token=', 1)[1]
         self.assertEqual(order_id_from_guest_token(token), (order.id, 'ada@example.com'))
@@ -318,7 +318,7 @@ class GuestAbuseProtectionTests(TestCase):
             amount=Decimal('236.00'), status='captured',
         )
         response = self.client.post(
-            reverse('order:order_cancel', args=[order.id]), follow=True,
+            reverse('order:order_cancel', args=[order.url_ref]), follow=True,
         )
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.PENDING)
@@ -329,10 +329,10 @@ class GuestAbuseProtectionTests(TestCase):
         self._seed_session_cart()
         self._order_post('token-unpaid-guest')
         order = Order.objects.get(checkout_token='token-unpaid-guest')
-        response = self.client.post(reverse('order:order_cancel', args=[order.id]))
+        response = self.client.post(reverse('order:order_cancel', args=[order.url_ref]))
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.CANCELLED)
-        self.assertRedirects(response, reverse('order:order_detail', args=[order.id]))
+        self.assertRedirects(response, reverse('order:order_detail', args=[order.url_ref]))
 
     def test_customer_cancel_allowed_matches_guard(self):
         self._seed_session_cart()

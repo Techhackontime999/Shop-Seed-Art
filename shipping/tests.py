@@ -18,12 +18,23 @@ class ShippingURLTests(TestCase):
         self.assertEqual(resolve(url).func, address_create)
 
     def test_shipping_select_url_resolves(self):
-        url = reverse('shipping:shipping_select', args=[1])
+        url = reverse('shipping:shipping_select', args=['SEED-2026-000001'])
         self.assertEqual(resolve(url).func, shipping_select)
+        self.assertEqual(url, '/shipping/select/SEED-2026-000001/')
 
     def test_order_tracking_url_resolves(self):
-        url = reverse('shipping:order_tracking', args=[1])
+        url = reverse('shipping:order_tracking', args=['SEED-2026-000001'])
         self.assertEqual(resolve(url).func, order_tracking)
+        self.assertEqual(url, '/shipping/tracking/SEED-2026-000001/')
+
+    def test_legacy_numeric_order_urls_still_resolve(self):
+        # Confirmation emails already in the wild point at /shipping/select/148/.
+        for name, view in (
+            ('shipping:shipping_select', shipping_select),
+            ('shipping:order_tracking', order_tracking),
+        ):
+            url = reverse(name + '_legacy', args=[1])
+            self.assertEqual(resolve(url).func, view)
 
 
 class ShippingMethodModelTests(TestCase):
@@ -88,11 +99,11 @@ class OrderAddressSelectionTests(TestCase):
         )
 
     def test_shipping_select_uses_order_address(self):
-        response = self.client.post(reverse('shipping:shipping_select', args=[self.order.id]), {
+        response = self.client.post(reverse('shipping:shipping_select', args=[self.order.url_ref]), {
             'shipping_method': self.method.id,
             'shipping_address': 'order_address',
         })
-        self.assertRedirects(response, reverse('payments:checkout', args=[self.order.id]), fetch_redirect_response=False)
+        self.assertRedirects(response, reverse('payments:checkout', args=[self.order.url_ref]), fetch_redirect_response=False)
         self.order.refresh_from_db()
         self.assertEqual(self.order.shipping_cost, 10)
         self.assertEqual(self.order.shipping_method_name, 'Standard')
@@ -129,13 +140,13 @@ class OrderAddressSelectionTests(TestCase):
             order=self.order,
             status='picked_up', tracking_number='TRACK123'
         )
-        response = self.client.get(reverse('shipping:order_tracking', args=[self.order.id]))
+        response = self.client.get(reverse('shipping:order_tracking', args=[self.order.url_ref]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'TRACK123')
         self.assertContains(response, 'Picked Up')
 
     def test_order_tracking_no_shipment(self):
-        response = self.client.get(reverse('shipping:order_tracking', args=[self.order.id]))
+        response = self.client.get(reverse('shipping:order_tracking', args=[self.order.url_ref]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'No shipment information yet')
 
@@ -161,4 +172,6 @@ class OrderMyOrdersTests(TestCase):
             email='a@b.com', address='Addr', postal_code='1', city='C'
         )
         response = self.client.get(reverse('order:my_orders'))
-        self.assertContains(response, f'#{order.id}')
+        # The list is keyed by the public reference, and links to the reference URL.
+        self.assertContains(response, order.order_number)
+        self.assertContains(response, reverse('order:order_detail', args=[order.url_ref]))

@@ -39,23 +39,23 @@ class OrderViewTests(TestCase):
         self.client = Client(SERVER_NAME='localhost')
 
     def _cancel_url(self):
-        return reverse('order:order_cancel', args=[self.order.pk])
+        return reverse('order:order_cancel', args=[self.order.url_ref])
 
     def test_detail_hidden_from_anonymous_without_session(self):
         # Guest checkout: an anonymous visitor with no recorded session access
         # must not even learn the order exists (404, never a login redirect or
         # a 200).
-        response = self.client.get(reverse('order:order_detail', args=[self.order.pk]))
+        response = self.client.get(reverse('order:order_detail', args=[self.order.url_ref]))
         self.assertEqual(response.status_code, 404)
 
     def test_detail_only_for_owner(self):
         self.client.force_login(self.other)
-        response = self.client.get(reverse('order:order_detail', args=[self.order.pk]))
+        response = self.client.get(reverse('order:order_detail', args=[self.order.url_ref]))
         self.assertEqual(response.status_code, 404)
 
     def test_detail_renders_order_and_totals(self):
         self.client.force_login(self.user)
-        response = self.client.get(reverse('order:order_detail', args=[self.order.pk]))
+        response = self.client.get(reverse('order:order_detail', args=[self.order.url_ref]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Nimbus Headphones')
         self.assertContains(response, self.order.order_number)
@@ -80,7 +80,7 @@ class OrderViewTests(TestCase):
 
         self.client.force_login(self.user)
         response = self.client.post(self._cancel_url(), {'reason': 'Changed my mind'})
-        self.assertRedirects(response, reverse('order:order_detail', args=[self.order.pk]))
+        self.assertRedirects(response, reverse('order:order_detail', args=[self.order.url_ref]))
 
         self.order.refresh_from_db()
         self.assertEqual(self.order.status, Order.Status.CANCELLED)
@@ -96,7 +96,7 @@ class OrderViewTests(TestCase):
         response = self.client.post(self._cancel_url())
         self.order.refresh_from_db()
         self.assertEqual(self.order.status, Order.Status.SHIPPED)
-        self.assertRedirects(response, reverse('order:order_detail', args=[self.order.pk]))
+        self.assertRedirects(response, reverse('order:order_detail', args=[self.order.url_ref]))
 
     def test_cancel_refunds_captured_payment(self):
         payment = Payment.objects.create(
@@ -113,7 +113,7 @@ class OrderViewTests(TestCase):
 
     def test_invoice_pdf_download(self):
         self.client.force_login(self.user)
-        response = self.client.get(reverse('order:order_invoice', args=[self.order.pk]))
+        response = self.client.get(reverse('order:order_invoice', args=[self.order.url_ref]))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'application/pdf')
         self.assertIn(f'{invoice_number(self.order)}.pdf', response['Content-Disposition'])

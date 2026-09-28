@@ -124,7 +124,7 @@
     {% if user.is_authenticated %}
     <a href="{% url 'order:my_orders' %}" class="od-back"><i class="fas fa-arrow-left"></i> {% trans 'Back to My Orders' %}</a>
     {% else %}
-    <a href="{% url 'shipping:order_tracking' order.id %}" class="od-back"><i class="fas fa-arrow-left"></i> {% trans 'Back to Tracking' %}</a>
+    <a href="{% url 'shipping:order_tracking' order.url_ref %}" class="od-back"><i class="fas fa-arrow-left"></i> {% trans 'Back to Tracking' %}</a>
     {% endif %}
 
     <header class="od-head">
@@ -135,7 +135,7 @@
         </div>
       </div>
       <div class="od-actions">
-        <a href="{% url 'order:order_invoice' order.id %}" class="od-btn od-btn-outline">
+        <a href="{% url 'order:order_invoice' order.url_ref %}" class="od-btn od-btn-outline">
           <i class="fas fa-file-invoice"></i> {% trans 'Download Invoice' %}
         </a>
         {% if order.customer_cancel_allowed %}
@@ -199,7 +199,7 @@
                 <i class="fas fa-location-dot"></i> {% trans 'Track Order' %}
               </a>
               {% else %}
-              <a href="{% url 'shipping:order_tracking' order.id %}" class="od-btn od-btn-outline">
+              <a href="{% url 'shipping:order_tracking' order.url_ref %}" class="od-btn od-btn-outline">
                 <i class="fas fa-location-dot"></i> {% trans 'Track Order' %}
               </a>
               {% endif %}
@@ -213,7 +213,7 @@
           <div class="od-card-body">
             <div class="od-cancel-box">
               <p>{% trans "You can cancel this order before it ships. If you've already paid, the full amount will be refunded." %}</p>
-              <form method="post" action="{% url 'order:order_cancel' order.id %}" onsubmit="return confirm('{% trans 'Are you sure you want to cancel this order?' %}');">
+              <form method="post" action="{% url 'order:order_cancel' order.url_ref %}" onsubmit="return confirm('{% trans 'Are you sure you want to cancel this order?' %}');">
                 {% csrf_token %}
                 <div class="od-reason">
                   <textarea name="reason" rows="2" maxlength="300" placeholder="{% trans 'Reason for cancellation (optional)' %}"></textarea>
@@ -244,7 +244,7 @@
             {% endfor %}
 
             {% if order.status == 'delivered' and not has_open_return %}
-              <form method="post" action="{% url 'order:request_return' order.id %}">
+              <form method="post" action="{% url 'order:request_return' order.url_ref %}">
                 {% csrf_token %}
                 <div class="od-reason">
                   <select name="reason" required style="width:100%;padding:.6rem .8rem;border-radius:var(--aq-radius-md);border:1px solid var(--aq-border);background:var(--aq-canvas);color:var(--aq-ink);">
@@ -304,7 +304,7 @@
             <div class="od-addr-line"><i class="fas fa-money-bill-wave"></i><span>{{ payment.currency }} {% price payment.amount %}</span></div>
             {% endif %}
             <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.5rem;">
-              <a href="{% url 'order:order_invoice' order.id %}" class="od-btn"><i class="fas fa-download"></i> {% trans 'Invoice PDF' %}</a>
+              <a href="{% url 'order:order_invoice' order.url_ref %}" class="od-btn"><i class="fas fa-download"></i> {% trans 'Invoice PDF' %}</a>
             </div>
           </div>
         </article>

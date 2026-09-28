@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from django.http import Http404
 from shop.models import Product, ProductImage, ProductVariant, VariantImage
+from order.access import get_order_by_ref
 from order.models import OrderItem, Order
 from accounts.models import SellerProfile
 from django.contrib import messages
@@ -269,11 +271,15 @@ def seller_orders(request):
 
 @login_required
 @require_POST
-def update_order_status(request, order_id):
-    order = get_object_or_404(
-        Order.objects.filter(items__product__seller=request.user.sellerprofile).distinct(),
-        id=order_id,
+def update_order_status(request, order_ref):
+    order = get_order_by_ref(
+        order_ref,
+        queryset=Order.objects.filter(
+            items__product__seller=request.user.sellerprofile,
+        ).distinct(),
     )
+    if order is None:
+        raise Http404
     from order.state import set_order_status
     ok, reason = set_order_status(
         order, Order.Status.PROCESSING, actor=request.user,
@@ -297,7 +303,7 @@ def update_order_status(request, order_id):
     notify(
         order.user,
         Notification.Category.ORDER,
-        f'Order #{order.id} confirmed',
+        f'Order #{order.order_number} confirmed',
         (
             f'{request.user.sellerprofile.shop_name} confirmed your order. '
             f'Your item(s) are being prepared for dispatch.'

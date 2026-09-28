@@ -9,7 +9,7 @@
         <div class="card-body">
             <p>{% blocktranslate %}Your payment for Order {{ order.order_number }} could not be processed.{% endblocktranslate %}</p>
             <p>{% trans 'Please try again or contact support.' %}</p>
-            <a href="{% url 'payments:checkout' order.id %}" class="btn btn-primary">{% trans 'Try Again' %}</a>
+            <a href="{% url 'payments:checkout' order.url_ref %}" class="btn btn-primary">{% trans 'Try Again' %}</a>
             <a href="{% url 'shop:product_list' %}" class="btn btn-secondary">{% trans 'Continue Shopping' %}</a>
         </div>
     </div>

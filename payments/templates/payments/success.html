@@ -190,7 +190,7 @@
             <span>{% trans 'Track your order' %}</span>
           </a>
           {% else %}
-          <a class="pay-btn" href="{% url 'shipping:order_tracking' order.id %}">
+          <a class="pay-btn" href="{% url 'shipping:order_tracking' order.url_ref %}">
             <i class="fas fa-box" aria-hidden="true"></i>
             <span>{% trans 'Track your order' %}</span>
           </a>

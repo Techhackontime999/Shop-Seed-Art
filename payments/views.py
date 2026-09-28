@@ -7,7 +7,7 @@ from django.shortcuts import redirect, render, reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from order.access import get_order_for_request
+from order.access import get_order_for_request, is_canonical_ref
 from order.models import Order
 
 from .models import Payment
@@ -36,25 +36,28 @@ def _order_done(order):
     return order.paid or (order.is_cod and order.status != Order.Status.PENDING)
 
 
-def checkout(request, order_id):
-    order = get_order_for_request(request, order_id)
+def checkout(request, order_ref):
+    order = get_order_for_request(request, order_ref)
 
     if _order_done(order):
-        return redirect('payments:success', order_id=order.id)
+        return redirect('payments:success', order_ref=order.url_ref)
 
     if request.method == 'POST':
         method = request.POST.get('payment_method', '')
         if method == Order.PaymentMethod.COD:
             if request.POST.get('confirm') == '1':
                 confirm_cod_order(order, actor=_actor(request))
-                return redirect('payments:success', order_id=order.id)
+                return redirect('payments:success', order_ref=order.url_ref)
             order.payment_method = Order.PaymentMethod.COD
             order.save(update_fields=['payment_method', 'updated'])
-            return redirect('payments:checkout', order_id=order.id)
+            return redirect('payments:checkout', order_ref=order.url_ref)
         if method == Order.PaymentMethod.ONLINE:
             order.payment_method = Order.PaymentMethod.ONLINE
             order.save(update_fields=['payment_method', 'updated'])
-            return redirect('payments:checkout', order_id=order.id)
+            return redirect('payments:checkout', order_ref=order.url_ref)
+
+    if not is_canonical_ref(order_ref, order):
+        return redirect('payments:checkout', order_ref=order.url_ref, permanent=True)
 
     subtotal = sum(item.get_cost() for item in order.items.all())
 
@@ -158,7 +161,7 @@ def payment_callback(request):
 
     if not verify_callback_signature(razorpay_order_id, razorpay_payment_id, razorpay_signature):
         mark_payment_failed(payment, source='callback')
-        return redirect('payments:error', order_id=payment.order.id)
+        return redirect('payments:error', order_ref=payment.order.url_ref)
 
     try:
         finalize_payment(
@@ -171,8 +174,8 @@ def payment_callback(request):
 
     order = Order.objects.get(pk=payment.order_id)
     if order.paid:
-        return redirect('payments:success', order_id=order.id)
-    return redirect('payments:error', order_id=order.id)
+        return redirect('payments:success', order_ref=order.url_ref)
+    return redirect('payments:error', order_ref=order.url_ref)
 
 
 @csrf_exempt
@@ -196,13 +199,13 @@ def payment_link_callback(request):
 
     if status == 'failed' or not razorpay_payment_id:
         mark_payment_failed(payment, source='callback')
-        return redirect('payments:error', order_id=payment.order.id)
+        return redirect('payments:error', order_ref=payment.order.url_ref)
 
     if not verify_payment_link_signature(
         payment_link_id, reference_id, status, razorpay_payment_id, signature
     ):
         mark_payment_failed(payment, source='callback')
-        return redirect('payments:error', order_id=payment.order.id)
+        return redirect('payments:error', order_ref=payment.order.url_ref)
 
     try:
         finalize_payment(payment, razorpay_payment_id, source='callback')
@@ -213,8 +216,8 @@ def payment_link_callback(request):
 
     order = Order.objects.get(pk=payment.order_id)
     if order.paid:
-        return redirect('payments:success', order_id=order.id)
-    return redirect('payments:error', order_id=order.id)
+        return redirect('payments:success', order_ref=order.url_ref)
+    return redirect('payments:error', order_ref=order.url_ref)
 
 
 @csrf_exempt
@@ -291,18 +294,18 @@ def payment_webhook(request):
 
 
 @require_POST
-def payment_verify(request, order_id):
+def payment_verify(request, order_ref):
     """POST-only server-side re-check against the gateway.
 
     Used when a capture succeeded at the gateway but the browser callback was
     lost. Never reached via GET, so a plain page load can never change a
     payment status.
     """
-    order = get_order_for_request(request, order_id)
+    order = get_order_for_request(request, order_ref)
     payment = getattr(order, 'payment', None)
 
     if order.paid:
-        return redirect('payments:success', order_id=order.id)
+        return redirect('payments:success', order_ref=order.url_ref)
 
     if payment and payment.razorpay_payment_id:
         try:
@@ -314,23 +317,27 @@ def payment_verify(request, order_id):
             logger.error('Gateway verification failed for order %s: %s', order.id, exc, exc_info=True)
 
     if order.paid:
-        return redirect('payments:success', order_id=order.id)
-    return redirect('payments:checkout', order_id=order.id)
+        return redirect('payments:success', order_ref=order.url_ref)
+    return redirect('payments:checkout', order_ref=order.url_ref)
 
 
-def payment_success(request, order_id):
+def payment_success(request, order_ref):
     """Render-only success page.
 
     A GET can never change a payment status — if the order isn't already paid
     (or a confirmed COD order), the user is sent back to checkout instead.
     """
-    order = get_order_for_request(request, order_id)
+    order = get_order_for_request(request, order_ref)
     if not _order_done(order):
-        return redirect('payments:checkout', order_id=order.id)
+        return redirect('payments:checkout', order_ref=order.url_ref)
+    if not is_canonical_ref(order_ref, order):
+        return redirect('payments:success', order_ref=order.url_ref, permanent=True)
     payment = getattr(order, 'payment', None)
     return render(request, 'payments/success.html', {'order': order, 'payment': payment})
 
 
-def payment_error(request, order_id):
-    order = get_order_for_request(request, order_id)
+def payment_error(request, order_ref):
+    order = get_order_for_request(request, order_ref)
+    if not is_canonical_ref(order_ref, order):
+        return redirect('payments:error', order_ref=order.url_ref, permanent=True)
     return render(request, 'payments/error.html', {'order': order})

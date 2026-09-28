@@ -330,7 +330,7 @@ class PaymentEndpointTests(TestCase):
     @mock.patch('payments.services._post_capture_side_effects', autospec=True)
     def test_verify_rejects_get(self, side_effects, fake_client):
         self.client.force_login(self.user)
-        response = self.client.get(reverse('payments:verify', args=[self.order.id]))
+        response = self.client.get(reverse('payments:verify', args=[self.order.url_ref]))
         self.assertEqual(response.status_code, 405)
 
     @mock.patch('payments.views.get_razorpay_client')
@@ -340,15 +340,15 @@ class PaymentEndpointTests(TestCase):
         self.payment.razorpay_payment_id = 'pay_v1'
         self.payment.save()
         self.client.force_login(self.user)
-        response = self.client.post(reverse('payments:verify', args=[self.order.id]))
+        response = self.client.post(reverse('payments:verify', args=[self.order.url_ref]))
         self.assertEqual(response.status_code, 302)
         self.order.refresh_from_db()
         self.assertTrue(self.order.paid)
 
     def test_success_page_redirects_unpaid_orders(self):
         self.client.force_login(self.user)
-        response = self.client.get(reverse('payments:success', args=[self.order.id]))
-        self.assertRedirects(response, reverse('payments:checkout', args=[self.order.id]), fetch_redirect_response=False)
+        response = self.client.get(reverse('payments:success', args=[self.order.url_ref]))
+        self.assertRedirects(response, reverse('payments:checkout', args=[self.order.url_ref]), fetch_redirect_response=False)
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, 'created')
 
@@ -451,7 +451,7 @@ class CheckoutViewTests(TestCase):
     @mock.patch('payments.views.create_razorpay_order', return_value='ord_rzp1')
     @mock.patch('payments.views.create_payment_link', return_value=('plink_1', 'https://rzp.test/plink_1'))
     def test_first_visit_creates_payment_and_renders_link(self, create_link, create_order):
-        response = self.client.get(reverse('payments:checkout', args=[self.order.id]))
+        response = self.client.get(reverse('payments:checkout', args=[self.order.url_ref]))
         self.assertEqual(response.status_code, 200)
         create_order.assert_called_once()
         create_link.assert_called_once()
@@ -473,7 +473,7 @@ class CheckoutViewTests(TestCase):
             razorpay_payment_link_url='https://rzp.test/plink_1',
             amount=Decimal('100.00'), currency='INR', status='created',
         )
-        response = self.client.get(reverse('payments:checkout', args=[self.order.id]))
+        response = self.client.get(reverse('payments:checkout', args=[self.order.url_ref]))
         self.assertEqual(response.status_code, 200)
         create_order.assert_called_once()
         create_link.assert_called_once()
@@ -493,7 +493,7 @@ class CheckoutViewTests(TestCase):
             razorpay_payment_link_url='https://rzp.test/plink_dead',
             amount=Decimal('100.00'), currency='INR', status='failed',
         )
-        response = self.client.get(reverse('payments:checkout', args=[self.order.id]))
+        response = self.client.get(reverse('payments:checkout', args=[self.order.url_ref]))
         self.assertEqual(response.status_code, 200)
         create_order.assert_called_once()
         create_link.assert_called_once()
@@ -505,7 +505,7 @@ class CheckoutViewTests(TestCase):
     @mock.patch('payments.views.create_razorpay_order', side_effect=Exception('gateway down'))
     @mock.patch('payments.views.create_payment_link', side_effect=Exception('gateway down'))
     def test_gateway_failure_renders_error_page(self, create_link, create_order):
-        response = self.client.get(reverse('payments:checkout', args=[self.order.id]))
+        response = self.client.get(reverse('payments:checkout', args=[self.order.url_ref]))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'payments/error.html')
         self.assertTrue(response.context['gateway_error'])
@@ -513,7 +513,7 @@ class CheckoutViewTests(TestCase):
     @mock.patch('payments.views.create_razorpay_order', side_effect=Exception('order api down'))
     @mock.patch('payments.views.create_payment_link', return_value=('plink_fb', 'https://rzp.test/plink_fb'))
     def test_renders_hosted_link_when_embedded_order_fails(self, create_link, create_order):
-        response = self.client.get(reverse('payments:checkout', args=[self.order.id]))
+        response = self.client.get(reverse('payments:checkout', args=[self.order.url_ref]))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['razorpay_order_id'], '')
         self.assertEqual(response.context['payment_link_url'], 'https://rzp.test/plink_fb')
@@ -523,8 +523,8 @@ class CheckoutViewTests(TestCase):
     def test_paid_order_redirects_to_success(self):
         self.order.paid = True
         self.order.save()
-        response = self.client.get(reverse('payments:checkout', args=[self.order.id]))
-        self.assertRedirects(response, reverse('payments:success', args=[self.order.id]), fetch_redirect_response=False)
+        response = self.client.get(reverse('payments:checkout', args=[self.order.url_ref]))
+        self.assertRedirects(response, reverse('payments:success', args=[self.order.url_ref]), fetch_redirect_response=False)
 
 
 class CodCheckoutTests(TestCase):
@@ -545,7 +545,7 @@ class CodCheckoutTests(TestCase):
     def test_cod_order_renders_confirmation_without_gateway(self):
         self.order.payment_method = Order.PaymentMethod.COD
         self.order.save()
-        response = self.client.get(reverse('payments:checkout', args=[self.order.id]))
+        response = self.client.get(reverse('payments:checkout', args=[self.order.url_ref]))
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['cod_mode'])
         self.assertContains(response, 'Confirm Cash on Delivery order')
@@ -557,11 +557,11 @@ class CodCheckoutTests(TestCase):
         self.order.payment_method = Order.PaymentMethod.COD
         self.order.save()
         with self.captureOnCommitCallbacks(execute=True):
-            response = self.client.post(reverse('payments:checkout', args=[self.order.id]), {
+            response = self.client.post(reverse('payments:checkout', args=[self.order.url_ref]), {
                 'payment_method': 'cod',
                 'confirm': '1',
             })
-        self.assertRedirects(response, reverse('payments:success', args=[self.order.id]), fetch_redirect_response=False)
+        self.assertRedirects(response, reverse('payments:success', args=[self.order.url_ref]), fetch_redirect_response=False)
         self.order.refresh_from_db()
         self.assertFalse(self.order.paid)
         self.assertEqual(self.order.payment_method, Order.PaymentMethod.COD)
@@ -576,13 +576,13 @@ class CodCheckoutTests(TestCase):
         self.order.save()
         from jobs.models import Job
         with self.captureOnCommitCallbacks(execute=True):
-            self.client.post(reverse('payments:checkout', args=[self.order.id]), {
+            self.client.post(reverse('payments:checkout', args=[self.order.url_ref]), {
                 'payment_method': 'cod', 'confirm': '1',
             })
             # Already processing → no-op, no second fulfilment kick.
             self.order.status = Order.Status.PROCESSING
             self.order.save()
-            self.client.post(reverse('payments:checkout', args=[self.order.id]), {
+            self.client.post(reverse('payments:checkout', args=[self.order.url_ref]), {
                 'payment_method': 'cod', 'confirm': '1',
             })
         self.assertEqual(Job.objects.filter(kind='fulfil_order').count(), 1)
@@ -592,10 +592,10 @@ class CodCheckoutTests(TestCase):
         self.order.save()
         with mock.patch('payments.views.create_razorpay_order', return_value='ord_online1'):
             with mock.patch('payments.views.create_payment_link', return_value=('plink_1', 'https://rzp.test/plink_1')):
-                response = self.client.post(reverse('payments:checkout', args=[self.order.id]), {
+                response = self.client.post(reverse('payments:checkout', args=[self.order.url_ref]), {
                     'payment_method': 'online',
                 })
-                self.assertRedirects(response, reverse('payments:checkout', args=[self.order.id]), fetch_redirect_response=False)
+                self.assertRedirects(response, reverse('payments:checkout', args=[self.order.url_ref]), fetch_redirect_response=False)
                 self.order.refresh_from_db()
                 self.assertEqual(self.order.payment_method, Order.PaymentMethod.ONLINE)
                 follow = self.client.get(response.url)
@@ -631,7 +631,7 @@ class PaymentLinkCallbackTests(TestCase):
             'razorpay_payment_id': 'pay_link1',
             'razorpay_signature': _link_sig('plink_cb1', 'ref_cb1', 'paid', 'pay_link1'),
         })
-        self.assertRedirects(response, reverse('payments:success', args=[self.order.id]), fetch_redirect_response=False)
+        self.assertRedirects(response, reverse('payments:success', args=[self.order.url_ref]), fetch_redirect_response=False)
         self.order.refresh_from_db()
         self.product.refresh_from_db()
         self.assertTrue(self.order.paid)
@@ -645,7 +645,7 @@ class PaymentLinkCallbackTests(TestCase):
             'razorpay_payment_id': 'pay_link1',
             'razorpay_signature': 'forged',
         })
-        self.assertRedirects(response, reverse('payments:error', args=[self.order.id]), fetch_redirect_response=False)
+        self.assertRedirects(response, reverse('payments:error', args=[self.order.url_ref]), fetch_redirect_response=False)
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, 'failed')
         self.assertFalse(self.order.paid)
@@ -658,7 +658,7 @@ class PaymentLinkCallbackTests(TestCase):
             'razorpay_payment_id': 'pay_link1',
             'razorpay_signature': _link_sig('plink_cb1', 'ref_cb1', 'failed', 'pay_link1'),
         })
-        self.assertRedirects(response, reverse('payments:error', args=[self.order.id]), fetch_redirect_response=False)
+        self.assertRedirects(response, reverse('payments:error', args=[self.order.url_ref]), fetch_redirect_response=False)
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, 'failed')
 

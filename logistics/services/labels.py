@@ -313,7 +313,7 @@ def generate_invoice_pdf(shipment):
             Paragraph(
                 f'<b>Invoice No:</b> INV-{shipment.shipment_number}<br/>'
                 f'<b>Date:</b> {timezone.localdate():%d %b %Y}<br/>'
-                f'<b>Order:</b> #{order.pk}<br/>'
+                f'<b>Order:</b> {order.order_number}<br/>'
                 f'<b>Shipment:</b> {shipment.shipment_number}<br/>'
                 f'<b>Payment:</b> {"COD" if shipment.is_cod else "Prepaid"}', st['body']),
             Paragraph(

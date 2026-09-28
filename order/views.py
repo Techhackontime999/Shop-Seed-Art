@@ -15,7 +15,12 @@ from coupons.services import discount_for, validate_coupon
 from core.throttle import throttle_allows
 from .models import Order, OrderItem, ReturnRequest
 from .forms import OrderCreateForm
-from .access import get_guest_order_ids, grant_guest_access, get_order_for_request
+from .access import (
+    get_guest_order_ids,
+    grant_guest_access,
+    get_order_for_request,
+    is_canonical_ref,
+)
 from .services import cancel_order, invoice_number, invoice_totals
 from jobs.services import enqueue
 from notifications.models import Notification
@@ -62,7 +67,7 @@ def order_create(request):
         )
         if existing is not None:
             grant_guest_access(request, existing)
-            return redirect('shipping:shipping_select', order_id=existing.id)
+            return redirect('shipping:shipping_select', order_ref=existing.url_ref)
 
         form = OrderCreateForm(request.POST)
         if form.is_valid():
@@ -116,7 +121,7 @@ def order_create(request):
                 existing = Order.objects.filter(user=user, checkout_token=token).first()
                 if existing is not None:
                     grant_guest_access(request, existing)
-                    return redirect('shipping:shipping_select', order_id=existing.id)
+                    return redirect('shipping:shipping_select', order_ref=existing.url_ref)
                 raise
 
             # Order + items are durable; now clean up the cart (session + DB)
@@ -136,7 +141,7 @@ def order_create(request):
                     Notification.Category.ORDER,
                     f'Order #{order.order_number} placed',
                     'We received your order and are preparing it. Choose a shipping method to continue.',
-                    link=reverse('shipping:shipping_select', args=[order.id]),
+                    link=reverse('shipping:shipping_select', args=[order.url_ref]),
                     icon='box',
                 )
             seller_users = set()
@@ -153,7 +158,7 @@ def order_create(request):
                     link=reverse('seller:orders'),
                     icon='store',
                 )
-            return redirect('shipping:shipping_select', order_id=order.id)
+            return redirect('shipping:shipping_select', order_ref=order.url_ref)
     else:
         token = secrets.token_urlsafe(32)
         initial = {}
@@ -290,13 +295,15 @@ def autofill_address(request):
     })
 
 
-def order_detail(request, order_id):
-    order = get_order_for_request(request, order_id, queryset=(
+def order_detail(request, order_ref):
+    order = get_order_for_request(request, order_ref, queryset=(
         Order.objects.prefetch_related(
             'items__product', 'items__variant', 'logistics_shipments__courier',
             'refunds', 'return_requests', 'audit_logs',
         )
     ), token=request.GET.get('token'))
+    if not is_canonical_ref(order_ref, order):
+        return redirect('order:order_detail', order_ref=order.url_ref, permanent=True)
     shipment = order.logistics_shipments.select_related('courier').first()
     payment = getattr(order, 'payment', None)
     has_open_return = order.return_requests.exclude(
@@ -314,34 +321,34 @@ def order_detail(request, order_id):
 
 
 @require_POST
-def request_return(request, order_id):
+def request_return(request, order_ref):
     """Customer asks for a return on a delivered order.
 
     Creates a ``ReturnRequest`` and kicks off reverse logistics through the LMS
     when a shipment exists. Never auto-refunds — an admin approves and issues
     the refund (with over-refund protection on the Refund model).
     """
-    order = get_order_for_request(request, order_id)
+    order = get_order_for_request(request, order_ref)
 
     if order.user is None:
         messages.error(request, 'Create an account to request a return for a guest order.')
-        return redirect('order:order_detail', order_id=order.id)
+        return redirect('order:order_detail', order_ref=order.url_ref)
 
     if order.status != Order.Status.DELIVERED:
         messages.error(request, 'Returns are only available for delivered orders.')
-        return redirect('order:order_detail', order_id=order.id)
+        return redirect('order:order_detail', order_ref=order.url_ref)
 
     if order.return_requests.exclude(
         status__in=[ReturnRequest.Status.REJECTED, ReturnRequest.Status.CLOSED],
     ).exists():
         messages.error(request, 'A return request is already open for this order.')
-        return redirect('order:order_detail', order_id=order.id)
+        return redirect('order:order_detail', order_ref=order.url_ref)
 
     reason = request.POST.get('reason', '')
     details = request.POST.get('details', '').strip()
     if reason not in dict(ReturnRequest.Reason.choices):
         messages.error(request, 'Please choose a valid return reason.')
-        return redirect('order:order_detail', order_id=order.id)
+        return redirect('order:order_detail', order_ref=order.url_ref)
 
     ret = ReturnRequest.objects.create(
         order=order, user=order.user, reason=reason, details=details,
@@ -366,16 +373,16 @@ def request_return(request, order_id):
         Notification.Category.ORDER,
         f'Return requested for order {order.order_number}',
         'Your return request was received. An admin will review it and arrange a pickup.',
-        link=reverse('order:order_detail', args=[order.id]),
+        link=reverse('order:order_detail', args=[order.url_ref]),
         icon='rotate-left',
     )
     messages.success(request, 'Return request submitted.')
-    return redirect('order:order_detail', order_id=order.id)
+    return redirect('order:order_detail', order_ref=order.url_ref)
 
 
 @require_POST
-def order_cancel(request, order_id):
-    order = get_order_for_request(request, order_id)
+def order_cancel(request, order_ref):
+    order = get_order_for_request(request, order_ref)
     actor = _user(request)
     ok, detail = cancel_order(order, actor=actor, reason=request.POST.get('reason', ''))
     if ok:
@@ -385,11 +392,13 @@ def order_cancel(request, order_id):
             messages.success(request, 'Order cancelled.')
     else:
         messages.error(request, detail)
-    return redirect('order:order_detail', order_id=order.id)
+    return redirect('order:order_detail', order_ref=order.url_ref)
 
 
-def order_invoice_pdf(request, order_id):
-    order = get_order_for_request(request, order_id, token=request.GET.get('token'))
+def order_invoice_pdf(request, order_ref):
+    order = get_order_for_request(request, order_ref, token=request.GET.get('token'))
+    if not is_canonical_ref(order_ref, order):
+        return redirect('order:order_invoice', order_ref=order.url_ref, permanent=True)
     from .services import generate_invoice_pdf
     pdf = generate_invoice_pdf(order)
     response = HttpResponse(pdf, content_type='application/pdf')

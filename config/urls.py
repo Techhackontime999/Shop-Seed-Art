@@ -11,6 +11,10 @@ from django.views.static import serve as static_serve
 from blogs.urls import sitemaps as blog_sitemaps
 from shop.sitemaps import CategorySitemap, ProductSitemap
 
+# Registers the <orderref:...> path converter before the urlpatterns below
+# include() the apps that use it.
+import core.converters  # noqa: F401  (import for side effect)
+
 sitemaps = {
     **blog_sitemaps,
     'products': ProductSitemap,

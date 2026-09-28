@@ -125,7 +125,7 @@
               </td>
               <td>
                 {% if not item.order.paid %}
-                  <form method="post" action="{% url 'seller:update_order_status' item.order.id %}">
+                  <form method="post" action="{% url 'seller:update_order_status' item.order.url_ref %}">
                     {% csrf_token %}
                     <button type="submit" class="seller-dash-btn-primary seller-dash-btn-sm">
                       <i class="fas fa-box"></i> Confirm Order
