@@ -7,6 +7,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/hero-video.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'css/role-select.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
@@ -31,6 +32,94 @@
     <p>{% trans 'Scroll slowly — watch the layers drift apart.' %}</p>
   </div>
   <div class="parallax-aq-fade"></div>
+</section>
+
+<!-- ===== ROLE SELECTION ===== -->
+<!-- Each card is a single link, so the whole surface is the tap target and
+     keyboard users get one stop instead of a decorative CTA bolted onto a
+     non-interactive card. -->
+<section class="section-aq roles-aq" id="choose-your-path" aria-labelledby="roles-aq-title">
+  <div class="container-aq">
+    <div class="text-center mb-5 fade-up">
+      <span class="hero-aq-badge mx-auto" style="justify-content:center">
+        <i class="fas fa-compass"></i> {% trans 'Two ways in' %}
+      </span>
+      <h2 class="display-section" id="roles-aq-title" style="margin-top:0.75rem">
+        {% trans 'How would you like to use' %}<br>{% trans 'Shop-Seed Art?' %}
+      </h2>
+      <p class="body-large mx-auto mt-3" style="text-align:center">
+        {% trans "Whether you're here to sell your craft or discover something special, we'll take you to the right place." %}
+      </p>
+    </div>
+
+    <div class="roles-aq-grid">
+      <!-- Seller: verified sellers land on the dashboard, everyone else on the
+           existing sign-up flow (become_seller is @login_required). -->
+      <a class="role-aq-card role-aq-card--seller fade-up fade-up-delay-1"
+         href="{% if user.is_authenticated %}{% if is_seller %}{% url 'seller:seller_dashboard' %}{% else %}{% url 'accounts:become_seller' %}{% endif %}{% else %}{% url 'accounts:become_seller' %}{% endif %}">
+        <div class="role-aq-head">
+          <div class="role-aq-icon" aria-hidden="true">{% trans '🧑‍🎨' %}</div>
+          <span class="role-aq-flag"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> {% trans 'AI assisted' %}</span>
+        </div>
+        <div class="role-aq-heading">
+          <h3 class="role-aq-title">{% trans "I'm a Seller" %}</h3>
+          <p class="role-aq-desc">{% trans 'Turn your craft into a professional online listing with AI-powered assistance.' %}</p>
+        </div>
+        <div class="role-aq-features">
+          <span class="role-aq-chip"><i class="fas fa-microphone" aria-hidden="true"></i> {% trans 'Voice' %}</span>
+          <span class="role-aq-chip"><i class="fas fa-camera" aria-hidden="true"></i> {% trans 'AI Image' %}</span>
+          <span class="role-aq-chip"><i class="fas fa-sparkles" aria-hidden="true"></i> {% trans 'Smart Catalog' %}</span>
+          <span class="role-aq-chip"><i class="fas fa-tags" aria-hidden="true"></i> {% trans 'Smart Price' %}</span>
+        </div>
+        <div class="role-aq-flow">
+          <div class="role-aq-flow-track" aria-hidden="true">
+            <div class="role-aq-flow-fill"></div>
+          </div>
+          <div class="role-aq-flow-steps">
+            <span>{% trans 'Photo' %}</span>
+            <span>{% trans 'Enhance' %}</span>
+            <span>{% trans 'Voice' %}</span>
+            <span>{% trans 'Catalog' %}</span>
+            <span>{% trans 'Price' %}</span>
+            <span>{% trans 'Publish' %}</span>
+          </div>
+        </div>
+        <span class="btn-aq btn-aq-primary role-aq-cta">
+          {% trans 'Go to Seller Dashboard' %}
+          <i class="fas fa-arrow-right role-aq-arrow" aria-hidden="true"></i>
+        </span>
+      </a>
+
+      <a class="role-aq-card role-aq-card--customer fade-up fade-up-delay-2" href="{% url 'shop:product_list' %}">
+        <div class="role-aq-head">
+          <div class="role-aq-icon" aria-hidden="true">{% trans '🛍️' %}</div>
+        </div>
+        <div class="role-aq-heading">
+          <h3 class="role-aq-title">{% trans "I'm a Customer" %}</h3>
+          <p class="role-aq-desc">{% trans 'Discover unique products and shop from talented artisans and creators.' %}</p>
+        </div>
+        <div class="role-aq-features">
+          <span class="role-aq-chip"><i class="fas fa-layer-group" aria-hidden="true"></i> {% trans 'Categories' %}</span>
+          <span class="role-aq-chip"><i class="fas fa-fire" aria-hidden="true"></i> {% trans 'Best Sellers' %}</span>
+          <span class="role-aq-chip"><i class="fas fa-bolt" aria-hidden="true"></i> {% trans 'Hot Deals' %}</span>
+        </div>
+        <div class="role-aq-flow">
+          <div class="role-aq-flow-track" aria-hidden="true">
+            <div class="role-aq-flow-fill"></div>
+          </div>
+          <div class="role-aq-flow-steps">
+            <span>{% trans 'Discover' %}</span>
+            <span>{% trans 'Explore' %}</span>
+            <span>{% trans 'Shop' %}</span>
+          </div>
+        </div>
+        <span class="btn-aq btn-aq-blue role-aq-cta">
+          {% trans 'Start Shopping' %}
+          <i class="fas fa-arrow-right role-aq-arrow" aria-hidden="true"></i>
+        </span>
+      </a>
+    </div>
+  </div>
 </section>
 
 <!-- ===== FEATURES ===== -->

@@ -1,0 +1,357 @@
+/* ==========================================================================
+   Role selection — "How would you like to use Shop-Seed Art?"
+   Page-scoped styles for the homepage role picker. Built entirely from the
+   aquastic.css design tokens (--aq-*) so it reads as part of the existing
+   site rather than a bolted-on widget. Loaded from the homepage only.
+   ========================================================================== */
+
+.roles-aq {
+  background: var(--aq-gradient-2);
+}
+
+/* Both cards share one grid and one set of rules; only the accent custom
+   properties differ per role, so the markup stays parallel. */
+.roles-aq-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1rem, 2.5vw, 1.75rem);
+}
+
+@media (min-width: 900px) {
+  .roles-aq-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.role-aq-card {
+  --role-accent: var(--aq-accent);
+  --role-accent-dark: var(--aq-accent-dark);
+  --role-tint: var(--aq-accent-subtle);
+  --role-line: rgba(249, 115, 22, 0.18);
+  --role-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+  padding: clamp(1.5rem, 3.5vw, 2.5rem);
+  background: var(--aq-surface);
+  border: 1px solid var(--aq-border);
+  border-radius: var(--aq-radius-lg);
+  box-shadow: 0 1px 2px var(--aq-shadow), 0 8px 24px -14px rgba(15, 23, 42, 0.14);
+  text-decoration: none;
+  overflow: hidden;
+  isolation: isolate;
+  /* opacity is listed so the shared .fade-up scroll reveal still fades
+     rather than snapping, since this shorthand overrides .fade-up's. */
+  transition:
+    opacity 0.5s ease,
+    transform 0.28s var(--role-ease),
+    box-shadow 0.28s var(--role-ease),
+    border-color 0.28s var(--role-ease);
+}
+
+.role-aq-card--customer {
+  --role-accent: var(--aq-blue);
+  --role-accent-dark: var(--aq-blue);
+  --role-tint: var(--aq-blue-glow);
+  --role-line: rgba(30, 64, 175, 0.16);
+}
+
+/* Accent rule across the top edge — the only element that changes shape. */
+.role-aq-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--aq-gradient-1);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.32s var(--role-ease);
+  z-index: 2;
+}
+
+.role-aq-card--customer::before {
+  background: var(--aq-gradient-blue);
+}
+
+/* Soft bloom behind the icon. This is the AI tell on the seller card; on the
+   customer card the same effect runs in the blue accent. */
+.role-aq-card::after {
+  content: "";
+  position: absolute;
+  top: -30%;
+  right: -18%;
+  width: 62%;
+  aspect-ratio: 1;
+  background: radial-gradient(circle, var(--role-tint) 0%, transparent 68%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.32s var(--role-ease);
+  z-index: 0;
+}
+
+.role-aq-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (hover: hover) {
+  .role-aq-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--role-line);
+    box-shadow: 0 2px 4px var(--aq-shadow), 0 24px 48px -24px rgba(15, 23, 42, 0.22);
+  }
+
+  .role-aq-card:hover::before {
+    transform: scaleX(1);
+  }
+
+  .role-aq-card:hover::after {
+    opacity: 1;
+  }
+}
+
+.role-aq-card:focus-visible {
+  outline: 2px solid var(--role-accent);
+  outline-offset: 3px;
+}
+
+/* ─── Card head ─── */
+
+.role-aq-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.role-aq-icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: clamp(56px, 9vw, 72px);
+  height: clamp(56px, 9vw, 72px);
+  font-size: clamp(1.5rem, 4.5vw, 2rem);
+  line-height: 1;
+  background: var(--role-tint);
+  border: 1px solid var(--role-line);
+  border-radius: var(--aq-radius-md);
+  transition:
+    transform 0.28s var(--role-ease),
+    box-shadow 0.28s var(--role-ease);
+}
+
+@media (hover: hover) {
+  .role-aq-card:hover .role-aq-icon {
+    transform: translateY(-3px) scale(1.05) rotate(-5deg);
+    box-shadow: 0 12px 28px -12px var(--role-accent);
+  }
+}
+
+.role-aq-heading {
+  min-width: 0;
+}
+
+.role-aq-title {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.6vw, 1.625rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--aq-ink);
+}
+
+.role-aq-desc {
+  margin: 0.5rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--aq-body);
+  overflow-wrap: break-word;
+}
+
+/* The AI marker. Small, factual, and part of the card's own chrome — not a
+   promo banner. */
+.role-aq-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-shrink: 0;
+  padding: 0.3125rem 0.6875rem;
+  background: var(--role-tint);
+  border: 1px solid var(--role-line);
+  border-radius: var(--aq-radius-xl);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--role-accent-dark);
+  white-space: nowrap;
+}
+
+/* ─── Feature chips ─── */
+
+.role-aq-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.role-aq-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  min-height: 34px;
+  padding: 0.375rem 0.8125rem;
+  background: var(--aq-canvas);
+  border: 1px solid var(--aq-border);
+  border-radius: var(--aq-radius-xl);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--aq-body);
+  white-space: nowrap;
+  transition:
+    transform 0.26s var(--role-ease),
+    background-color 0.26s var(--role-ease),
+    border-color 0.26s var(--role-ease),
+    color 0.26s var(--role-ease);
+}
+
+.role-aq-chip i {
+  font-size: 0.75rem;
+  color: var(--role-accent);
+  transition: color 0.26s var(--role-ease);
+}
+
+@media (hover: hover) {
+  .role-aq-card:hover .role-aq-chip {
+    transform: translateY(-2px);
+    background: var(--role-tint);
+    border-color: var(--role-line);
+    color: var(--aq-ink);
+  }
+
+  /* Staggered so the row reads as a sequence, not a list. */
+  .role-aq-card:hover .role-aq-chip:nth-child(1) { transition-delay: 0ms; }
+  .role-aq-card:hover .role-aq-chip:nth-child(2) { transition-delay: 55ms; }
+  .role-aq-card:hover .role-aq-chip:nth-child(3) { transition-delay: 110ms; }
+  .role-aq-card:hover .role-aq-chip:nth-child(4) { transition-delay: 165ms; }
+}
+
+/* ─── Flow rail ───
+   The seller pipeline (photo → … → publish) and the shopper's
+   discover → explore → shop path, as one thin line rather than a diagram. */
+
+.role-aq-flow {
+  margin-top: auto;
+}
+
+.role-aq-flow-track {
+  position: relative;
+  height: 3px;
+  background: var(--aq-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.role-aq-flow-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--aq-gradient-1);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.55s var(--role-ease);
+}
+
+.role-aq-card--customer .role-aq-flow-fill {
+  background: var(--aq-gradient-blue);
+}
+
+@media (hover: hover) {
+  .role-aq-card:hover .role-aq-flow-fill {
+    transform: scaleX(1);
+  }
+}
+
+.role-aq-flow-steps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.375rem 0.75rem;
+  margin-top: 0.625rem;
+  font-family: var(--aq-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--aq-tertiary);
+}
+
+.role-aq-flow-steps span {
+  white-space: nowrap;
+}
+
+/* ─── CTA ─── */
+
+.role-aq-cta {
+  margin-top: 0.5rem;
+  justify-content: center;
+  min-height: 48px;
+}
+
+.role-aq-arrow {
+  display: inline-block;
+  transition: transform 0.26s var(--role-ease);
+}
+
+@media (hover: hover) {
+  .role-aq-card:hover .role-aq-arrow {
+    transform: translateX(6px);
+  }
+}
+
+/* ─── Responsive ─── */
+
+@media (max-width: 380px) {
+  .role-aq-card {
+    padding: 1.375rem;
+    gap: 1.125rem;
+  }
+
+  .role-aq-flow-steps {
+    font-size: 0.5625rem;
+  }
+}
+
+/* ─── Motion preferences ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  .role-aq-card,
+  .role-aq-card::before,
+  .role-aq-card::after,
+  .role-aq-icon,
+  .role-aq-chip,
+  .role-aq-chip i,
+  .role-aq-arrow,
+  .role-aq-flow-fill {
+    transition: none;
+  }
+
+  .role-aq-card:hover,
+  .role-aq-card:hover .role-aq-icon,
+  .role-aq-card:hover .role-aq-chip,
+  .role-aq-card:hover .role-aq-arrow {
+    transform: none;
+  }
+
+  .role-aq-card::before,
+  .role-aq-card:hover .role-aq-flow-fill {
+    transform: scaleX(1);
+  }
+
+  .role-aq-card:hover::after {
+    opacity: 1;
+  }
+}

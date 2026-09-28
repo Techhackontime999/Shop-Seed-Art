@@ -1,5 +1,10 @@
+import re
+from html import unescape
+
+from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 from django.urls import reverse
+from accounts.models import SellerProfile
 from shop.models import Category, Product
 
 
@@ -142,3 +147,74 @@ class TestViews(TestCase):
         finally:
             SiteSetting.objects.filter(key__in=('hero_video_light', 'hero_video_dark')).delete()
             invalidate()
+
+class TestHomepageRoleSelection(TestCase):
+    """The role picker that sits between the parallax hero and the features grid.
+
+    Each card is a single link covering the whole surface, so the href itself
+    has to carry the auth decision rather than leaving it to a view further
+    down the funnel.
+    """
+
+    def setUp(self):
+        self.url = reverse('shop:home')
+
+    def card_href(self, role):
+        html = self.client.get(self.url).content.decode()
+        match = re.search(
+            r'class="role-aq-card role-aq-card--%s[^"]*"\s*\n?\s*href="([^"]+)"' % role,
+            html,
+        )
+        self.assertIsNotNone(match, 'no %s card link in the homepage' % role)
+        return match.group(1)
+
+    def test_section_sits_between_parallax_hero_and_features(self):
+        html = self.client.get(self.url).content.decode()
+        self.assertLess(html.index('parallax-aq-fade'), html.index('roles-aq-grid'))
+        self.assertLess(html.index('roles-aq-grid'), html.index('features-aq-grid'))
+
+    def test_surrounding_homepage_sections_are_untouched(self):
+        html = self.client.get(self.url).content.decode()
+        self.assertIn('parallax-aq-title', html)
+        self.assertIn('Scroll slowly', html)
+        self.assertIn('features-aq-grid', html)
+        self.assertIn('collections-aq', html)
+
+    def test_headline_and_both_cards_render(self):
+        # Unescape so this asserts on what a visitor actually reads.
+        html = unescape(self.client.get(self.url).content.decode())
+        self.assertIn('How would you like to use', html)
+        self.assertIn('take you to the right place', html)
+        self.assertIn("I'm a Seller", html)
+        self.assertIn("I'm a Customer", html)
+
+    def test_seller_card_advertises_the_ai_pipeline(self):
+        html = self.client.get(self.url).content.decode()
+        for label in ('AI assisted', 'AI Image', 'Smart Catalog', 'Smart Price', 'Publish'):
+            self.assertIn(label, html)
+
+    def test_no_nested_links_inside_the_cards(self):
+        # The whole card is the <a>; a nested one would be invalid markup and
+        # would break the single-tab-stop keyboard order.
+        html = self.client.get(self.url).content.decode()
+        cards = re.findall(r'<a class="role-aq-card.*?</a>', html, re.S)
+        self.assertEqual(len(cards), 2)
+        for card in cards:
+            self.assertEqual(card.count('<a'), 1, 'nested link inside a role card')
+
+    def test_anonymous_seller_card_opens_the_existing_signup(self):
+        self.assertEqual(self.card_href('seller'), reverse('accounts:become_seller'))
+
+    def test_signed_in_non_seller_opens_the_existing_signup(self):
+        user = get_user_model().objects.create_user(username='role-non-seller', password='pw')
+        self.client.force_login(user)
+        self.assertEqual(self.card_href('seller'), reverse('accounts:become_seller'))
+
+    def test_seller_reaches_the_existing_dashboard(self):
+        user = get_user_model().objects.create_user(username='role-seller', password='pw')
+        SellerProfile.objects.create(user=user)
+        self.client.force_login(user)
+        self.assertEqual(self.card_href('seller'), reverse('seller:seller_dashboard'))
+
+    def test_customer_card_opens_the_existing_shop_listing(self):
+        self.assertEqual(self.card_href('customer'), reverse('shop:product_list'))
