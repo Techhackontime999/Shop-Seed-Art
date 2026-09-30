@@ -98,6 +98,18 @@ class SecurityHeadersTests(TestCase):
         self.assertIn('checkout.razorpay.com', csp)
         self.assertIn('googletagmanager.com', csp)
 
+    def test_permissions_policy_allows_our_own_microphone(self):
+        """The AI Studio's voice typing is dead if this ever goes back to `()`.
+
+        The browser rejects getUserMedia() before the page can even ask the
+        seller for permission, so no amount of front-end care can recover it.
+        """
+        policy = Client().get('/robots.txt')['Permissions-Policy']
+        self.assertIn('microphone=(self)', policy)
+        self.assertNotIn('microphone=()', policy)
+        # Same-origin only: a cross-origin document still gets no microphone.
+        self.assertNotIn('microphone=*', policy)
+
 
 class ThrottleTests(TestCase):
     def setUp(self):

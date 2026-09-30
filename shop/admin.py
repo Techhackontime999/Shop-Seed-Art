@@ -1,7 +1,14 @@
 from django.contrib import admin
 from django.utils import timezone
 from core.admin_actions import export_as_csv_action
-from .models import Category, Product, ProductImage, ProductVariant, VariantImage
+from .models import (Category, Product, ProductImage, ProductVariant,
+                     SubCategory, VariantImage)
+
+
+class SubCategoryInline(admin.TabularInline):
+    model = SubCategory
+    extra = 0
+    prepopulated_fields = {'slug': ('name',)}
 
 
 class ProductImageInline(admin.TabularInline):
@@ -24,6 +31,22 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug', 'product_count']
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ['name']
+    inlines = [SubCategoryInline]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('products')
+
+    def product_count(self, obj):
+        return obj.products.count()
+    product_count.short_description = 'Products'
+
+
+@admin.register(SubCategory)
+class SubCategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'category', 'product_count']
+    list_filter = ['category']
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ['name', 'category__name']
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related('products')

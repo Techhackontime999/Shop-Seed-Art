@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'ckeditor',
 
+    'ai_services.apps.AIServicesConfig',
     'shop.apps.ShopConfig',
     'cart.apps.CartConfig',
     'wishlist.apps.WishlistConfig',
@@ -368,10 +369,104 @@ SECURITY_CSP = '; '.join([
     "base-uri 'self'",
     "form-action 'self'",
 ])
-SECURITY_PERMISSIONS_POLICY = 'camera=(), microphone=(), geolocation=(), battery=(), usb=(), interest-cohort=()'
+SECURITY_PERMISSIONS_POLICY = (
+    # The AI Studio records the seller's voice, so the microphone has to be
+    # allowed for this origin's own pages: with `microphone=()` the browser
+    # refuses at getUserMedia() time ("microphone is not allowed in this
+    # document") and dictation is dead on every device. `(self)` keeps it
+    # away from third-party frames and cross-origin documents, which is who
+    # this actually protects against.
+    # `battery` and `interest-cohort` are dropped on purpose: both are removed
+    # from the spec, and Chrome logs "Unrecognized feature" for each of them
+    # on every page load, which buries the console warnings that do matter.
+    "microphone=(self), camera=(), geolocation=(), usb=()"
+)
 
 # Upload safety: reject oversized POST bodies early (before they hit memory).
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# ---------------------------------------------------------------------------
+# AI image enhancement (ai_services)
+# ---------------------------------------------------------------------------
+# Deterministic computer vision performs the pixel work; OpenRouter is an
+# optional vision advisor that returns a few enumerated parameters about the
+# photo and never touches the output image. The key is required to be set for
+# the advisor, but the enhancer degrades to its own defaults without it, so a
+# missing key costs quality rather than availability.
+AI_BASE_URL = os.getenv("AI_BASE_URL", "https://openrouter.ai/api/v1")
+AI_API_KEY = os.getenv("AI_API_KEY", "")
+# AI_VISION_MODEL must accept image input; a text-only model will refuse.
+AI_MODEL = os.getenv("AI_MODEL", "")
+AI_VISION_MODEL = os.getenv("AI_VISION_MODEL", "")
+AI_TIMEOUT = int(os.getenv("AI_TIMEOUT", "20"))
+AI_MAX_RETRIES = int(os.getenv("AI_MAX_RETRIES", "2"))
+
+# "demo" here is a hard system-check ERROR (ai_services.E001) rather than a
+# silent fallback: a real seller must never be shown placeholder output.
+IMAGE_ENHANCEMENT_PROVIDER = os.getenv("IMAGE_ENHANCEMENT_PROVIDER", "studio")
+IMAGE_ENHANCEMENT_SEGMENTER = os.getenv("IMAGE_ENHANCEMENT_SEGMENTER", "auto")
+# OpenRouter serves the voice and text features. The image path is entirely
+# local computer vision and makes no external call. The advisor below is an
+# opt-in extra and is off by default.
+IMAGE_ENHANCEMENT_ADVISOR = os.getenv("IMAGE_ENHANCEMENT_ADVISOR", "none")
+IMAGE_ENHANCEMENT_ADVISOR_ENABLED = (
+    IMAGE_ENHANCEMENT_ADVISOR != "none" and bool(AI_API_KEY)
+)
+IMAGE_ENHANCEMENT_ADVISOR_TIMEOUT = int(os.getenv("IMAGE_ENHANCEMENT_ADVISOR_TIMEOUT", "6"))
+
+IMAGE_ENHANCEMENT_BACKGROUND = os.getenv("IMAGE_ENHANCEMENT_BACKGROUND", "white")
+IMAGE_ENHANCEMENT_CANVAS = (
+    int(os.getenv("IMAGE_ENHANCEMENT_CANVAS_W", "1000")),
+    int(os.getenv("IMAGE_ENHANCEMENT_CANVAS_H", "1000")),
+)
+IMAGE_ENHANCEMENT_PADDING = float(os.getenv("IMAGE_ENHANCEMENT_PADDING", "0.06"))
+IMAGE_ENHANCEMENT_QUALITY = int(os.getenv("IMAGE_ENHANCEMENT_QUALITY", "90"))
+IMAGE_ENHANCEMENT_WORKING_MAX_EDGE = int(os.getenv("IMAGE_ENHANCEMENT_WORKING_MAX_EDGE", "1600"))
+IMAGE_ENHANCEMENT_MAX_BYTES = int(os.getenv("IMAGE_ENHANCEMENT_MAX_BYTES", str(25 * 1024 * 1024)))
+IMAGE_ENHANCEMENT_MAX_PIXELS = int(os.getenv("IMAGE_ENHANCEMENT_MAX_PIXELS", str(40_000_000)))
+
+# ---------------------------------------------------------------------------
+# AI text (ai_services) — OpenRouter gateway
+# ---------------------------------------------------------------------------
+# Dictation runs on a local Whisper model (faster-whisper) rather than a paid
+# API: no key, no per-request cost, no rate limit, and audio stays on the
+# server. The model is loaded once per process and takes a couple of minutes on
+# first use, so a production worker should run `manage.py preload_speech` at
+# start-up. Read-back still uses the browser's speechSynthesis.
+#
+# A hosted deployment needs roughly 2GB of RAM free and a CPU: "small" is
+# about 0.6x real-time on 8 cores. Set AI_SPEECH_DEVICE=cuda and a smaller
+# model on GPU workers, or AI_VOICE_PROVIDER=browser to disable server-side
+# dictation entirely.
+AI_VOICE_PROVIDER = os.getenv("AI_VOICE_PROVIDER", "local")     # local | openrouter | browser
+AI_SPEECH_MODEL = os.getenv("AI_SPEECH_MODEL", "small")
+AI_SPEECH_DEVICE = os.getenv("AI_SPEECH_DEVICE", "cpu")
+AI_SPEECH_COMPUTE_TYPE = os.getenv("AI_SPEECH_COMPUTE_TYPE", "int8")
+AI_SPEECH_LANGUAGE = os.getenv("AI_SPEECH_LANGUAGE", "auto")
+AI_SPEECH_BEAM_SIZE = int(os.getenv("AI_SPEECH_BEAM_SIZE", "5"))
+AI_SPEECH_MAX_SECONDS = int(os.getenv("AI_SPEECH_MAX_SECONDS", "120"))
+# Shorter than this is a mis-tap, not a recording: it gets a "speak a
+# little longer" answer instead of a slow, useless "no speech" one.
+AI_SPEECH_MIN_SECONDS = float(os.getenv("AI_SPEECH_MIN_SECONDS", "1.0"))
+# Voice-activity filtering is skipped below this length, where it tends to
+# discard the single sentence the seller actually said.
+AI_SPEECH_VAD_MIN_SECONDS = float(os.getenv("AI_SPEECH_VAD_MIN_SECONDS", "5.0"))
+AI_SPEECH_MAX_BYTES = int(os.getenv("AI_SPEECH_MAX_BYTES", str(25 * 1024 * 1024)))
+AI_SPEECH_QUEUE_TIMEOUT = int(os.getenv("AI_SPEECH_QUEUE_TIMEOUT", "120"))
+
+# Paid OpenRouter audio, kept for API clients that want server-side audio.
+AI_VOICE_MODEL = os.getenv("AI_VOICE_MODEL", "openai/whisper-large-v3")
+AI_TTS_MODEL = os.getenv("AI_TTS_MODEL", "openai/tts-1")
+
+# Any OpenRouter model id. ":free" models cost nothing but are dynamic; see
+# config/settings/local.py for the same note.
+AI_TEXT_MODEL = os.getenv("AI_TEXT_MODEL", "openrouter/auto")
+AI_TEXT_FALLBACK_MODELS = os.getenv("AI_TEXT_FALLBACK_MODELS", "")
+
+AI_VOICE_RATE_LIMIT = int(os.getenv("AI_VOICE_RATE_LIMIT", "30"))
+AI_TEXT_RATE_LIMIT = int(os.getenv("AI_TEXT_RATE_LIMIT", "60"))
+AI_TTS_RATE_LIMIT = int(os.getenv("AI_TTS_RATE_LIMIT", "20"))

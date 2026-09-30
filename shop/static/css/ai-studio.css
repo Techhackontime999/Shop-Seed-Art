@@ -1,11 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   AI PRODUCT STUDIO — seller wizard (UI prototype)
+   AI PRODUCT STUDIO — seller wizard
    -----------------------------------------------------------------------
-   Demonstrates the SIH 2026 problem 26090 workflow:
+   The SIH 2026 problem 26090 workflow:
      upload → enhance → speak → AI catalog → smart price → preview
-   Front-end only. No AI service is connected; every "AI" state is a
-   labelled demo value produced by static/js/ai-studio.js. Reuses the
-   site's --aq-* / --ds-* tokens, .sp-* form primitives and .btn-aq CTAs.
+   Every state here is real: the wizard calls the /ai/ endpoints, and the
+   card on the last step is rendered from the listing that will be created.
+   Reuses the site's --aq-* / --ds-* tokens, .sp-* form primitives and
+   .btn-aq CTAs.
    ═══════════════════════════════════════════════════════════════════════ */
 
 /* Several panels below set an explicit `display`, which would otherwise beat
@@ -598,6 +599,62 @@
   color: #b91c1c;
 }
 
+/* The alert sits above the stepper, so it is the only thing guaranteed to be
+   on screen whatever step the seller is on. It is anchored rather than
+   scrolled into view: a long studio page would otherwise jump the seller away
+   from the button they just pressed. */
+.ais-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.ais-error::before {
+  content: '\f06a';
+  font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free', sans-serif;
+  font-weight: 900;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  flex-shrink: 0;
+}
+
+.ais-error[hidden] { display: none; }
+
+/* ─── Step 2: busy state ──────────────────────────────────────────────
+   The enhancement is a real server round trip, so the compare step has to
+   say so instead of showing a "before" image beside an identical copy of it
+   and waiting silently. */
+
+.ais-enhance-busy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2.5rem 1rem;
+}
+
+.ais-enhance-busy[hidden] { display: none; }
+
+.ais-busy-spinner {
+  font-size: 1.75rem;
+  color: var(--aq-accent);
+  margin-bottom: 0.875rem;
+}
+
+.ais-busy-text {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--aq-ink);
+}
+
+.ais-busy-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--aq-body);
+}
+
 /* ─── Step 2: before / after ─────────────────────────────────────── */
 
 .ais-cmp {
@@ -777,6 +834,68 @@
   color: var(--aq-body);
 }
 
+/* ── Dictation guide ───────────────────────────────────────────────────
+   Four moves, on screen, ticking themselves off. The seller never has to
+   remember what "Tap to record" is about to do, and after a finished take the
+   last line is the only one still open, which is the button to press. */
+.ais-guide {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--ais-line, rgba(15, 23, 42, 0.08));
+  border-radius: 0.75rem;
+  background: rgba(249, 115, 22, 0.04);
+  text-align: left;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.ais-guide-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--aq-body);
+}
+
+.ais-guide-step i {
+  flex: 0 0 auto;
+  margin-top: 0.2rem;
+  font-size: 0.8125rem;
+  color: rgba(100, 116, 139, 0.75);
+}
+
+.ais-guide-step.is-done { color: rgba(100, 116, 139, 0.7); }
+.ais-guide-step.is-done i { color: #16a34a; }
+.ais-guide-step.is-done strong { text-decoration: line-through; font-weight: 600; }
+
+.ais-guide-step.is-next { color: var(--aq-ink); font-weight: 500; }
+.ais-guide-step.is-next i { color: var(--aq-accent); animation: ais-blink 1.6s ease-in-out infinite; }
+
+@keyframes ais-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* Once the description exists, the way forward should look different from
+   the rest of the page until it is pressed. One gentle pulse, not a loop the
+   seller has to dismiss. */
+.ais-btn-nudge {
+  animation: ais-nudge 1.1s ease-in-out 3;
+}
+
+@keyframes ais-nudge {
+  0%, 100% { transform: translateY(0); box-shadow: none; }
+  50% { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(249, 115, 22, 0.28); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ais-guide-step.is-next i,
+  .ais-btn-nudge { animation: none; }
+  .ais-btn-nudge { box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.25); }
+}
+
 .ais-timer {
   margin: 0.75rem 0 0;
   font-size: 1.25rem;
@@ -945,6 +1064,14 @@
 
 .ais-kw.is-busy .ais-kw-item { opacity: 0.45; }
 
+/* Shown in place of the chips when the model returned no usable keywords, so
+   an empty list reads as "none came back" rather than "this never ran". */
+.ais-kw-empty {
+  font-size: 0.8125rem;
+  color: var(--aq-tertiary);
+  font-style: italic;
+}
+
 /* ─── Step 5: pricing ────────────────────────────────────────────── */
 
 .ais-price {
@@ -966,13 +1093,20 @@
 }
 
 .ais-price-value {
-  margin: 0.25rem 0 1.5rem;
+  margin: 0.25rem 0 0.5rem;
   font-size: clamp(2.25rem, 9vw, 3rem);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
   color: var(--aq-ink);
   font-variant-numeric: tabular-nums;
+}
+
+/* Where the suggestion came from, in the seller's words. */
+.ais-price-basis {
+  margin: 0 0 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--aq-body);
 }
 
 .ais-range {
@@ -1183,6 +1317,14 @@
 
 .ais-actions-center { justify-content: center; }
 
+/* The generate button sits below both input tabs, so it needs to read as the
+   step's single next step rather than as part of either tab. */
+.ais-actions-final {
+  padding-top: 0.5rem;
+  margin-top: 1.75rem;
+  border-top: 1px solid var(--ais-line, rgba(15, 23, 42, 0.08));
+}
+
 @media (min-width: 480px) {
   .ais-actions { flex-direction: row; flex-wrap: wrap; }
 
@@ -1212,6 +1354,12 @@
 }
 
 .ais-nav.is-hidden { display: none; }
+
+/* Once the draft exists there is nothing left to edit, so the wizard retires
+   and the confirmation stands on its own. */
+.ais-stepper.is-hidden,
+.ais-progress.is-hidden,
+.ais-workspace.is-hidden { display: none; }
 
 .ais-done {
   margin-top: 1.5rem;

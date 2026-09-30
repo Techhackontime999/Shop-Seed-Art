@@ -55,21 +55,30 @@ def seller_dashboard(request):
 
 @login_required
 def ai_product_studio(request):
-    """AI Product Studio — front-end only.
+    """AI Product Studio — the SIH 2026 problem 26090 wizard.
 
-    Renders the SIH 2026 problem 26090 wizard shell
-    (image → enhance → voice/describe → AI catalog → smart price → preview).
-    Every AI capability is a demo state driven by ``static/js/ai-studio.js``;
-    no AI service, model or pricing data source is wired up yet, and nothing
-    this view receives is persisted. The real handlers will be attached to
-    ``data-studio-hook`` attributes when the services land.
+    Renders the shell only: image → enhance → voice/describe → AI catalog →
+    smart price → preview. The behaviour lives in ``static/js/ai-studio.js``,
+    which talks to the ``ai_services`` JSON endpoints (image enhancement and
+    upload, server-side Whisper transcription, catalog generation) and then
+    to ``/ai/publish/``, which creates a real unpublished Product.
+
+    ``category_tree`` is the shop's own taxonomy, rendered into the page. The
+    studio used to ship a hardcoded list of categories that matched nothing in
+    the database, which meant a pick landed on a brand-new department at
+    publish time; the pickers and the publish check now read the same rows.
     """
     try:
         profile = request.user.sellerprofile
     except SellerProfile.DoesNotExist:
         return redirect('accounts:become_seller')
 
-    return render(request, 'seller/ai_studio.html', {'profile': profile})
+    from shop.taxonomy import category_choices
+
+    return render(request, 'seller/ai_studio.html', {
+        'profile': profile,
+        'category_tree': category_choices(),
+    })
 
 
 @login_required

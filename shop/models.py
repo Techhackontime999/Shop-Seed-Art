@@ -23,6 +23,31 @@ class Category(models.Model):
         return reverse('shop:product_list_by_category', args=[self.slug])
 
 
+class SubCategory(models.Model):
+    """The second level of the taxonomy.
+
+    The AI Studio asks the seller to place a product, and a single level is
+    too coarse for a catalogue this wide: "Paintings & Wall Art" alone covers
+    Madhubani work, wall hangings and framed prints. The studio can only offer
+    a choice that exists here, so this is the source of truth for both the
+    picker and the publish check.
+    """
+
+    category = models.ForeignKey(Category, related_name='subcategories',
+                                 on_delete=models.CASCADE)
+    name = models.CharField(max_length=200, db_index=True)
+    slug = models.SlugField(max_length=200)
+
+    class Meta:
+        ordering = ('category__name', 'name')
+        unique_together = (('category', 'name'),)
+        verbose_name = 'subcategory'
+        verbose_name_plural = 'subcategories'
+
+    def __str__(self):
+        return '%s / %s' % (self.category.name, self.name)
+
+
 class ProductQuerySet(models.QuerySet):
     """QuerySet with bulk-loading helpers for the price/rating properties.
 
@@ -97,6 +122,9 @@ class Product(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     brand = models.CharField(max_length=100 , blank=True)
+    subcategory = models.ForeignKey(SubCategory, related_name='products',
+                                    on_delete=models.SET_NULL, null=True,
+                                    blank=True)
     seller = models.ForeignKey(SellerProfile, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
 
     class Meta:
