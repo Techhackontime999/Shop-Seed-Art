@@ -7,12 +7,16 @@
 # 4. Set the missing SECRET_KEY, FIELD_ENCRYPTION_KEY, RAZORPAY_*, and
 #    SUPERUSER vars manually (marked `sync: false`)
 #
-# Python version is pinned to 3.13.3 via the PYTHON_VERSION envVar on every
-# service below. Render's `runtime: python` ignores runtime.txt, so without this
-# pin the build silently follows whatever Python is newest on the image — and
-# several pins below (av, PyYAML, zopfli) publish no cp314 wheels, so pip falls
-# back to building from source and dies on missing ffmpeg/libyaml headers.
-# runtime.txt carries the same version for non-Render hosts.
+# Python version is pinned to 3.13.3 by the .python-version file at the repo
+# root, and repeated as the PYTHON_VERSION envVar on every service below.
+#
+# Keep all three in sync. Render's `runtime: python` ignores runtime.txt, and
+# the blueprint envVars are NOT applied retroactively to already-created
+# services — so .python-version is what actually governs existing deploys.
+#
+# Without a pin the build follows whatever Python is newest on the image
+# (3.14.x), and av/PyYAML/zopfli publish no cp314 wheels, so pip falls back to
+# building from source and dies on missing ffmpeg/libyaml headers.
 #
 # Plan note: the free tier only includes ONE web service + ONE PostgreSQL
 # database. The background worker and the cron services below require a paid
