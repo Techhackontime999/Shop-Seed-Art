@@ -39,3 +39,12 @@ pytest.ini
 # External
 taste-skill/
 worktrees/
+
+# Throwaway debugging artefacts from the AI Studio work: one-off probe
+# scripts, the evidence screenshots they wrote, and the synthetic audio used
+# to prove the speech service rejects silence. The kept suites are
+# e2e_studio_*.py at the repo root.
+probe_*.py
+probe_*.png
+studio_*.png
+*.wav
