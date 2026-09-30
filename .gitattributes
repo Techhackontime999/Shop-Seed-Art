@@ -1,1 +1,4 @@
 *.* linguist-language=Python
+
+# Render parses this as a bare version string, so a stray CR would break the pin.
+.python-version text eol=lf
