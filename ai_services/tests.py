@@ -552,6 +552,12 @@ class TestUploadPhotoEndpoint(EnhanceTestBase):
             phone='9999999999', address='Test address',
             is_email_verified=True, is_phone_verified=True,
         )
+        # Publish resolves the category against the shop's own taxonomy and
+        # refuses a name that is not there, rather than creating a department.
+        # A test database starts with no categories, so the one listing we do
+        # publish has to exist before it can be placed.
+        from shop.models import Category
+        self.category = Category.objects.create(name='Home Textiles')
 
     def test_requires_login(self):
         self.assertEqual(
@@ -612,7 +618,7 @@ class TestUploadPhotoEndpoint(EnhanceTestBase):
             json.dumps({
                 'title': 'Handwoven Runner',
                 'description': 'A cotton runner woven by hand.',
-                'category': 'Textiles',
+                'category': self.category.name,
                 'price': '1200',
                 'stock': 1,
                 'enhancement_job': upload.json()['job']['id'],
