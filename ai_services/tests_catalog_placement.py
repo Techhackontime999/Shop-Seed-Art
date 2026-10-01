@@ -56,11 +56,23 @@ class CatalogPlacementTests(TestCase):
         self.assertEqual(result['category'], 'Paintings & Wall Art')
         self.assertEqual(result['subcategory'], 'Madhubani')
 
+    def test_the_model_answers_with_a_seeded_artisan_department(self):
+        """The project ships an artisan taxonomy, so the seeded department and
+        its own subcategory must resolve like any other real pair."""
+        result = self.generate(reply(category='Paintings & Folk Art',
+                                     subcategory='Madhubani'))
+        self.assertEqual(result['category'], 'Paintings & Folk Art')
+        self.assertEqual(result['subcategory'], 'Madhubani')
+
     def test_a_department_the_shop_does_not_have_is_dropped(self):
         """The model invents departments. None may reach the database."""
+        before = Category.objects.count()
         result = self.generate(reply(category='Home Decor'))
         self.assertNotEqual(result['category'], 'Home Decor')
-        self.assertEqual(Category.objects.count(), 2)
+        # Counted as a delta: the project seeds an artisan taxonomy, so the
+        # database is never empty when this runs. What matters is that this
+        # call invented nothing.
+        self.assertEqual(Category.objects.count(), before)
 
     def test_a_subcategory_from_another_department_is_dropped(self):
         result = self.generate(reply(subcategory='Cookware'))
@@ -82,8 +94,11 @@ class CatalogPlacementTests(TestCase):
                               'fringe. Soft enough for everyday wear.'),
             title='a plain cotton scarf woven on a hand loom',
             seller_notes='a plain cotton scarf woven on a hand loom')
+        # Real department, not necessarily one of this test's own two: the
+        # seeded artisan taxonomy is in the database too, so "did not invent a
+        # department" is the claim under test, not "picked a fixture".
         self.assertIn(result['category'],
-                      ['Home & Kitchen', 'Paintings & Wall Art'])
+                      set(Category.objects.values_list('name', flat=True)))
         self.assertEqual(result['subcategory'], '')
 
     # ── the seller's own pick ───────────────────────────────────────
@@ -128,7 +143,14 @@ class CatalogPlacementTests(TestCase):
         # unambiguous without a second pass.
         line = [l for l in system_prompt.splitlines()
                 if 'Madhubani' in l][0]
-        self.assertIn('Paintings & Wall Art', line)
+        # The line pairs Madhubani with whichever department owns it, so the
+        # seeded Paintings & Folk Art is just as valid here as the fixture's.
+        owners = {s.category.name for s in
+                 SubCategory.objects.filter(name='Madhubani')}
+        self.assertTrue(
+            any(owner in line for owner in owners),
+            'Madhubani line %r names none of its departments %r'
+            % (line, sorted(owners)))
 
     def test_nothing_is_invented_when_the_shop_has_no_taxonomy(self):
         Category.objects.all().delete()

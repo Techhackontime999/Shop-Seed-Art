@@ -376,9 +376,16 @@ class TestGenerateProductCatalogService(TestCase):
         self.assertIn('Hindi', call.kwargs['system_prompt'])
 
     def test_an_unsupported_language_asks_for_nothing(self):
-        """An unrecognised language must not produce a garbled instruction."""
+        """An unrecognised language must not produce a garbled instruction.
+
+        Compared against the prompt with an unsupported code rather than
+        against the bare constant: the taxonomy clause is appended to every
+        catalog prompt, so an exact match would only hold on an empty shop.
+        """
         _, call = self._run('t', {'seller_notes': 'A pot', 'language': 'fr'})
-        self.assertEqual(call.kwargs['system_prompt'], PRODUCT_CATALOG_SYSTEM)
+        _, reference = self._run('t', {'seller_notes': 'A pot', 'language': 'zz'})
+        self.assertEqual(call.kwargs['system_prompt'],
+                         reference.kwargs['system_prompt'])
 
     def test_a_supported_language_appends_to_the_base_prompt(self):
         _, call = self._run('t', {'seller_notes': 'A pot', 'language': 'en'})
