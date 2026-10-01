@@ -932,7 +932,21 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
   min-height: 150vh;
   overflow: hidden;
-  background: linear-gradient(180deg, var(--aq-canvas) 0%, #0b1120 55%, var(--aq-canvas) 100%);
+  /* The title is #fff and the caption is #cbd5e1, so this band is a dark
+     cinematic break in both themes. Previously the gradient resolved to
+     var(--aq-canvas) at the edges, which is #FAFAFA in light mode — the
+     images then straddled a white-to-dark seam and the section read as
+     unfinished. The bed is now a fixed dark navy and the canvas only
+     shows as a short soft entry/exit, so the same frame sits correctly
+     on a light page and dissolves completely into a dark one. */
+  --parallax-bed: #0b1120;
+  background: linear-gradient(
+    180deg,
+    var(--aq-canvas) 0%,
+    var(--parallax-bed) 16%,
+    var(--parallax-bed) 84%,
+    var(--aq-canvas) 100%
+  );
 }
 
 .parallax-aq::after {
