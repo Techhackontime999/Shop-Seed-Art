@@ -37,7 +37,7 @@ not tolerated. See [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
 - **Features** — open a discussion/issue before starting large features so the
   approach can be agreed on first.
 - **Documentation** — typos, clarifications and new guides are always welcome.
-- **Tests** — improving coverage of the existing 407-test suite is valuable.
+- **Tests** — improving coverage of the existing 764-test suite is valuable.
 
 If you are unsure where to start, look for open issues labelled `good first
 issue`.
@@ -99,7 +99,7 @@ Before pushing, make sure everything is green:
 ```sh
 python manage.py check
 python manage.py makemigrations --check --dry-run   # no missing migrations
-python manage.py test                               # full suite (407 tests)
+python manage.py test                               # full suite (764 tests)
 ```
 
 New behaviour should come with tests. When you add or change a model, add the

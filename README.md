@@ -13,8 +13,13 @@ cash-on-delivery, logistics with shipment tracking, coupons and deals, a blog,
 moderated reviews, newsletter double opt-in, and a durable background job queue
 for emails, fulfilment and refunds.
 
+Sellers get an **AI Product Studio** — a six-step wizard that turns one photo and
+a sentence of dictation into a real, correctly placed product listing, with
+product-photo enhancement, local voice transcription and AI copy running in the
+app itself.
+
 It ships with a one-click **Render blueprint**, a **Heroku-style Procfile**, a
-full test suite (407 tests) and a GitHub Actions CI pipeline that runs on
+full test suite (764 tests) and a GitHub Actions CI pipeline that runs on
 Python 3.12 and 3.13.
 
 ---
@@ -22,6 +27,13 @@ Python 3.12 and 3.13.
 ## Table of Contents
 
 - [Features](#features)
+- [AI Product Studio](#ai-product-studio)
+  - [How a listing is created](#how-a-listing-is-created)
+  - [Image enhancement pipeline](#image-enhancement-pipeline)
+  - [Voice and text](#voice-and-text)
+  - [Taxonomy-aware publishing](#taxonomy-aware-publishing)
+  - [Studio API](#studio-api)
+- [Platform Studio](#platform-studio)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Local Development](#local-development)
@@ -29,8 +41,10 @@ Python 3.12 and 3.13.
   - [Linux / macOS](#linux--macos)
   - [Windows](#windows)
   - [Environment Variables](#environment-variables)
+  - [Trying the AI Product Studio locally](#trying-the-ai-product-studio-locally)
   - [Demo Data](#demo-data)
 - [Running Tests](#running-tests)
+  - [End-to-end studio suites](#end-to-end-studio-suites)
 - [Deployment](#deployment)
   - [Render (one-click)](#render-one-click)
   - [Heroku / generic platforms](#heroku--generic-platforms)
@@ -39,6 +53,7 @@ Python 3.12 and 3.13.
   - [Async worker (DB-backed job queue)](#async-worker-db-backed-job-queue)
   - [Scheduled jobs (cron)](#scheduled-jobs-cron)
   - [Refund reconciliation](#refund-reconciliation)
+  - [Warming the speech model](#warming-the-speech-model)
   - [Media storage (S3)](#media-storage-s3)
   - [Monitoring (Sentry)](#monitoring-sentry)
 - [Security](#security)
@@ -50,9 +65,10 @@ Python 3.12 and 3.13.
 ## Features
 
 **Storefront & catalogue**
-- Product catalogue with categories, multi-image galleries and rich-text (CKEditor) descriptions
+- Product catalogue with categories, **subcategories**, multi-image galleries and rich-text (CKEditor) descriptions
 - Product **variants** — separate SKU, price and per-variant stock
 - Full-text search, daily deals, product sitemap and `robots.txt`
+- Scroll-choreographed **role picker** on the homepage that routes a visitor down a seller path or a customer path
 - Responsive, mobile-first UI with light/dark themes, font/contrast preferences and accent colours
 
 **Buying experience**
@@ -60,6 +76,7 @@ Python 3.12 and 3.13.
 - Coupon codes with usage/over-refund protection and per-user targeting
 - Guest checkout with session access + signed, expiring email tokens (guests never see a login wall)
 - Multiple shipping methods with estimated delivery windows
+- Orders addressed in the URL by **human reference** (`SEED-2026-000149`), not the database key
 
 **Payments (Razorpay + COD)**
 - In-page checkout (`checkout.js`) with hosted **Payment Link** fallback
@@ -77,6 +94,7 @@ Python 3.12 and 3.13.
 - Seller registration and admin **verification** flow
 - Seller storefronts and listings, configurable marketplace commission
 - **Payouts** backed by a ledger (`SellerLedgerEntry`) with a reconciliation command
+- **AI Product Studio** — create a listing from one photo and one sentence (see below)
 
 **Logistics (LMS)**
 - Courier registry with pluggable providers (mock, mockexpress, delhivery)
@@ -100,8 +118,139 @@ Python 3.12 and 3.13.
 
 **Platform & operations**
 - Custom admin dashboard with analytics/marketing pages and role-based groups (`customers`, `sellers`, `admins`)
+- **Platform Studio** — superuser-only runtime branding and storefront configuration, no code changes (see below)
 - **DB-backed async job queue** — durable, leased, retried background jobs
 - `/healthz` readiness probe, Sentry error tracking, structured console logging
+
+---
+
+## AI Product Studio
+
+Sellers should not have to become a copywriter and a photographer to list
+something. The studio, at **`/seller/ai-studio/`**, walks them through six steps
+and publishes a real `Product` row at the end. It is reachable from the **AI
+Seller Assistant** card on the seller dashboard; sellers who prefer the
+conventional form still have it one click away.
+
+### How a listing is created
+
+| Step | What the seller does | What the app does |
+|---|---|---|
+| 1 · Image | Uploads a photo | Validates it (format, size, pixels, EXIF orientation) and stores the original |
+| 2 · Enhance | Picks a background | Runs the local CV pipeline, shows the staged result and the quality report, lets them keep the original instead |
+| 3 · Describe | **Dictates** or types a sentence | Transcribes locally with faster-whisper (Hindi / English / mixed) |
+| 4 · AI Catalog | Edits what came back | Generates title, description, SEO keywords and a category placement resolved against the shop's real tree |
+| 5 · Smart Price | Moves a slider or types a price | Suggests the shop's own average for that department, and states the basis |
+| 6 · Preview | Checks and publishes | Creates an **unpublished** product, copying the chosen image into product storage |
+
+Every step is backed by a real endpoint under `/ai/`. The server keeps the
+seller's most recent photo job, so a seller who reloads mid-flow picks up where
+they left off, and each enhancement is stored as an `ImageEnhancementJob` with a
+stage log, quality metrics, the provider that ran it, and an `is_ai` flag so a
+placeholder can never be passed off as a real edit.
+
+### Image enhancement pipeline
+
+Photo enhancement is **entirely local** — Pillow, NumPy and SciPy. No pixel ever
+leaves the server and OpenRouter is never used to edit an image. The pipeline
+runs ten recorded stages:
+
+```
+validate → normalize → segment → clean → background → correct
+         → sharpen → format → validate_output
+```
+
+- **Segmentation** uses a deterministic classical segmenter (Otsu thresholding on
+  an edge-band distance map, largest component containing the centre, hole
+  filling, feathered edges). If `rembg` is installed, a **U2Net** segmenter is
+  preferred automatically.
+- **Correction** does grey-world white balance, exposure against a target luma, a
+  smoothstep S-curve and a saturation nudge — but a **fidelity guard** measures
+  the colour shift and, if it exceeds tolerance, falls back to an exposure-only
+  correction. A product is never silently recoloured.
+- **Format** trims empty margins around the product silhouette, scales to fit a
+  padded canvas and centres it, returning RGBA when a transparent background was
+  chosen.
+- An optional **vision advisor** (off by default) can let a vision model read the
+  photo and suggest background, exposure, sharpness and framing. Without an API
+  key the pipeline simply uses its defaults.
+
+Every job records its stages and quality metrics, so a result can always be
+explained after the fact.
+
+### Voice and text
+
+**Dictation runs on a local Whisper model** (`faster-whisper`): no API key, no
+per-request cost, no provider rate limit, and the seller's audio never leaves
+the server. The model loads once per process, so warm it at deploy time with
+`python manage.py preload_speech`. On CPU, the `small` model runs at roughly
+0.6× real time and handles Hindi-English code-switching; use `base` on a small
+box or `medium` with a GPU.
+
+**Text runs through OpenRouter** and is genuinely optional — the studio is
+useable without a key, you just don't get generated copy. Because free model ids
+are deprecated and rate limited, the client takes a **fallback list** and tries
+each in turn, retrying an empty or truncated response with a larger token budget
+rather than showing the seller a blank field.
+
+### Taxonomy-aware publishing
+
+A listing has to land in the shop's real category tree, and this is enforced
+rather than assumed:
+
+- The studio's pickers are filled from the live tree, and changing department
+  re-scopes its subcategories.
+- `shop/taxonomy.py` is the single place that resolves a name to a row, with
+  plural folding ("a book" finds *Books*) and a `suggest_*` guess for the
+  initial pick.
+- The seller's own selection always wins over the model's suggestion.
+- A subcategory can never come from a different department.
+- **Publish refuses an unknown category or a mismatched subcategory** with a
+  message the seller can act on, and never creates a taxonomy row on the fly — a
+  typo cannot quietly become a new department.
+
+### Studio API
+
+All endpoints are JSON, require an authenticated user (publish additionally
+requires a seller profile), and are rate limited per minute
+(`IMAGE_ENHANCEMENT_RATE_LIMIT` 6, `AI_VOICE_RATE_LIMIT` 30, `AI_TTS_RATE_LIMIT`
+20, `AI_TEXT_RATE_LIMIT` 60). Every job query is scoped to the requesting user,
+so one seller can never read or publish from another's draft.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/ai/image/enhance/` | Run a photo through the enhancement pipeline |
+| `POST` | `/ai/image/upload/` | Store a photo as-is (no enhancement) |
+| `GET` | `/ai/image/status/<job_id>/` | Poll a job |
+| `POST` | `/ai/image/select/` | Choose original or enhanced for a draft |
+| `GET` | `/ai/image/draft/` | Fetch the seller's current draft |
+| `POST` | `/ai/voice/transcribe/` | Transcribe recorded audio |
+| `POST` | `/ai/voice/synthesise/` | Text-to-speech read-back |
+| `POST` | `/ai/text/complete/` | General text completion |
+| `POST` | `/ai/text/product/catalog/` | Title, description, keywords, placement |
+| `POST` | `/ai/text/product/description/` | Product copy from known facts |
+| `POST` | `/ai/text/product/keywords/` | SEO keywords |
+| `POST` | `/ai/text/product/tags/` | Product tags |
+| `POST` | `/ai/text/product/rewrite/` | Rewrite copy for SEO |
+| `POST` | `/ai/publish/` | Create the unpublished product |
+| `GET` | `/ai/health/` | Provider, segmenter, advisor and speech status |
+
+---
+
+## Platform Studio
+
+Under **Platform Studio** in the admin, a superuser can rebrand and reconfigure
+the whole storefront **at runtime, with no code changes** — store name, tagline,
+logo, support email, copyright holder, contact details, appearance defaults,
+homepage copy, header/footer visibility, SEO and analytics tags, store thresholds
+such as currency and per-page limits, and injected custom CSS/JS/HTML.
+
+Settings are typed (`text`, `textarea`, `boolean`, `select`, `color`, `number`),
+grouped into Brand & Identity, Appearance, Homepage, Header & Navigation, Footer,
+SEO & Analytics, Contact Details, Store Settings and Custom Code. Every save and
+every reset writes an admin `LogEntry`, so there is an audit trail, and a
+`SiteSetting` admin changelist exposes the raw rows. Note that injected custom
+code is rendered unescaped, which is why this area is superuser-only.
 
 ---
 
@@ -109,10 +258,13 @@ Python 3.12 and 3.13.
 
 | Layer | Technology |
 |---|---|
-| Backend | Django 5.2 · Python 3.12 / 3.13 (`runtime.txt`: 3.13.3) |
+| Backend | Django 5.2 · Python 3.12 / 3.13 (pinned to 3.13.3 via `.python-version`) |
 | Database | SQLite (dev) · PostgreSQL via `dj-database-url` (prod) |
 | Cache / Sessions | LocMem or DatabaseCache (dev) · **Redis** (prod, with DB-session fallback) |
 | Payments | Razorpay (order creation, payment links, refunds, webhooks) |
+| AI — text / vision | **OpenRouter** (optional, no key required) with a fallback model list |
+| AI — voice | **faster-whisper** local speech-to-text · browser `speechSynthesis` for read-back |
+| AI — image | Local CV pipeline: Pillow · NumPy · SciPy (optional `rembg`/U2Net segmenter) |
 | Media | Local filesystem or **Amazon S3** (`django-storages`) |
 | Static files | WhiteNoise (`CompressedManifestStaticFilesStorage`) |
 | Async jobs | `jobs` app — DB-backed queue drained by `run_worker` |
@@ -133,16 +285,27 @@ Shop-Seed-Art/
 │       ├── __init__.py      # Picks local/production from DJANGO_ENV
 │       ├── local.py         # Dev settings (SQLite, console email, DEBUG=True)
 │       └── production.py    # Prod settings (Postgres, HTTPS, security headers)
-├── core/                    # Healthz, admin URL overrides, security middleware/CSP
-├── shop/                    # Product catalogue, categories, variants, search, sitemap
+├── core/                    # Healthz, admin URL overrides, security middleware/CSP,
+│                            #   shared URL converters, field encryption, sanitizers, throttling
+├── shop/                    # Product catalogue, categories/subcategories, variants,
+│                            #   search, sitemap, taxonomy resolution
 ├── cart/                    # Session-based shopping cart
 ├── wishlist/                # Wishlist
-├── order/                   # Orders, status workflow, stock, invoices, cancellations
+├── order/                   # Orders, status workflow, stock, invoices, cancellations,
+│                            #   access rules (owner / guest token)
 ├── payments/                # Razorpay orders/payment-links/webhooks, refunds, COD
 ├── coupons/                 # Coupon codes
 ├── deals/                   # Flash deals on products
-├── accounts/                # Users, customer/seller profiles, verification
-├── seller/                  # Seller marketplace, listings, commission, payouts/ledger
+├── accounts/                # Users, customer/seller profiles, verification, KYC media
+├── seller/                  # Seller marketplace, listings, commission, payouts/ledger,
+│                            #   dashboard, AI Product Studio entry point
+├── ai_services/             # AI Product Studio: image enhancement pipeline, local speech,
+│                            #   OpenRouter text/vision, publish endpoint
+│   ├── clients/             #   OpenRouter client (retries, fallbacks, TTS, vision)
+│   ├── services/            #   Enhancement pipeline, segmenters, storage, speech
+│   ├── utils/               #   Image I/O and upload validation
+│   └── management/commands/ #   preload_speech
+├── platform_studio/         # Superuser-only runtime branding & storefront settings
 ├── logistics/               # Courier integrations, shipments, tracking, NDR/returns
 ├── reviews/                 # Moderated product reviews
 ├── blogs/                   # Blog engine (posts, comments, badges, moderation)
@@ -152,15 +315,19 @@ Shop-Seed-Art/
 ├── jobs/                    # DB-backed async job queue (worker + reconciliation)
 ├── shipping/                # Shipping methods/addresses/shipments (legacy layer)
 ├── services/ · about/ · contact/ · faq/ · documentation/ · news/ · legal/
-│                           # Content/marketing/static pages
+│                            # Content/marketing/static pages
 ├── locale/                  # Gettext translation catalogs
 ├── static/                  # Static assets (collected into staticfiles/ in prod)
-├── build.sh                 # Render build phase (deps + collectstatic)
-├── setup.sh                 # Render pre-deploy: migrate, cache table, superuser
+├── docs/                    # Customer licence agreement + invoice template documents
+├── build.sh                 # Render build phase (deps, migrate, cache table,
+│                            #   collectstatic, compilemessages, superuser)
+├── setup.sh                 # Release phase for Heroku-style platforms
 ├── render.yaml              # Render Blueprint (web + worker + cron + Postgres)
+├── .python-version          # Pinned Python (3.13.3) — Render honours this
 ├── Procfile                 # Heroku-style process definitions
+├── e2e_studio_*.py          # Playwright end-to-end suites for the AI Studio
 ├── .env.example             # Documented environment variable template
-└── .github/workflows/django.yml  # CI: checks, migrations check, 407 tests
+└── .github/workflows/django.yml  # CI: checks, migrations check, 764 tests
 ```
 
 ---
@@ -172,11 +339,15 @@ Shop-Seed-Art/
 - Python **3.12** or **3.13**
 - `pip` and `virtualenv`/`venv`
 - (Optional) PostgreSQL if you want to develop against prod-like DB
+- (Optional) `rembg` for the U2Net segmenter, and `playwright` for the
+  end-to-end studio suites — the image pipeline falls back to the built-in
+  classical segmenter without the first, and the e2e scripts are not part of CI
 
 ### Linux / macOS
 
 ```sh
 git clone https://github.com/Techhackontime999/Shop-Seed-Art.git
+
 cd Shop-Seed-Art
 
 python3 -m venv env
@@ -237,8 +408,32 @@ and edit it. The most important variables:
 | `AWS_STORAGE_BUCKET_NAME` | S3 bucket for persistent media (recommended prod) | empty |
 | `SENTRY_DSN` | Error tracking DSN (optional) | empty |
 | `EMAIL_HOST*` | SMTP settings; dev falls back to console email | — |
+| `AI_API_KEY` | OpenRouter key for AI **text and vision only** (optional — the studio works without it) | empty |
+| `AI_VOICE_PROVIDER` | `local` (Whisper, default), `openrouter`, or `browser` to disable server-side dictation | `local` |
+| `AI_SPEECH_MODEL` | `tiny`/`base`/`small`/`medium` — the local Whisper model to load | `small` |
+| `AI_TEXT_FALLBACK_MODELS` | Comma-separated model ids tried in order when the primary is unavailable | empty |
 
-See [`.env.example`](./.env.example) for the complete, commented reference.
+See [`.env.example`](./.env.example) for the complete, commented reference. The
+AI section there documents every `AI_*` and `IMAGE_ENHANCEMENT_*` variable,
+including the Whisper sizing guidance (`small` ≈ 460MB download, ≈1GB RAM) and
+the note that `av`, `PyYAML` and `zopfli` need the Python pin to install cleanly.
+
+### Trying the AI Product Studio locally
+
+The studio needs a verified seller account — seed one with `seed_all`, or make
+your superuser a seller, then open `/seller/ai-studio/`. Nothing further is
+required: image enhancement is local and dictation is local, so the wizard works
+with no API key at all. Add `AI_API_KEY` to get generated copy, and warm the
+Whisper model once so the first dictation isn't slow:
+
+```sh
+python manage.py preload_speech
+```
+
+Django will also tell you if the AI configuration is wrong before it bites you —
+`python manage.py check` flags a demo provider in production, an unknown
+provider/segmenter/advisor/background, `u2net` chosen without `rembg`, and the
+vision advisor enabled without an API key.
 
 ### Demo Data
 
@@ -261,14 +456,29 @@ Seed demo users:
 ## Running Tests
 
 ```sh
-python manage.py test                 # full suite (407 tests)
-python manage.py test order          # one app
+python manage.py test                 # full suite (764 tests)
+python manage.py test ai_services     # the AI Studio app
+python manage.py test shop.tests.test_taxonomy
+python manage.py test order.tests.test_urls.LegacyOrderUrlTests
 python manage.py test order.tests.test_services.OrderViewTests.test_cancel_refunds_captured_payment   # one test
 ```
 
 The same checks run in CI (`.github/workflows/django.yml`) on Python 3.12 and
 3.13: `manage.py check`, `makemigrations --check --dry-run`, then the full test
 suite.
+
+### End-to-end studio suites
+
+`e2e_studio_ui_check.py`, `e2e_studio_ui_edge_check.py` and
+`e2e_studio_placement_check.py` drive the studio in a real browser via
+Playwright; `e2e_ai_studio_check.py` exercises the endpoints over the network.
+These make real calls and need `playwright` installed, so they are **scripts, not
+CI test cases**:
+
+```sh
+pip install playwright && playwright install chromium
+python e2e_studio_ui_check.py
+```
 
 ---
 
@@ -282,8 +492,14 @@ everything needed:
 - **PostgreSQL** database
 - **Web service** (gunicorn, 2 workers) — health check on `/healthz`
 - **Background worker** draining the async job queue (`run_worker`)
-- **Cron jobs**: refund reconciliation (every 10 min), job re-arming (every 5 min),
-  tracking sync (every 30 min), exchange-rate refresh (every 12 h)
+- **Cron jobs**: refund reconciliation (every 10 min), job re-arming + keepalive
+  (every 5 min), tracking sync (every 30 min), exchange-rate refresh (every 12 h)
+
+Python is pinned to **3.13.3** by `.python-version`, and repeated as
+`PYTHON_VERSION` on every service. This matters: without a pin the build follows
+whatever Python is newest on the image, and `av`, `PyYAML` and `zopfli` publish
+no cp314 wheels, so pip falls back to building from source and dies on missing
+ffmpeg/libyaml headers.
 
 To deploy:
 
@@ -291,15 +507,23 @@ To deploy:
 2. Go to **https://dashboard.render.com/blueprints** → **New Blueprint** → connect the repo.
 3. Render auto-detects `render.yaml`. Fill in the `sync: false` values when prompted:
    `SECRET_KEY`, `FIELD_ENCRYPTION_KEY`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`,
-   `RAZORPAY_WEBHOOK_SECRET`, and the `DJANGO_SUPERUSER_*` variables.
-4. Migrations, the cache table and the superuser are created automatically in the
-   pre-deploy phase (`setup.sh`).
+   `RAZORPAY_WEBHOOK_SECRET`, the `DJANGO_SUPERUSER_*` variables, and
+   `KEEPALIVE_URL` (your web service's `/healthz` URL).
+4. Migrations, the cache table, `collectstatic`, catalog compilation and the
+   superuser are all created in `build.sh`, which runs as the **build command**.
+
+> **Why not a pre-deploy phase?** Render's free tier does not support
+> `preDeployCommand`, so those tasks live in `build.sh` and the start command is
+> a pure gunicorn — otherwise they would run twice. `setup.sh` still exists for
+> platforms that do have a release phase (see below).
 
 > **Plans:** the free tier covers **one web service + one PostgreSQL** database.
 > The background worker and cron jobs require a paid plan (Starter and above).
 > On a purely free deployment, disable the `worker` and `cron` services — the
 > web app still works, but transactional emails, fulfilment and refund retries
-> will not drain until a worker runs.
+> will not drain until a worker runs. Cron services also carry a per-job monthly
+> minimum, which is why the keep-alive pings ride the existing `job-reconcile`
+> cron instead of adding a fourth.
 
 ### Heroku / generic platforms
 
@@ -311,8 +535,10 @@ web: gunicorn config.wsgi --bind 0.0.0.0:$PORT --workers=2 --access-logfile=-
 worker: python manage.py run_worker --poll 5 --limit 25
 ```
 
-Set the same environment variables as for Render (minus the Render-specific ones)
-and add the cron commands via your platform's scheduler.
+`setup.sh` runs the release-phase tasks (collectstatic, migrate, compilemessages,
+cache table, superuser). Set the same environment variables as for Render (minus
+the Render-specific ones) and add the cron commands via your platform's
+scheduler.
 
 ### Production environment variables
 
@@ -332,13 +558,17 @@ and add the cron commands via your platform's scheduler.
 | `ADMIN_URL` | recommended | random segment, e.g. `x7k2-admin/` |
 | `SENTRY_DSN` | optional | error tracking |
 | `REDIS_URL` | optional | Redis cache + sessions; otherwise DatabaseCache |
+| `AI_API_KEY` | optional | OpenRouter key; unlocks AI text and the vision advisor. The studio works without it |
+| `AI_TEXT_MODEL` / `AI_TEXT_FALLBACK_MODELS` | recommended with AI | use `:free` model ids and always list fallbacks — free ids get deprecated |
+| `AI_VOICE_PROVIDER` | optional | `local` (Whisper, default), `openrouter`, or `browser` to turn server-side dictation off |
+| `KEEPALIVE_URL` | recommended | your web service's `/healthz` URL, pinged by the 5-minute cron so the free web instance never spins down |
 
 **Branding.** Your store name, tagline, logo letter, support email, copyright
 holder and contact email are all editable at runtime — no code changes needed —
-under **Platform Studio → Brand & Identity** in the admin. `DEFAULT_FROM_EMAIL`
-(preset `Shop-Seed Art <no-reply@shop-seed.com>`) is overridable via env for a
-custom sender. Every Shop-Seed Art default (name, logo, emails, demo data) can be
-replaced to present the platform as your own storefront.
+under **Platform Studio** in the admin (see [Platform Studio](#platform-studio)).
+`DEFAULT_FROM_EMAIL` (preset `Shop-Seed Art <no-reply@shop-seed.com>`) is
+overridable via env for a custom sender. Every Shop-Seed Art default (name, logo,
+emails, demo data) can be replaced to present the platform as your own storefront.
 
 ---
 
@@ -384,6 +614,21 @@ hasn't been returned yet:
 python manage.py reconcile_refunds --dry-run   # preview first
 ```
 
+### Warming the speech model
+
+Local dictation loads the Whisper model once per process, which takes a couple of
+minutes on first use. Warm it at deploy or worker start-up so the first seller
+isn't left waiting:
+
+```sh
+python manage.py preload_speech
+```
+
+`small` is a ~460MB download and ~1GB of RAM. On a GPU worker set
+`AI_SPEECH_DEVICE=cuda` and `AI_SPEECH_COMPUTE_TYPE=float16`. If you have no
+spare capacity, `AI_VOICE_PROVIDER=browser` disables server-side dictation
+entirely and the studio falls back to the browser's own `SpeechRecognition`.
+
 ### Media storage (S3)
 
 Render's disk is ephemeral — uploads are lost on every redeploy. Set
@@ -410,6 +655,14 @@ Set `SENTRY_DSN` to enable error tracking. Optional: `SENTRY_ENVIRONMENT`,
 - Upload validation (MIME/size limits), oversized-body rejection
 - Guest order access via signed, expiring tokens; protected KYC media is never public
 - Payment webhooks/callbacks verified by HMAC; captures are idempotent and serialized
+- **AI Studio**: magic-byte upload sniffing (not just the extension), pixel-count
+  and minimum-dimension limits, per-endpoint rate limits, CSRF-protected POSTs,
+  and every job query scoped to the owning seller
+- **AI Studio**: the non-AI `demo` enhancement provider is a hard **error** in
+  production (`manage.py check`), so a placeholder can never reach a live listing
+- **AI Studio**: product copy is sanitized as HTML, and publish never creates a
+  category row — an unknown category is refused, not invented
+- Dictation runs locally, so seller audio never leaves the server
 
 See [SECURITY.md](./SECURITY.md) for how to report a vulnerability.
 
@@ -421,6 +674,9 @@ Contributions are welcome — bug fixes, features and documentation. Please read
 [CONTRIBUTING.md](./CONTRIBUTING.md) first (branch model, commit conventions,
 how to run the checks and open a pull request) and follow our
 [Code of Conduct](./CODE_OF_CONDUCT.md).
+
+Looking for what changed recently? See [CHANGELOG.md](./CHANGELOG.md) for the
+feature, behaviour-change and deployment history of the project.
 
 Because Shop-Seed Art is a **commercial product**, contributors must agree to the
 [Contributor License Agreement](./CLA.md) (the PR template includes the
