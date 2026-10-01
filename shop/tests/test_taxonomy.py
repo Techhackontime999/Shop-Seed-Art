@@ -35,8 +35,11 @@ class FindCategoryTests(TestCase):
         self.assertEqual(find_category('Home & Kitchen'), self.kitchen)
 
     def test_an_invented_name_is_not_created(self):
+        before = Category.objects.count()
         self.assertIsNone(find_category('Home Decor'))
-        self.assertEqual(Category.objects.count(), 2)
+        # Counted as a delta, not an absolute: the project seeds an artisan
+        # taxonomy, so the database is never empty when this runs.
+        self.assertEqual(Category.objects.count(), before)
 
     def test_a_suggestion_is_only_made_when_the_words_point_somewhere(self):
         """No overlap means no suggestion. A wrong guess the seller can see is
@@ -52,10 +55,13 @@ class FindCategoryTests(TestCase):
     def test_subcategory_words_are_evidence_for_their_department(self):
         madhubani = Category.objects.create(
             name='Paintings & Wall Art', slug='paintings')
+        # "Kalighat" rather than a real seeded subcategory: the project ships an
+        # artisan taxonomy that already contains Madhubani, and this test is
+        # about the matching rule, not about which department happens to win.
         SubCategory.objects.create(
-            category=madhubani, name='Madhubani', slug='madhubani')
+            category=madhubani, name='Kalighat', slug='kalighat')
         self.assertEqual(
-            suggest_category('a hand painted madhubani painting'), madhubani)
+            suggest_category('a hand painted kalighat scroll'), madhubani)
 
     def test_the_caller_supplies_the_fallback(self):
         self.assertEqual(suggest_category('qwertyuiop', default=self.books),
@@ -170,7 +176,7 @@ class CategoryChoicesTests(TestCase):
     def test_returns_every_category_in_the_shop(self):
         self.assertEqual(
             {row['name'] for row in category_choices()},
-            {'Home & Kitchen', 'Security'})
+            set(Category.objects.values_list('name', flat=True)))
 
     def test_counts_splits_live_products_from_drafts(self):
         row = self.entry('Home & Kitchen')

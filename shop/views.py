@@ -32,7 +32,9 @@ def home(request):
     # unfiltered product list and showed nothing on the card. Craft categories
     # are listed first by a slug whitelist, then whatever else has stock, and
     # the count is annotated so each card can show real inventory.
-    craft_slugs = ['home-kitchen', 'paintings-wall-art', 'textiles', 'home-decor', 'fashion', 'toys-games']
+    craft_slugs = ['pottery-ceramics', 'paintings-folk-art', 'textiles-weaving',
+                   'jewellery', 'wood-carving', 'metal-brass-craft', 'leather-craft',
+                   'bamboo-cane', 'masks-puppetry', 'incense-wellness']
     priority = Case(
         *[When(slug=s, then=Value(i)) for i, s in enumerate(craft_slugs)],
         default=Value(len(craft_slugs)),
