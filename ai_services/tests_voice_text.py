@@ -469,6 +469,7 @@ class TestHealthEndpoint(VoiceTextTestBase):
         self.assertIn('classical_segmentation', body)
 
 
+@override_settings(AI_API_KEY='test-key', IMAGE_ENHANCEMENT_ADVISOR='none')
 class TestSellerFacingMessages(SimpleTestCase):
     """The seller sees our copy, never the provider's internal wording."""
 
@@ -495,6 +496,9 @@ class TestSellerFacingMessages(SimpleTestCase):
 
         with self.assertRaises(VoiceTextError) as ctx:
             generate_seo_keywords({'title': 'Runner'})
+        # The code is asserted too: a wrong-but-quiet failure would otherwise
+        # still pass the "no credit wording" check below.
+        self.assertEqual(ctx.exception.code, 'out_of_credit')
         self.assertNotIn('credit', ctx.exception.message.lower())
 
     @mock.patch('ai_services.services.voice_text._client')
