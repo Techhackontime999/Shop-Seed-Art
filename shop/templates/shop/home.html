@@ -197,44 +197,24 @@
   <div class="container-aq">
     <div class="text-center mb-5 fade-up">
       <span class="hero-aq-badge mx-auto" style="justify-content:center">
-        <i class="fas fa-layer-group"></i> {{ platform_settings.collections_badge|default:'Categories' }}
+        <i class="fas fa-layer-group"></i> {{ platform_settings.collections_badge|default:'Crafts' }}
       </span>
-      <h2 class="display-section" style="margin-top:0.75rem">{{ platform_settings.collections_heading|default:'Shop by Category' }}</h2>
+      <h2 class="display-section" style="margin-top:0.75rem">{{ platform_settings.collections_heading|default:'Shop by Craft Category' }}</h2>
     </div>
 
     <div class="collections-aq-grid">
-      <a href="{% url 'shop:product_list' %}" class="collection-aq-card fade-up fade-up-delay-1">
-        <div class="collection-aq-card-bg" style="background: linear-gradient(135deg, rgba(13,148,136,0.08), rgba(20,184,166,0.12));"></div>
-        <div class="collection-aq-card-content">
-          <span class="eyebrow">{{ platform_settings.collection_1_label|default:'Featured' }}</span>
-          <h3>{{ platform_settings.collection_1_title|default:"Women's Collection" }}</h3>
-          <span class="arrow"><i class="fas fa-arrow-right"></i></span>
-        </div>
-      </a>
-      <a href="{% url 'shop:product_list' %}" class="collection-aq-card fade-up fade-up-delay-2">
-        <div class="collection-aq-card-bg" style="background: linear-gradient(135deg, rgba(13,148,136,0.05), rgba(20,184,166,0.08));"></div>
-        <div class="collection-aq-card-content">
-          <span class="eyebrow">{{ platform_settings.collection_2_label|default:'New' }}</span>
-          <h3>{{ platform_settings.collection_2_title|default:"Men's Collection" }}</h3>
-          <span class="arrow"><i class="fas fa-arrow-right"></i></span>
-        </div>
-      </a>
-      <a href="{% url 'shop:product_list' %}" class="collection-aq-card fade-up fade-up-delay-3">
-        <div class="collection-aq-card-bg" style="background: linear-gradient(135deg, rgba(13,148,136,0.06), rgba(20,184,166,0.1));"></div>
-        <div class="collection-aq-card-content">
-          <span class="eyebrow">{{ platform_settings.collection_3_label|default:'Trending' }}</span>
-          <h3>{{ platform_settings.collection_3_title|default:'Accessories' }}</h3>
-          <span class="arrow"><i class="fas fa-arrow-right"></i></span>
-        </div>
-      </a>
-      <a href="{% url 'shop:product_list' %}" class="collection-aq-card fade-up fade-up-delay-4">
-        <div class="collection-aq-card-bg" style="background: linear-gradient(135deg, rgba(13,148,136,0.04), rgba(20,184,166,0.06));"></div>
-        <div class="collection-aq-card-content">
-          <span class="eyebrow">{{ platform_settings.collection_4_label|default:'Essentials' }}</span>
-          <h3>{{ platform_settings.collection_4_title|default:'Footwear' }}</h3>
-          <span class="arrow"><i class="fas fa-arrow-right"></i></span>
-        </div>
-      </a>
+      {% for category in home_categories %}
+        <a href="{% url 'shop:product_list_by_category' category.slug %}" class="collection-aq-card fade-up fade-up-delay-{{ forloop.counter }}">
+          <div class="collection-aq-card-bg" style="background: linear-gradient(135deg, rgba(13,148,136,0.07), rgba(20,184,166,0.11));"></div>
+          <div class="collection-aq-card-content">
+            <span class="eyebrow">{{ category.name }}</span>
+            <h3>{% blocktrans count counter=category.product_count %}{{ counter }} handcrafted product{% plural %}{{ counter }} handcrafted products{% endblocktrans %}</h3>
+            <span class="arrow"><i class="fas fa-arrow-right"></i></span>
+          </div>
+        </a>
+      {% empty %}
+        <p class="text-center">{% trans 'No categories yet.' %}</p>
+      {% endfor %}
     </div>
   </div>
 </section>

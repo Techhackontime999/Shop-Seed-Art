@@ -194,16 +194,8 @@ ALL_SETTINGS = [
     _S('feature_4_text', 'Feature 4 text', 'homepage', 'textarea',
        '100% secure transactions with encrypted checkout. Your privacy and data security are our top priority.'),
 
-    _S('collections_badge', 'Collections badge', 'homepage', 'text', 'Categories'),
-    _S('collections_heading', 'Collections heading', 'homepage', 'text', 'Shop by Category'),
-    _S('collection_1_label', 'Collection 1 eyebrow', 'homepage', 'text', 'Featured'),
-    _S('collection_1_title', 'Collection 1 title', 'homepage', 'text', "Women's Collection"),
-    _S('collection_2_label', 'Collection 2 eyebrow', 'homepage', 'text', 'New'),
-    _S('collection_2_title', 'Collection 2 title', 'homepage', 'text', "Men's Collection"),
-    _S('collection_3_label', 'Collection 3 eyebrow', 'homepage', 'text', 'Trending'),
-    _S('collection_3_title', 'Collection 3 title', 'homepage', 'text', 'Accessories'),
-    _S('collection_4_label', 'Collection 4 eyebrow', 'homepage', 'text', 'Essentials'),
-    _S('collection_4_title', 'Collection 4 title', 'homepage', 'text', 'Footwear'),
+    _S('collections_badge', 'Collections badge', 'homepage', 'text', 'Crafts'),
+    _S('collections_heading', 'Collections heading', 'homepage', 'text', 'Shop by Craft Category'),
 
     _S('featured_badge', 'Featured badge', 'homepage', 'text', 'Featured'),
     _S('featured_heading', 'Featured heading', 'homepage', 'text', 'Best Sellers'),

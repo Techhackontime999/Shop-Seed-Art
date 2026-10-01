@@ -6,7 +6,7 @@ from django.views.decorators.http import require_GET
 from cart.forms import CartAddProductForm
 from .models import Category, Product
 from django.core.paginator import Paginator
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Case, When, Value, IntegerField
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.text import Truncator
@@ -24,9 +24,32 @@ def home(request):
     ).distinct()[:4]
     if not deals:
         deals = Product.objects.with_rating().with_deal_price().filter(available=True)[:4]
+
+    # Categories come from the database so the homepage can never advertise a
+    # collection that does not exist. The four shown are the ones an artisan
+    # marketplace actually sells through -- the earlier hardcoded cards were
+    # fashion leftovers ("Women's Collection", "Footwear") that pointed at the
+    # unfiltered product list and showed nothing on the card. Craft categories
+    # are listed first by a slug whitelist, then whatever else has stock, and
+    # the count is annotated so each card can show real inventory.
+    craft_slugs = ['home-kitchen', 'paintings-wall-art', 'textiles', 'home-decor', 'fashion', 'toys-games']
+    priority = Case(
+        *[When(slug=s, then=Value(i)) for i, s in enumerate(craft_slugs)],
+        default=Value(len(craft_slugs)),
+        output_field=IntegerField(),
+    )
+    categories = (Category.objects
+                  .annotate(
+                        product_count=Count('products', filter=Q(products__available=True)),
+                        rank=priority,
+                  )
+                  .filter(product_count__gt=0)
+                  .order_by('rank', '-product_count', 'name')[:4])
+
     return render(request, 'shop/home.html', {
         'trending_products': trending,
         'deals': deals,
+        'home_categories': categories,
     })
 
 
