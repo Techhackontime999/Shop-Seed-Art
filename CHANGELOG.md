@@ -182,6 +182,17 @@ design can be reviewed against real content before anyone commits to a schema.
   comment containing `<script>` no longer reaches the browser.
 - Manual price entry in the studio commits as it is typed and widens the slider,
   instead of being clamped to a fixed window.
+- The homepage "Schemes for Artisans" pill was clipped to a ~10px sliver on every
+  phone and tablet. The hero is exactly one viewport tall (`height: 100dvh`) but
+  begins below the news ticker, so the bottom strip of the hero — and the pill
+  docked to it — sits below the fold at scroll 0. `js/schemes-hero-tab.js` now
+  measures the chrome above the hero and lifts the pill by that amount
+  (`--as-tab-lift`), keeping it in step through a `ResizeObserver` and on resize.
+  The lift is capped by the room the hero's CTA row leaves, so on a short
+  viewport it shrinks rather than covering the CTAs, and is skipped entirely
+  where there is no room to lift (measured at 320–1366px: fully visible from
+  375×667 up, partially but collision-free at 360×640). Without JS the
+  `--ds-news-ticker-h` token is the fallback.
 - Dictation is now usable rather than merely present: the guide highlights the one
   thing to do next instead of a button that may not exist, a silent recording
   says what to hear and what to do about it, and Generate sits below both the

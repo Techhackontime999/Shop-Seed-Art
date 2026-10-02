@@ -169,7 +169,16 @@ html[data-theme="dark"] .schemes-tab {
 
 /* ═══ <1200px — cleared lane at the hero's bottom-left ═════════════════
    The hero's centred column never reaches this corner, and the hero reserves
-   extra bottom padding (see below) so the pill can never land on the CTA. */
+   extra bottom padding (see below) so the pill can never land on the CTA.
+
+   The lift is the point of the calc. The hero is exactly one viewport tall
+   (`height: 100dvh`) but it starts below the news ticker, so that many pixels
+   of its bottom edge hang *below the fold* — docking the pill at the hero's own
+   bottom edge clipped it to a ~10px sliver on every phone and tablet. The lift
+   is normally that same strip, measured by js/schemes-hero-tab.js into
+   --as-tab-lift (which also shrinks it when the hero's content leaves no room).
+   Without JS the ticker token is the fallback, and the guard below covers the
+   one case where even that is too much. */
 @media (max-width: 1199.98px) {
   .hero-video-aq.has-schemes-tab .hero-video-aq-content {
     padding-bottom: 6.5rem;
@@ -178,10 +187,19 @@ html[data-theme="dark"] .schemes-tab {
   .schemes-tab {
     inset-block-start: auto;
     inset-inline-start: var(--ds-space-3);
-    inset-block-end: 0.35rem;
+    inset-block-end: calc(var(--as-tab-lift, var(--ds-news-ticker-h, 0px)) + 0.35rem);
     translate: none;
     height: 44px;
     font-size: 0.75rem;
+  }
+}
+
+/* No-JS fallback: on a viewport too short to lift the pill, keep it docked at the
+   hero's bottom edge rather than let it cover the CTA row. Scoped to
+   :root:not(.as-tab-js) so it never overrides the measurement. */
+@media (max-height: 660px) and (max-width: 1199.98px) {
+  :root:not(.as-tab-js) .schemes-tab {
+    inset-block-end: 0.35rem;
   }
 }
 
@@ -320,8 +338,11 @@ html[data-theme="dark"] .schemes-tab {
   }
 }
 
-/* ─── Short viewports: the pill must stay clear of the hero headline ──── */
-@media (max-height: 620px) and (max-width: 1199px) {
+/* ─── Short viewports: the pill must stay clear of the hero headline ────
+   The reserve grows on short screens so the CTA row keeps its clearance from
+   the pill, which is lifted by the ticker strip there too. (Bottom padding on
+   this centred box lifts the hero's content by half the amount added.) */
+@media (max-height: 700px) and (max-width: 1199.98px) {
   .hero-video-aq.has-schemes-tab .hero-video-aq-content {
     padding-bottom: 7.5rem;
   }

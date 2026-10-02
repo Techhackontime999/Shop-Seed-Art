@@ -295,6 +295,15 @@ the sections below.
 - Below `640px` the pill is full-size and the hero's progress bar and scroll
   hint step aside rather than overlap it — a deliberate trade-off, since the
   pill is the more useful of the two on a phone.
+- **The pill is lifted clear of the fold.** The hero is exactly one viewport
+  tall (`height: 100dvh`) but starts below the news ticker, so that many pixels
+  of its bottom edge hang below the fold — docking the pill to the hero's own
+  bottom edge clipped it to a ~10px sliver on every phone and tablet. The tab
+  script measures the strip above the hero and lifts the pill by exactly that
+  much, publishing it as `--as-tab-lift`; if the hero's content leaves no room,
+  the lift shrinks instead of covering the CTA row. Without JS it falls back to
+  the `--ds-news-ticker-h` token, and on viewports too short to lift at all it
+  stays docked.
 
 ### The directory
 
