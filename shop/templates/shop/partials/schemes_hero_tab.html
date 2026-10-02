@@ -1,0 +1,43 @@
+{% load i18n %}
+{% comment %}
+Schemes-for-Artisans floating tab.
+
+Lives INSIDE the hero section (shop/partials/hero_video.html) and is positioned
+absolutely against it, so it scrolls away with the hero and can never linger
+over the sections below. It is deliberately NOT `position: fixed`.
+
+The label is one string; CSS collapses it to full → short → icon-only as the
+viewport narrows, so the accessible name never changes.
+
+`×` is a sibling <button>, not a child of the <a>, so dismissing the tab can
+never trigger navigation.
+{% endcomment %}
+<div class="schemes-tab" id="schemes-hero-tab" data-schemes-tab
+     data-storage-key="ssArtisanSchemesTabDismissed">
+  <a class="schemes-tab-link" href="{% url 'schemes:schemes_list' %}">
+    <span class="schemes-tab-icon" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
+    <span class="schemes-tab-text">
+      <span class="schemes-tab-text-long">{% trans "Schemes for Artisans" %}</span>
+      <span class="schemes-tab-text-short">{% trans "Schemes" %}</span>
+    </span>
+  </a>
+  <button type="button" class="schemes-tab-close" data-schemes-tab-close
+          aria-label="{% trans 'Hide the Schemes for Artisans shortcut' %}">
+    <i class="fas fa-xmark" aria-hidden="true"></i>
+  </button>
+</div>
+<script>
+  /* Apply a previous dismissal before the first paint so the tab never
+     flashes for a visitor who already closed it this session. Everything
+     else is handled by js/schemes-hero-tab.js; this inline run only exists to
+     beat the paint, and degrades to a visible tab when JS is unavailable. */
+  (function () {
+    var tab = document.getElementById('schemes-hero-tab');
+    if (!tab) return;
+    try {
+      if (window.sessionStorage.getItem(tab.getAttribute('data-storage-key')) === '1') {
+        tab.classList.add('is-dismissed');
+      }
+    } catch (e) { /* private mode / storage blocked — keep the tab visible */ }
+  })();
+</script>

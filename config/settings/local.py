@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     'notifications.apps.NotificationsConfig',
     'newsletter.apps.NewsletterConfig',
     'jobs.apps.JobsConfig',
+    'schemes.apps.SchemesConfig',
 ]
 
 MIDDLEWARE = [

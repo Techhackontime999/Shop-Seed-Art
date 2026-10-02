@@ -1,0 +1,278 @@
+{% extends 'shop/base/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Schemes for Artisans" %} — {{ platform_settings.site_name|default:'Shop-Seed Art' }}{{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="{% trans 'Discover government and non-government schemes, financial support, training opportunities and resources available for artisans.' %}">
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/schemes.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="as-page">
+  <div class="as-shell">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-aq as-breadcrumb" aria-label="{% trans 'Breadcrumb' %}">
+      <a href="{% url 'shop:home' %}">{% trans 'Home' %}</a>
+      <span class="sep" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
+      <span class="current" aria-current="page">{% trans 'Schemes for Artisans' %}</span>
+    </nav>
+
+    <!-- Page header -->
+    <header class="as-hero">
+      <div class="as-hero-main">
+        <span class="as-hero-badge">
+          <i class="fas fa-hand-holding-heart" aria-hidden="true"></i>
+          {% trans 'Artisan support directory' %}
+        </span>
+        <h1 class="as-hero-title">{% trans 'Schemes for Artisans' %}</h1>
+        <p class="as-hero-sub">
+          {% trans 'Discover government and non-government schemes, financial support, training opportunities and resources available for artisans.' %}
+        </p>
+      </div>
+
+      {% comment %}
+      Honest counters only: nothing here claims coverage or verification that
+      has not happened yet.
+      {% endcomment %}
+      <dl class="as-stats">
+        <div class="as-stat">
+          <dt>{% trans 'Programmes listed' %}</dt>
+          <dd>{{ total_schemes }}</dd>
+        </div>
+        <div class="as-stat">
+          <dt>{% trans 'Filter categories' %}</dt>
+          <dd>{{ total_categories }}</dd>
+        </div>
+        <div class="as-stat">
+          <dt>{% trans 'Links published' %}</dt>
+          <dd>0</dd>
+        </div>
+      </dl>
+    </header>
+
+    <!-- Search. UI only for now: matching happens client-side, nothing is sent to a server. -->
+    <div class="as-search" role="search">
+      <label class="sr-only" for="as-search-input">{% trans 'Search schemes, benefits, organizations' %}</label>
+      <div class="as-search-field">
+        <i class="fas fa-search as-search-icon" aria-hidden="true"></i>
+        <input type="search" id="as-search-input" class="as-search-input" data-schemes-search
+               autocomplete="off" spellcheck="false"
+               placeholder="{% trans 'Search schemes, benefits, organizations…' %}">
+        <button type="button" class="as-search-clear" data-schemes-search-clear hidden
+                aria-label="{% trans 'Clear search' %}" title="{% trans 'Clear search' %}">
+          <i class="fas fa-xmark" aria-hidden="true"></i>
+        </button>
+        <kbd class="as-search-kbd" aria-hidden="true">/</kbd>
+      </div>
+    </div>
+
+    <!-- Filter chips + sort. This bar sticks under the header once the page
+         header scrolls away, so the view can always be narrowed. -->
+    <div data-schemes-toolbar-sentinel aria-hidden="true"></div>
+    <div class="as-toolbar" data-schemes-toolbar>
+      <div class="as-toolbar-main">
+        <p class="as-filters-label" id="as-filters-label">{% trans 'Filter by category' %}</p>
+        <div class="as-filters" role="group" aria-labelledby="as-filters-label">
+          {% for filter in scheme_filters %}
+          <button type="button" class="as-chip{% if forloop.first %} is-active{% endif %}"
+                  data-schemes-filter="{{ filter.slug }}"
+                  aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}">
+            <i class="fas fa-check as-chip-check" aria-hidden="true"></i>
+            <span class="as-chip-text">{{ filter.label }}</span>
+            <span class="as-chip-count">{{ filter.count }}</span>
+          </button>
+          {% endfor %}
+          <button type="button" class="as-chip as-chip--saved" data-schemes-filter="saved"
+                  aria-pressed="false" hidden>
+            <i class="fas fa-bookmark as-chip-bookmark" aria-hidden="true"></i>
+            <span class="as-chip-text">{% trans 'Saved' %}</span>
+            <span class="as-chip-count" data-schemes-saved-count>0</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="as-sort">
+        <label class="as-sort-label" for="as-sort-select">{% trans 'Sort' %}</label>
+        <div class="as-sort-field">
+          <select id="as-sort-select" class="as-sort-select" data-schemes-sort>
+            {% for option in sort_options %}
+            <option value="{{ option.value }}">{{ option.label }}</option>
+            {% endfor %}
+          </select>
+          <i class="fas fa-chevron-down as-sort-icon" aria-hidden="true"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="as-results-bar">
+      <p class="as-results-count" data-schemes-count role="status" aria-live="polite"
+         data-count-one="{% trans '1 scheme listed' %}"
+         data-count-plural="{% trans '%(count)s schemes listed' %}">
+        {% blocktrans count counter=schemes|length %}{{ counter }} scheme listed{% plural %}{{ counter }} schemes listed{% endblocktrans %}
+      </p>
+      <button type="button" class="as-clear-all" data-schemes-clear-all hidden>
+        <i class="fas fa-xmark" aria-hidden="true"></i>
+        {% trans 'Clear filters' %}
+      </button>
+      <p class="as-demo-note">
+        <i class="fas fa-circle-info" aria-hidden="true"></i>
+        <span>{% trans 'Preview only — every listing below is placeholder content and has not been checked with any ministry, board or organisation.' %}</span>
+      </p>
+    </div>
+
+    <!-- Scheme cards -->
+    <div class="as-grid" data-schemes-grid>
+      {% for scheme in schemes %}
+      <article class="as-card"
+               data-schemes-card
+               data-scheme-name="{{ scheme.name }}"
+               data-scheme-provider="{{ scheme.provider }}"
+               data-scheme-category="{{ scheme.category }}"
+               data-scheme-type="{{ scheme.type }}"
+               data-scheme-tags="{{ scheme.tags|join:' ' }}">
+        <header class="as-card-head">
+          <span class="as-card-logo{% if scheme.type == 'Non-Government' %} as-card-logo--ngo{% endif %}" aria-hidden="true">
+            <i class="{{ scheme.icon }}"></i>
+          </span>
+          <div class="as-card-headings">
+            <h2 class="as-card-name">{{ scheme.name }}</h2>
+            <p class="as-card-provider">{{ scheme.provider }}</p>
+            <div class="as-card-badges">
+              {% if scheme.type == 'Government' %}
+              <span class="as-badge as-badge--gov">
+                <i class="fas fa-landmark" aria-hidden="true"></i>{% trans 'Government' %}
+              </span>
+              {% else %}
+              <span class="as-badge as-badge--ngo">
+                <i class="fas fa-handshake" aria-hidden="true"></i>{% trans 'Non-Government' %}
+              </span>
+              {% endif %}
+              <span class="as-badge as-badge--plain">{{ scheme.category }}</span>
+            </div>
+          </div>
+          <button type="button" class="as-save" data-schemes-save
+                  data-scheme-name="{{ scheme.name }}"
+                  aria-pressed="false"
+                  data-label-off="{% trans 'Save this scheme' %}"
+                  data-label-on="{% trans 'Remove from saved' %}">
+            <i class="far fa-bookmark" aria-hidden="true"></i>
+            <span class="sr-only" data-schemes-save-text>{% trans 'Save this scheme' %}</span>
+          </button>
+        </header>
+
+        <p class="as-card-desc">{{ scheme.description }}</p>
+
+        {% if scheme.tag_chips %}
+        <ul class="as-tag-list">
+          {% for tag in scheme.tag_chips %}
+          <li>
+            <button type="button" class="as-tag" data-schemes-tag="{{ tag.slug }}"
+                    aria-pressed="false"
+                    title="{% blocktrans %}Filter by {{ label }}{% endblocktrans %}">
+              {{ tag.label }}
+            </button>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+
+        <div class="as-card-meta">
+          <div class="as-meta-row">
+            <i class="fas fa-user-check" aria-hidden="true"></i>
+            <div>
+              <span class="as-meta-label">{% trans 'Eligible artisans' %}</span>
+              <span class="as-meta-value">{{ scheme.eligible_artisans }}</span>
+            </div>
+          </div>
+          <div class="as-meta-row">
+            <i class="fas fa-location-dot" aria-hidden="true"></i>
+            <div>
+              <span class="as-meta-label">{% trans 'Location' %}</span>
+              <span class="as-meta-value">{{ scheme.state }}</span>
+            </div>
+          </div>
+          <div class="as-meta-row">
+            <i class="fas fa-gift" aria-hidden="true"></i>
+            <div>
+              <span class="as-meta-label">{% trans 'Benefits' %}</span>
+              <span class="as-meta-value">{{ scheme.benefits }}</span>
+            </div>
+          </div>
+          <div class="as-meta-row">
+            <i class="fas fa-file-signature" aria-hidden="true"></i>
+            <div>
+              <span class="as-meta-label">{% trans 'How to apply' %}</span>
+              <span class="as-meta-value">{{ scheme.application_method }}</span>
+            </div>
+          </div>
+        </div>
+
+        <footer class="as-card-foot">
+          <p class="as-verified">
+            <i class="fas fa-shield-halved" aria-hidden="true"></i>
+            {% trans 'Last Verified' %}: —
+          </p>
+          {% if scheme.type == 'Government' %}
+          <button type="button" class="as-cta" data-schemes-cta
+                  data-scheme-name="{{ scheme.name }}"
+                  aria-label="{% blocktrans with name=scheme.name %}Check {{ name }} — opens the official provider website{% endblocktrans %}">
+            {% trans 'Check Scheme' %}
+            <i class="fas fa-arrow-right as-cta-arrow" aria-hidden="true"></i>
+            <i class="fas fa-arrow-up-right-from-square as-cta-ext" aria-hidden="true"></i>
+          </button>
+          {% else %}
+          <button type="button" class="as-cta" data-schemes-cta
+                  data-scheme-name="{{ scheme.name }}"
+                  aria-label="{% blocktrans with name=scheme.name %}Visit the {{ name }} website — opens an external site{% endblocktrans %}">
+            {% trans 'Visit Website' %}
+            <i class="fas fa-arrow-right as-cta-arrow" aria-hidden="true"></i>
+            <i class="fas fa-arrow-up-right-from-square as-cta-ext" aria-hidden="true"></i>
+          </button>
+          {% endif %}
+        </footer>
+      </article>
+      {% empty %}
+      <div class="as-empty">
+        <div class="as-empty-icon"><i class="fas fa-folder-open" aria-hidden="true"></i></div>
+        <h3>{% trans 'No schemes to show yet' %}</h3>
+        <p>{% trans 'The directory is being prepared. Please check back shortly.' %}</p>
+      </div>
+      {% endfor %}
+
+      <!-- Shown only when the active filter/search matches nothing -->
+      <div class="as-empty" data-schemes-empty hidden>
+        <div class="as-empty-icon"><i class="fas fa-magnifying-glass" aria-hidden="true"></i></div>
+        <h3>{% trans 'No matching schemes' %}</h3>
+        <p>{% trans 'Try a different keyword, or clear the filters to see every listing.' %}</p>
+        <button type="button" class="as-reset" data-schemes-reset>{% trans 'Clear search and filters' %}</button>
+      </div>
+    </div>
+
+    <!-- Live region for the inert CTAs -->
+    <p class="as-cta-status" data-schemes-cta-status role="status" aria-live="polite" hidden
+       data-pending-template="{% blocktrans %}No official link has been published for “%(name)s” yet. This listing is placeholder content — official sources will be added once every scheme has been verified.{% endblocktrans %}"></p>
+
+    <!-- Closing banner -->
+    <section class="as-cta-banner" aria-labelledby="as-cta-banner-title">
+      <h2 id="as-cta-banner-title">{% trans 'Are you an artisan looking for support?' %}</h2>
+      <p>{% trans 'Set up a seller profile and we will point you at the schemes and resources that match your craft.' %}</p>
+      <a href="{% url 'accounts:become_seller' %}" class="btn-aq">
+        {% trans 'Start Selling on Shop-Seed Art' %}
+        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+      </a>
+    </section>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/schemes.js' %}?v=2"></script>
+{% endblock %}

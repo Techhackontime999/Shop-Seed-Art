@@ -3,7 +3,7 @@
 {% if v_enabled != '0' and v_light|add:v_dark %}
 <!-- Video hero (configured in Platform Studio → Homepage).
      Autoplays the theme-matched video full-screen; content below scrolls normally. -->
-<section class="hero-video-aq hero-video-aq--video" id="hero-video-aq" data-hero-video aria-label="Shop-Seed Art — {% trans 'product discovery' %}">
+<section class="hero-video-aq hero-video-aq--video has-schemes-tab" id="hero-video-aq" data-hero-video aria-label="Shop-Seed Art — {% trans 'product discovery' %}">
   <div class="hero-video-aq-bg" aria-hidden="true"></div>
   <video class="hero-video-aq-video" muted loop playsinline preload="auto"
          data-hero-video-element
@@ -20,17 +20,20 @@
     <span class="mouse"></span>
     {{ platform_settings.hero_scroll_hint|default:'Scroll to explore' }}
   </div>
+  {% include 'shop/partials/schemes_hero_tab.html' %}
   <svg class="hero-video-aq-wave" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true">
     <path d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z"/>
   </svg>
 </section>
 {% else %}
 <!-- Static hero (shown until a hero video is configured in Platform Studio) -->
-<section class="hero-video-aq hero-video-aq--static" data-hero-video aria-label="Shop-Seed Art — {% trans 'product discovery' %}">
+<section class="hero-video-aq hero-video-aq--static has-schemes-tab" data-hero-video aria-label="Shop-Seed Art — {% trans 'product discovery' %}">
   <div class="hero-video-aq-bg" aria-hidden="true"></div>
   <div class="hero-video-aq-overlay" aria-hidden="true"></div>
 
   {% include 'shop/partials/hero_video_content.html' %}
+
+  {% include 'shop/partials/schemes_hero_tab.html' %}
 
   <svg class="hero-video-aq-wave" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true">
     <path d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z"/>

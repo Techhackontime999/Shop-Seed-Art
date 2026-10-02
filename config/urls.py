@@ -53,6 +53,7 @@ urlpatterns = [
     path('contact/', include('contact.urls', namespace='contact')),
     path('coupons/', include('coupons.urls', namespace='coupons')),
     path('seller/', include('seller.urls', namespace='seller')),
+    path('artisan-schemes/', include('schemes.urls', namespace='schemes')),
     path('ai/', include('ai_services.urls', namespace='ai_services')),
     path('payments/', include('payments.urls', namespace='payments')),
     path('shipping/', include('shipping.urls', namespace='shipping')),

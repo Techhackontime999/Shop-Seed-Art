@@ -1,0 +1,1052 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Shop-Seed Art — Schemes for Artisans directory page
+   -----------------------------------------------------------------------
+   Page header + counters, search, sticky filter/sort toolbar, filter chips
+   and scheme cards. Built entirely on the shared design system (--aq-*
+   palette, --ds-* spacing/radius, .container-aq, .breadcrumb-aq, .glass-card,
+   .btn-aq) so it reads as part of the same storefront rather than a separate
+   portal.
+
+   Layout contract:
+     base / sm / md  single column, filter chips scroll horizontally
+     lg (≥1024)     two-column card grid, chips wrap
+     ≥900px         page header splits copy and counters side by side
+     toolbar        sticky under the header, bleeds into the shell padding
+                    via --as-pad so cards never show through the gutters
+     top padding    cleared past the fixed header by design-system.css's
+                    universal page-header rule for .as-page
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.as-page {
+  background: var(--aq-canvas);
+}
+
+.as-shell {
+  --as-pad: var(--ds-space-4);
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: var(--ds-space-6) var(--as-pad) clamp(3rem, 8vw, 5.5rem);
+}
+
+@media (min-width: 640px) {
+  .as-shell { --as-pad: var(--ds-space-6); }
+}
+
+@media (min-width: 1024px) {
+  .as-shell { --as-pad: var(--ds-space-8); }
+}
+
+/* ─── Breadcrumb ─────────────────────────────────────────────────────── */
+.as-breadcrumb {
+  margin-bottom: var(--ds-space-5);
+}
+
+/* ─── Page header ────────────────────────────────────────────────────── */
+.as-hero {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: var(--ds-space-5);
+  padding: clamp(1.75rem, 4vw, 2.75rem) clamp(1.25rem, 4vw, 2.5rem);
+  margin-bottom: clamp(1.5rem, 3.5vw, 2.25rem);
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-lg);
+  background:
+    radial-gradient(90% 120% at 12% 0%, var(--aq-accent-subtle) 0%, transparent 58%),
+    radial-gradient(70% 100% at 92% 8%, var(--aq-blue-glow, rgba(30, 64, 175, 0.08)) 0%, transparent 62%),
+    var(--aq-surface);
+  box-shadow: var(--ds-shadow-sm);
+}
+
+.as-hero-main {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .as-hero {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: var(--ds-space-8);
+  }
+}
+
+/* Woven-thread motif: three offset rule lines, purely decorative. */
+.as-hero::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: -2.5rem;
+  top: 1.25rem;
+  width: 11rem;
+  height: 5.5rem;
+  border-radius: var(--ds-radius-md);
+  background:
+    repeating-linear-gradient(
+      58deg,
+      color-mix(in srgb, var(--aq-accent) 22%, transparent) 0 2px,
+      transparent 2px 9px
+    ),
+    repeating-linear-gradient(
+      -58deg,
+      color-mix(in srgb, var(--aq-accent) 14%, transparent) 0 2px,
+      transparent 2px 13px
+    );
+  opacity: 0.5;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(160deg, #000 0%, transparent 78%);
+  mask-image: linear-gradient(160deg, #000 0%, transparent 78%);
+}
+
+.as-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.875rem;
+  padding: 0.3125rem 0.875rem;
+  border: 1px solid var(--aq-accent-glow);
+  border-radius: var(--ds-radius-full);
+  background: var(--aq-accent-subtle);
+  color: var(--aq-accent-dark);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.as-hero-title {
+  margin: 0;
+  font-size: clamp(1.625rem, 4.6vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  color: var(--aq-ink);
+}
+
+.as-hero-sub {
+  margin: 0.75rem 0 0;
+  max-width: 62ch;
+  font-size: var(--ds-text-base);
+  line-height: 1.65;
+  color: var(--aq-body);
+}
+
+/* Counters. Deliberately modest: real numbers about what is on the page, and
+   nothing that implies the listings are checked. */
+.as-stats {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0;
+  margin: 0;
+  padding: 0.875rem 0 0;
+  border-top: 1px solid var(--aq-border);
+}
+
+.as-stat {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0 0.875rem;
+  border-left: 1px solid var(--aq-border);
+}
+
+.as-stat:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+
+.as-stat dt {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--aq-tertiary);
+}
+
+.as-stat dd {
+  margin: 0.1875rem 0 0;
+  font-size: 1.375rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--aq-ink);
+}
+
+@media (max-width: 480px) {
+  .as-stats { gap: 0.75rem 0; }
+  .as-stat { flex-basis: 33.333%; padding-inline: 0.625rem; }
+  .as-stat dd { font-size: 1.1875rem; }
+}
+
+/* ─── Search ─────────────────────────────────────────────────────────── */
+.as-search {
+  position: relative;
+  margin-bottom: var(--ds-space-4);
+}
+
+.as-search-field {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  min-height: 52px;
+  padding: 0.5rem 0.5rem 0.5rem 1.125rem;
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-full);
+  background: var(--aq-surface);
+  box-shadow: var(--ds-shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.as-search-field:focus-within {
+  border-color: var(--aq-accent);
+  box-shadow: 0 0 0 3px var(--aq-accent-glow), var(--ds-shadow-sm);
+}
+
+.as-search-icon {
+  flex: 0 0 auto;
+  color: var(--aq-tertiary);
+  font-size: 0.9375rem;
+}
+
+.as-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  /* The shared input rules force a min-height and a border on every text
+     input; the field wrapper already provides both. */
+  min-height: 0 !important;
+  padding: 0.25rem 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent;
+  color: var(--aq-ink);
+  font-size: var(--ds-text-base);
+}
+
+.as-search-input:focus {
+  box-shadow: none !important;
+}
+
+.as-search-input::placeholder {
+  color: var(--aq-tertiary);
+}
+
+.as-search-clear {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: var(--ds-radius-full);
+  background: var(--aq-accent-subtle);
+  color: var(--aq-accent-dark);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+.as-search-clear:hover {
+  background: var(--aq-accent);
+  color: #fff;
+}
+
+/* Only meaningful once there is something to clear. */
+.as-search-clear[hidden] {
+  display: none;
+}
+
+/* "/" hint. Hidden once the field has focus or a value, so it never competes
+   with the clear button. */
+.as-search-kbd {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 0.3125rem;
+  border: 1px solid var(--aq-border);
+  border-bottom-width: 2px;
+  border-radius: var(--ds-radius-sm);
+  background: var(--aq-canvas);
+  color: var(--aq-tertiary);
+  font-family: var(--aq-mono);
+  font-size: 0.6875rem;
+  line-height: 1;
+}
+
+.as-search-field:focus-within .as-search-kbd,
+.as-search-field:has(.as-search-input:not(:placeholder-shown)) .as-search-kbd {
+  display: none;
+}
+
+/* ─── Sticky filter toolbar ──────────────────────────────────────────── */
+[data-schemes-toolbar-sentinel] {
+  height: 0;
+}
+
+.as-toolbar {
+  position: sticky;
+  /* --as-nav-h is measured from the real header in js/schemes.js and falls
+     back to the design-system token, so the bar never tucks under the navbar
+     at any breakpoint (the token is a few px short of the real height once the
+     header's own padding is counted). */
+  top: calc(var(--as-nav-h, var(--ds-navbar-h)) + 0.5rem);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem var(--ds-space-4);
+  /* Bleed into the shell padding so cards never show through the gutters. */
+  margin-inline: calc(var(--as-pad) * -1);
+  padding: 0.75rem var(--as-pad);
+  background: color-mix(in srgb, var(--aq-canvas) 88%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  backdrop-filter: blur(14px) saturate(150%);
+  transition: box-shadow 0.25s ease;
+}
+
+.as-toolbar.is-stuck {
+  box-shadow: var(--ds-shadow-md);
+}
+
+.as-toolbar-main {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+/* ─── Sort ───────────────────────────────────────────────────────────── */
+.as-sort {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.as-sort-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--aq-tertiary);
+}
+
+.as-sort-field {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.as-sort-icon {
+  position: absolute;
+  inset-inline-end: 0.75rem;
+  color: var(--aq-tertiary);
+  font-size: 0.6875rem;
+  pointer-events: none;
+}
+
+.as-sort-select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 40px;
+  padding: 0.4375rem 2.125rem 0.4375rem 0.9375rem !important;
+  border: 1px solid var(--aq-border) !important;
+  border-radius: var(--ds-radius-full) !important;
+  background: var(--aq-surface) !important;
+  color: var(--aq-ink) !important;
+  font-family: var(--aq-font);
+  font-size: var(--ds-text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.as-sort-select:focus {
+  border-color: var(--aq-accent) !important;
+  box-shadow: 0 0 0 3px var(--aq-accent-glow) !important;
+}
+
+.as-sort-select:hover {
+  border-color: var(--aq-accent) !important;
+}
+
+/* ─── Filter chips ───────────────────────────────────────────────────── */
+.as-filters-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--aq-tertiary);
+}
+
+.as-filters {
+  display: flex;
+  gap: 0.5rem;
+  padding-bottom: 0.25rem;
+  /* Horizontal scroll instead of wrapping on phones — the row scrolls inside
+     its own box, so the page never gains a horizontal scrollbar. */
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x proximity;
+}
+
+.as-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.as-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 40px;
+  padding: 0.4375rem 0.9375rem;
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-full);
+  background: var(--aq-surface);
+  color: var(--aq-body);
+  font-family: var(--aq-font);
+  font-size: var(--ds-text-sm);
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.2s ease;
+}
+
+.as-chip:hover {
+  border-color: var(--aq-accent);
+  background: var(--aq-accent-subtle);
+  color: var(--aq-accent-dark);
+}
+
+.as-chip:active {
+  transform: scale(0.97);
+}
+
+.as-chip i {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+/* Selected state is carried by weight + background + a check glyph, never by
+   colour alone. */
+.as-chip.is-active {
+  background: var(--aq-gradient-1);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--aq-accent) 60%, transparent);
+}
+
+.as-chip.is-active i {
+  opacity: 1;
+}
+
+.as-chip.is-active .as-chip-check {
+  display: inline-flex;
+}
+
+.as-chip-check {
+  display: none;
+  align-items: center;
+  font-size: 0.625rem;
+}
+
+.as-chip-count {
+  font-family: var(--aq-mono);
+  font-size: 0.625rem;
+  opacity: 0.7;
+}
+
+.as-chip--saved {
+  border-style: dashed;
+}
+
+.as-chip-bookmark {
+  display: none;
+  font-size: 0.6875rem;
+  opacity: 0.9;
+}
+
+.as-chip--saved.is-active {
+  border-style: solid;
+}
+
+.as-chip--saved.is-on {
+  border-style: solid;
+  border-color: var(--aq-accent);
+  background: var(--aq-accent-subtle);
+  color: var(--aq-accent-dark);
+  font-weight: 600;
+}
+
+.as-chip--saved.is-active .as-chip-bookmark,
+.as-chip--saved[aria-pressed="true"] .as-chip-bookmark {
+  display: inline-block;
+}
+
+.as-chip[hidden] {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .as-filters {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
+
+/* ─── Results meta ───────────────────────────────────────────────────── */
+.as-results-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-top: var(--ds-space-5);
+  margin-bottom: var(--ds-space-4);
+}
+
+.as-results-count {
+  margin: 0;
+  font-size: var(--ds-text-sm);
+  color: var(--aq-tertiary);
+}
+
+.as-results-count strong {
+  color: var(--aq-ink);
+  font-weight: 600;
+}
+
+.as-clear-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  padding: 0.3125rem 0.75rem;
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-full);
+  background: var(--aq-surface);
+  color: var(--aq-body);
+  font-family: var(--aq-font);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.as-clear-all:hover {
+  border-color: var(--aq-accent);
+  background: var(--aq-accent-subtle);
+  color: var(--aq-accent-dark);
+}
+
+.as-clear-all[hidden] {
+  display: none;
+}
+
+.as-demo-note {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  flex: 1 1 320px;
+  margin: 0;
+  padding: 0.4375rem 0.75rem;
+  border: 1px dashed var(--aq-border);
+  border-radius: var(--ds-radius-sm);
+  background: var(--aq-accent-subtle);
+  color: var(--aq-body);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.as-demo-note i {
+  margin-top: 0.15rem;
+  color: var(--aq-accent);
+  flex: 0 0 auto;
+}
+
+/* ─── Card grid ──────────────────────────────────────────────────────── */
+.as-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--ds-space-4);
+}
+
+@media (min-width: 640px) {
+  .as-grid {
+    gap: var(--ds-space-5);
+  }
+}
+
+@media (min-width: 768px) {
+  .as-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ─── Scheme card ────────────────────────────────────────────────────── */
+.as-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: var(--ds-space-5);
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-md);
+  background: var(--aq-surface);
+  box-shadow: var(--ds-shadow-sm);
+  transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+}
+
+.as-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--aq-accent) 30%, var(--aq-border));
+  box-shadow: var(--ds-shadow-lg);
+}
+
+.as-card[hidden] {
+  display: none;
+}
+
+/* Header: logo placeholder + name + provider + type badge */
+.as-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  margin-bottom: var(--ds-space-4);
+}
+
+.as-card-logo {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--ds-radius-sm);
+  background: var(--aq-accent-subtle);
+  color: var(--aq-accent-dark);
+  font-size: 1.125rem;
+}
+
+.as-card-logo--ngo {
+  background: var(--aq-blue-glow, rgba(30, 64, 175, 0.08));
+  color: var(--aq-blue);
+}
+
+html[data-theme="dark"] .as-card-logo--ngo {
+  color: var(--aq-blue-light, #3B82F6);
+}
+
+.as-card-headings {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.as-card-name {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--aq-ink);
+}
+
+.as-card-provider {
+  margin: 0.25rem 0 0;
+  font-size: var(--ds-text-sm);
+  color: var(--aq-tertiary);
+}
+
+.as-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+.as-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  padding: 0.1875rem 0.625rem;
+  border-radius: var(--ds-radius-full);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.as-badge--gov {
+  border: 1px solid color-mix(in srgb, var(--aq-blue) 24%, transparent);
+  background: var(--aq-blue-glow, rgba(30, 64, 175, 0.08));
+  color: var(--aq-blue);
+}
+
+html[data-theme="dark"] .as-badge--gov {
+  color: var(--aq-blue-light, #3B82F6);
+}
+
+.as-badge--ngo {
+  border: 1px solid var(--aq-accent-glow);
+  background: var(--aq-accent-subtle);
+  color: var(--aq-accent-dark);
+}
+
+.as-badge--plain {
+  border: 1px solid var(--aq-border);
+  color: var(--aq-tertiary);
+  font-weight: 500;
+}
+
+/* Body */
+.as-card-desc {
+  margin: 0 0 var(--ds-space-3);
+  font-size: var(--ds-text-sm);
+  line-height: 1.65;
+  color: var(--aq-body);
+}
+
+/* Category tags double as filter triggers. */
+.as-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin: 0 0 var(--ds-space-4);
+  padding: 0;
+  list-style: none;
+}
+
+.as-tag {
+  padding: 0.1875rem 0.625rem;
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-full);
+  background: transparent;
+  color: var(--aq-tertiary);
+  font-family: var(--aq-font);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.as-tag:hover,
+.as-tag[aria-pressed="true"] {
+  border-color: var(--aq-accent);
+  background: var(--aq-accent-subtle);
+  color: var(--aq-accent-dark);
+}
+
+.as-tag[aria-pressed="true"] {
+  font-weight: 600;
+}
+
+/* Bookmark */
+.as-save {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--ds-radius-full);
+  background: transparent;
+  color: var(--aq-tertiary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.as-save:hover {
+  border-color: var(--aq-border);
+  background: var(--aq-canvas);
+  color: var(--aq-accent-dark);
+}
+
+.as-save:active {
+  transform: scale(0.92);
+}
+
+.as-save.is-saved {
+  border-color: var(--aq-accent-glow);
+  background: var(--aq-accent-subtle);
+  color: var(--aq-accent-dark);
+}
+
+.as-card-meta {
+  display: grid;
+  gap: 0.625rem;
+  margin: 0 0 var(--ds-space-4);
+  padding: var(--ds-space-4) 0 0;
+  border-top: 1px solid var(--aq-border);
+}
+
+.as-meta-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: start;
+  min-width: 0;
+}
+
+.as-meta-row i {
+  margin-top: 0.1875rem;
+  color: var(--aq-accent);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.as-meta-label {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--aq-tertiary);
+}
+
+.as-meta-value {
+  display: block;
+  margin-top: 0.0625rem;
+  font-size: var(--ds-text-sm);
+  line-height: 1.5;
+  color: var(--aq-body);
+}
+
+/* Footer */
+.as-card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: var(--ds-space-4);
+  border-top: 1px solid var(--aq-border);
+}
+
+.as-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0;
+  font-size: 0.6875rem;
+  color: var(--aq-tertiary);
+  white-space: nowrap;
+}
+
+.as-verified i {
+  font-size: 0.625rem;
+}
+
+/* Outbound CTA. Inert while no official source exists — it explains itself
+   instead of pretending to be a live external link. */
+.as-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 42px;
+  padding: 0.5rem 1.125rem;
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-full);
+  background: var(--aq-surface);
+  color: var(--aq-ink);
+  font-family: var(--aq-font);
+  font-size: var(--ds-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.as-cta:hover {
+  border-color: var(--aq-accent);
+  background: var(--aq-accent-subtle);
+  color: var(--aq-accent-dark);
+  box-shadow: 0 8px 20px -12px color-mix(in srgb, var(--aq-accent) 55%, transparent);
+}
+
+.as-cta-arrow {
+  font-size: 0.6875rem;
+  transition: transform 0.25s ease;
+}
+
+.as-cta:hover .as-cta-arrow,
+.as-cta:focus-visible .as-cta-arrow {
+  transform: translateX(3px);
+}
+
+.as-cta-ext {
+  font-size: 0.625rem;
+  opacity: 0.65;
+}
+
+/* Live announcement for the inert CTAs */
+.as-cta-status {
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--aq-accent-glow);
+  border-radius: var(--ds-radius-sm);
+  background: var(--aq-accent-subtle);
+  color: var(--aq-body);
+  font-size: var(--ds-text-sm);
+  line-height: 1.55;
+}
+
+.as-cta-status[hidden] {
+  display: none;
+}
+
+/* ─── Empty state (filters match nothing) ────────────────────────────── */
+.as-empty {
+  grid-column: 1 / -1;
+  padding: clamp(2rem, 6vw, 3.5rem) var(--ds-space-5);
+  border: 1px dashed var(--aq-border);
+  border-radius: var(--ds-radius-md);
+  background: var(--aq-surface);
+  text-align: center;
+}
+
+.as-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 0.875rem;
+  border-radius: var(--ds-radius-full);
+  background: var(--aq-accent-subtle);
+  color: var(--aq-accent);
+  font-size: 1.25rem;
+}
+
+.as-empty h3 {
+  margin: 0 0 0.375rem;
+  font-size: 1.0625rem;
+  color: var(--aq-ink);
+}
+
+.as-empty p {
+  margin: 0;
+  font-size: var(--ds-text-sm);
+  color: var(--aq-tertiary);
+}
+
+.as-reset {
+  margin-top: 1rem;
+  padding: 0.5rem 1.125rem;
+  border: 1px solid var(--aq-border);
+  border-radius: var(--ds-radius-full);
+  background: transparent;
+  color: var(--aq-ink);
+  font-family: var(--aq-font);
+  font-size: var(--ds-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.as-reset:hover {
+  border-color: var(--aq-accent);
+  background: var(--aq-accent-subtle);
+  color: var(--aq-accent-dark);
+}
+
+/* ─── Footer CTA ─────────────────────────────────────────────────────── */
+.as-cta-banner {
+  margin-top: clamp(2rem, 5vw, 3.5rem);
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  border-radius: var(--ds-radius-lg);
+  background: var(--aq-gradient-1);
+  color: #fff;
+  text-align: center;
+  box-shadow: var(--ds-shadow-accent);
+}
+
+.as-cta-banner h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.25rem, 3.5vw, 1.75rem);
+}
+
+.as-cta-banner p {
+  margin: 0.5rem auto 1.25rem;
+  max-width: 52ch;
+  font-size: var(--ds-text-base);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.as-cta-banner .btn-aq {
+  background: #fff;
+  color: var(--aq-accent-dark);
+}
+
+.as-cta-banner .btn-aq:hover {
+  background: #fff;
+  color: var(--aq-accent-dark);
+  box-shadow: 0 12px 26px -14px rgba(15, 23, 42, 0.55);
+}
+
+.as-cta-banner .btn-aq i {
+  transition: transform 0.25s ease;
+}
+
+.as-cta-banner .btn-aq:hover i {
+  transform: translateX(3px);
+}
+
+/* ─── Focus visibility for every interactive element ─────────────────── */
+.as-chip:focus-visible,
+.as-cta:focus-visible,
+.as-search-clear:focus-visible,
+.as-reset:focus-visible,
+.as-clear-all:focus-visible,
+.as-save:focus-visible,
+.as-tag:focus-visible,
+.as-sort-select:focus-visible {
+  outline: 2px solid var(--aq-accent);
+  outline-offset: 2px;
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .as-card,
+  .as-card:hover,
+  .as-chip,
+  .as-chip:hover,
+  .as-chip:active,
+  .as-cta,
+  .as-cta .as-cta-arrow,
+  .as-cta:hover .as-cta-arrow,
+  .as-cta-banner .btn-aq i,
+  .as-save,
+  .as-save:active,
+  .as-tag,
+  .as-toolbar,
+  .as-reset {
+    transition: none;
+    transform: none;
+  }
+}
