@@ -17,6 +17,7 @@ you agree to follow it.
   - [2. Make small, focused commits](#2-make-small-focused-commits)
   - [3. Run the checks](#3-run-the-checks)
   - [4. Open a pull request](#4-open-a-pull-request)
+- [Adding a new app](#adding-a-new-app)
 - [Branch model](#branch-model)
 - [Commit conventions](#commit-conventions)
 - [Testing](#testing)
@@ -37,7 +38,7 @@ not tolerated. See [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
 - **Features** — open a discussion/issue before starting large features so the
   approach can be agreed on first.
 - **Documentation** — typos, clarifications and new guides are always welcome.
-- **Tests** — improving coverage of the existing 764-test suite is valuable.
+- **Tests** — improving coverage of the existing 772-test suite is valuable.
 
 If you are unsure where to start, look for open issues labelled `good first
 issue`.
@@ -99,7 +100,7 @@ Before pushing, make sure everything is green:
 ```sh
 python manage.py check
 python manage.py makemigrations --check --dry-run   # no missing migrations
-python manage.py test                               # full suite (764 tests)
+python manage.py test                               # full suite (772 tests)
 ```
 
 New behaviour should come with tests. When you add or change a model, add the
@@ -118,6 +119,34 @@ python manage.py makemigrations <app_label>
 - Link any related issue (`Fixes #123`).
 - Wait for CI (GitHub Actions on Python 3.12 and 3.13) to go green. A PR is
   only mergeable when the full test suite passes.
+
+## Adding a new app
+
+Django will not find an app that only exists on disk. When you add one, register
+it in **both** settings modules — `config/settings/local.py` *and*
+`config/settings/production.py` — then include it from `config/urls.py`:
+
+```python
+INSTALLED_APPS = [
+    ...
+    "myapp.apps.MyAppConfig",
+]
+```
+
+Miss either settings file and templates render nothing, or a URL raises
+`TemplateDoesNotExist` — usually blamed on the template path when the real cause
+is an unregistered app. If a new route 500s, check `INSTALLED_APPS` before
+touching the template.
+
+**Restart `runserver` after changing `INSTALLED_APPS`.** A process that is already
+running keeps serving the old URL conf, so if a route you just added 404s or
+raises `TemplateDoesNotExist`, restart the server before debugging further.
+
+Apps are self-contained by convention here: keep models, services, views, forms,
+admin, urls and templates inside the app directory, and load an app's static
+assets from the templates that use them. The `schemes` app is a small worked
+example — one directory, one URL, one template, one stylesheet, one script, and
+no models at all.
 
 ## Branch model
 

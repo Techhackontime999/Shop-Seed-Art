@@ -19,7 +19,7 @@ product-photo enhancement, local voice transcription and AI copy running in the
 app itself.
 
 It ships with a one-click **Render blueprint**, a **Heroku-style Procfile**, a
-full test suite (764 tests) and a GitHub Actions CI pipeline that runs on
+full test suite (772 tests) and a GitHub Actions CI pipeline that runs on
 Python 3.12 and 3.13.
 
 ---
@@ -34,6 +34,14 @@ Python 3.12 and 3.13.
   - [Taxonomy-aware publishing](#taxonomy-aware-publishing)
   - [Studio API](#studio-api)
 - [Platform Studio](#platform-studio)
+- [Schemes for Artisans](#schemes-for-artisans)
+  - [The homepage shortcut](#the-homepage-shortcut)
+  - [The directory](#the-directory)
+  - [Shareable views](#shareable-views)
+  - [Saved schemes](#saved-schemes)
+  - [Placeholder data, on purpose](#placeholder-data-on-purpose)
+  - [Swapping in a real data source](#swapping-in-a-real-data-source)
+  - [Where the code lives](#where-the-code-lives)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Local Development](#local-development)
@@ -103,6 +111,7 @@ Python 3.12 and 3.13.
 - Courier API credentials encrypted with Fernet
 
 **Content & community**
+- **Schemes for Artisans** directory at `/artisan-schemes/` — filterable, sortable, shareable list of support programmes, reachable from a dismissible homepage pill (see below)
 - Blog engine: posts, tags, comments, likes, bookmarks, follows, badges/XP and moderation reports
 - News ticker, FAQ, About, Services, legal pages, and a customer-facing documentation section
 - Moderated product reviews with verified-purchase weighting and a report queue
@@ -254,6 +263,142 @@ code is rendered unescaped, which is why this area is superuser-only.
 
 ---
 
+## Schemes for Artisans
+
+A small, self-contained feature in the **`schemes`** app: a directory of support
+schemes for artisans and craftspeople at **`/artisan-schemes/`**
+(`schemes:schemes_list`), reached from a pill on the homepage.
+
+It ships **frontend-only on purpose** — there is no model, no query and no
+external data source yet. The directory exists so the information architecture
+and the interaction design can be reviewed against real content before anyone
+commits to a schema. See
+[Placeholder data, on purpose](#placeholder-data-on-purpose).
+
+### The homepage shortcut
+
+`shop/partials/schemes_hero_tab.html` renders the pill inside the hero section
+(`shop/partials/hero_video.html`), so it is **absolutely positioned, not
+`position: fixed`** — it scrolls away with the hero and can never linger over
+the sections below.
+
+- The label is one accessible string that CSS collapses **full → short →
+  icon-only** as the viewport narrows, so the accessible name never changes and
+  no text is truncated by an ellipsis.
+- The `×` is a **sibling** `<button>`, not a child of the `<a>`, so dismissing
+  the pill can never trigger navigation.
+- Dismissal is stored per session in `sessionStorage`
+  (`ssArtisanSchemesTabDismissed`). A tiny inline script applies a previous
+  dismissal **before first paint**, so the pill never flashes for a visitor who
+  already closed it; if `sessionStorage` is unavailable it degrades to a visible
+  pill. The CSP already allows inline scripts (`'unsafe-inline'`).
+- Below `640px` the pill is full-size and the hero's progress bar and scroll
+  hint step aside rather than overlap it — a deliberate trade-off, since the
+  pill is the more useful of the two on a phone.
+
+### The directory
+
+| Control | Behaviour |
+|---|---|
+| **Search** | Matches name, provider, category, benefits and eligibility client-side. `/` focuses the field, `Esc` clears it, and `/` is never hijacked while you are typing |
+| **Filter chips** | Nine categories, each showing a **live count** computed from the records (Government 3, Equipment 4, …) |
+| **Tag chips on cards** | Clicking a tag on a card filters the directory by it, so a card doubles as a way in |
+| **Sort** | Curated order · Name A–Z · Name Z–A · Government first |
+| **Bookmark** | Per-card save toggle; a **Saved (n)** chip appears in the filter row once something is saved |
+| **Clear filters** | Appears only when something is active, and resets search, chips and the saved filter together |
+
+Filter chips and the sort control live in a bar that **sticks under the header**
+once the page header scrolls away. Its offset is *measured* from the real header
+at runtime (`--as-nav-h`) and falls back to `--ds-navbar-h`, because the token is
+slightly shorter than the rendered header and the toolbar would otherwise tuck
+underneath it.
+
+Saved and a category **compose**: turning on *Saved* and then *Government*
+narrows to saved government schemes and keeps the Saved chip lit.
+
+Accessibility: chips are `aria-pressed` buttons, the results count is an
+`aria-live="polite"` status line, the save buttons carry an `.sr-only` label that
+swaps between "Save this scheme" and "Remove from saved", and every interactive
+target is at least 40px on touch widths.
+
+### Shareable views
+
+The whole view is mirrored into the query string with `history.replaceState`, so
+a filtered directory can be bookmarked, pasted into a message or opened on a
+phone. Back/forward navigation is honoured via `popstate`.
+
+```
+/artisan-schemes/?q=weaver&type=non-government&sort=name-asc&saved=1
+```
+
+| Parameter | Values | Meaning |
+|---|---|---|
+| `q` | free text | Search term |
+| `type` | a filter slug, or `all` | Active filter chip |
+| `sort` | `curated`, `name-asc`, `name-desc`, `government` | Sort order |
+| `saved` | `1` | Saved-only view |
+
+Unknown values fall back to the default rather than emptying the page, and the
+search term is lower-cased in the URL while the input keeps the visitor's
+original casing.
+
+### Saved schemes
+
+Saved scheme names live in `localStorage` under **`ssSavedSchemes`** — no account,
+no server round-trip, works for guests. The chip is hidden until the first save,
+and it survives reload, which is why a `saved=1` deep link into an empty list
+shows a clear empty state instead of a blank page.
+
+If this ever needs to be per-user, the only change is swapping the storage
+adapter in `shop/static/js/schemes.js` for a call to a real endpoint.
+
+### Placeholder data, on purpose
+
+The six records in `schemes/views.py` are **hand-written samples**. None has been
+checked against a ministry, board or organisation, so the feature refuses to
+imply otherwise:
+
+- `official_url` is `''` and `last_verified` is `None` on every record, so each
+  card renders **`Last Verified: —`** instead of a date.
+- The card CTA is an **inert `<button>`**, not a link. Clicking it announces,
+  in a polite live region, that no official link has been published yet — there
+  is no dead link, no invented URL and no `#` target.
+- A permanent note above the results says the listings are placeholder content.
+- The hero counters are honest by construction: programmes listed, filter
+  categories, and **Links published: 0**.
+- A test asserts that no record advertises a URL, so honesty cannot regress.
+
+### Swapping in a real data source
+
+`schemes/views.py` deliberately mirrors the future `Scheme` model field-for-field
+— `name`, `provider`, `type`, `category`, `description`, `eligible_artisans`,
+`benefits`, `state`, `application_method`, `official_url`, `last_verified`,
+`active` — so promotion is mechanical:
+
+1. Add the model + migration and register it in `admin.py`.
+2. Replace the `SCHEMES` literal with the queryset in `schemes_list()`.
+3. Fill `official_url` and `last_verified`; switch the CTA back to a real link in
+   the template and delete the inert-button branch and its live region.
+4. Flip the copy: drop the placeholder note, and only then show a "Verified"
+   date and a real link count.
+5. Move search, filtering and sorting server-side (or keep them client-side if the
+   dataset stays small) and keep the `data-*` attributes the JS relies on.
+
+### Where the code lives
+
+| Path | Role |
+|---|---|
+| `schemes/views.py` | Placeholder records, filter/sort definitions, per-filter counts, tag-chip presentation |
+| `schemes/urls.py` | `app_name = 'schemes'`, single `schemes_list` route |
+| `schemes/templates/schemes/schemes_list.html` | The directory page |
+| `schemes/tests.py` | 7 tests: routing, filter counts, no unverified links, presentation |
+| `shop/static/css/schemes.css` | Page, toolbar, chips, cards, responsive rules |
+| `shop/static/js/schemes.js` | Search, filter, sort, URL state, bookmarks, sticky offset |
+| `shop/templates/shop/partials/schemes_hero_tab.html` | Homepage pill + pre-paint dismissal |
+| `shop/static/css/schemes-hero-tab.css` · `shop/static/js/schemes-hero-tab.js` | Pill styling, mobile collision handling, dismissal |
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -316,6 +461,8 @@ Shop-Seed-Art/
 ├── shipping/                # Shipping methods/addresses/shipments (legacy layer)
 ├── services/ · about/ · contact/ · faq/ · documentation/ · news/ · legal/
 │                            # Content/marketing/static pages
+├── schemes/                 # Schemes for Artisans directory (frontend-only for now):
+│                            #   placeholder records, filter counts, sort, directory page
 ├── locale/                  # Gettext translation catalogs
 ├── static/                  # Static assets (collected into staticfiles/ in prod)
 ├── docs/                    # Customer licence agreement + invoice template documents
@@ -327,7 +474,7 @@ Shop-Seed-Art/
 ├── Procfile                 # Heroku-style process definitions
 ├── e2e_studio_*.py          # Playwright end-to-end suites for the AI Studio
 ├── .env.example             # Documented environment variable template
-└── .github/workflows/django.yml  # CI: checks, migrations check, 764 tests
+└── .github/workflows/django.yml  # CI: checks, migrations check, 772 tests
 ```
 
 ---
@@ -456,8 +603,9 @@ Seed demo users:
 ## Running Tests
 
 ```sh
-python manage.py test                 # full suite (764 tests)
+python manage.py test                 # full suite (772 tests)
 python manage.py test ai_services     # the AI Studio app
+python manage.py test schemes         # the artisan scheme directory
 python manage.py test shop.tests.test_taxonomy
 python manage.py test order.tests.test_urls.LegacyOrderUrlTests
 python manage.py test order.tests.test_services.OrderViewTests.test_cancel_refunds_captured_payment   # one test

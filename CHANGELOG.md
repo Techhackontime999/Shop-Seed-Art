@@ -93,6 +93,55 @@ placed product listing from a single photo and a sentence of dictation.
   store settings and injected custom CSS/JS/HTML. Every save writes an admin
   `LogEntry` audit record.
 
+### Added — Schemes for Artisans directory (artisan-facing)
+
+A directory of support schemes for artisans and craftspeople at
+**`/artisan-schemes/`** (`schemes:schemes_list`), reachable from a pill on the
+homepage. **New app `schemes`**, registered in both the local and production
+settings and mounted from `config/urls.py`.
+
+**Deliberately frontend-only.** There is no model, no query and no external data
+source yet — the app exists so the information architecture and the interaction
+design can be reviewed against real content before anyone commits to a schema.
+
+- **Homepage pill** (`shop/partials/schemes_hero_tab.html`) rendered *inside* the
+  hero and absolutely positioned rather than `position: fixed`, so it scrolls
+  away with the hero and can never linger over the sections below. The label is
+  one accessible string that CSS collapses full → short → icon-only as the
+  viewport narrows. The `×` is a **sibling** button, not a child of the link, so
+  dismissing it can never trigger navigation. Dismissal is per session
+  (`ssArtisanSchemesTabDismissed`) and applied by a small inline script **before
+  first paint**, so it never flashes; blocked storage degrades to a visible pill.
+- **Directory page** with client-side search (`/` focuses the field, `Esc` clears
+  it, and `/` is never hijacked while typing), nine filter chips each carrying a
+  **live count** computed from the records, tag chips on cards that filter the
+  directory when clicked, a sort control (curated / A–Z / Z–A / government
+  first), per-card bookmarks and a **Saved (n)** chip that appears on first save.
+- **Sticky filter/sort toolbar** that pins under the header once the page header
+  scrolls away. Its offset is measured from the real header at runtime
+  (`--as-nav-h`) and falls back to `--ds-navbar-h`, because that token is a few
+  pixels shorter than the rendered header.
+- **Shareable, restorable views.** Search, filter, sort and the saved list are
+  mirrored into `?q=`, `?type=`, `?sort=` and `?saved=1` with
+  `history.replaceState`, restored on load and honoured on back/forward via
+  `popstate`, so a filtered directory can be bookmarked or pasted into a message.
+  Saved schemes persist in `localStorage` (`ssSavedSchemes`) — no account needed.
+- **Honest by construction.** The six records are hand-written placeholders, so
+  `official_url` is empty and `last_verified` is `None` on every one: each card
+  renders `Last Verified: —`, and the card CTA is an **inert button** that
+  announces in a polite live region that no official link has been published yet
+  — no dead links, no invented URLs. A permanent note says the listings are
+  placeholders, and the hero counters report **Links published: 0**. A test
+  asserts no record advertises a URL, so this cannot regress.
+- **Promotion path documented** — the record keys mirror the future `Scheme`
+  model field-for-field, so swapping the literal for a queryset is a mechanical
+  change (see the README).
+- Below `640px` the pill stays full-size and the hero's progress bar and scroll
+  hint step aside instead of overlapping it — a conscious trade-off, since the
+  pill is the more useful of the two on a phone.
+- `schemes/tests.py` adds 7 tests covering routing, per-filter counts, the
+  no-unverified-link guarantee and the presentation layer.
+
 ### Changed
 
 - **Orders are addressed by reference, not primary key.** Order, payment,
@@ -150,7 +199,8 @@ placed product listing from a single photo and a sentence of dictation.
   dictation and the image pipeline). `rembg` is optional and only needed for the
   U2Net segmenter.
 - `ai_services` added ~264 tests across 7 test modules; `shop/tests/test_taxonomy.py`
-  adds 23 more. The suite is now **764 tests**.
+  adds 23 more, and the new `schemes` app adds 7. The suite is now **772 tests**,
+  all passing.
 
 ---
 
